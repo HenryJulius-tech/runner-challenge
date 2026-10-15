@@ -1,0 +1,18 @@
+# Dependencias
+node_modules/
+package-lock.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# IDEs y configuración
+.vscode/
+.idea/
+.gemini/
+*.log

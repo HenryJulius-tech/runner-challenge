@@ -1,0 +1,6046 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Runner Challenge: Neon Run — Videojuego 2D runner cyberpunk con modo multijugador local offline. Proyecto académico universitario." />
+  <title>Runner Challenge — Prototipo (Avance 1)</title>
+  
+  
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;900&display=swap');
+/* ═══════════════════════════════════════════════════════════════════════════
+   styles.css — Runner Challenge
+   Sistema de diseño completo: variables, pantallas, componentes, animaciones
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Variables de diseño ─────────────────────────────────────────────────── */
+:root {
+  /* Paleta principal */
+  --c-primary:    #6C63FF;
+  --c-primary-dk: #4A45C8;
+  --c-accent:     #FF6B6B;
+  --c-accent-dk:  #E05555;
+  --c-gold:       #FFD700;
+  --c-gold-dk:    #E5C100;
+  --c-green:      #4CAF50;
+  --c-cyan:       #4FC3F7;
+
+  /* Fondos */
+  --bg-dark:    #0D0D1A;
+  --bg-surface: #1A1A2E;
+  --bg-card:    #16213E;
+  --bg-glass:   rgba(26, 26, 46, 0.85);
+
+  /* Texto */
+  --t-primary: #FFFFFF;
+  --t-muted:   #9E9EC8;
+  --t-accent:  #6C63FF;
+
+  /* Bordes / sombras */
+  --border:       rgba(108, 99, 255, 0.3);
+  --shadow-card:  0 8px 32px rgba(0,0,0,0.5);
+  --shadow-glow:  0 0 24px rgba(108, 99, 255, 0.4);
+
+  /* Tipografía */
+  --font-main:  'Outfit', sans-serif;
+  --font-game:  'Orbitron', monospace;
+
+  /* Transiciones */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur:  0.25s;
+}
+
+/* ─── Reset y base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: var(--font-main);
+  background: var(--bg-dark);
+  color: var(--t-primary);
+  user-select: none;
+}
+
+/* ─── Sistema de pantallas ──────────────────────────────────────────────────── */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity var(--dur) var(--ease),
+              transform var(--dur) var(--ease),
+              visibility 0s linear var(--dur);
+  transform: translateY(8px);
+  z-index: 10;
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  visibility: visible;
+  transition: opacity var(--dur) var(--ease),
+              transform var(--dur) var(--ease),
+              visibility 0s linear 0s;
+  transform: translateY(0);
+  z-index: 20;
+}
+.overlay-screen {
+  background: rgba(10, 10, 20, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 30;
+}
+.overlay-screen.active { z-index: 40; }
+
+/* ─── Cabecera de pantallas secundarias ─────────────────────────────────────── */
+.screen-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 32px;
+  background: rgba(13, 13, 26, 0.7);
+  border-bottom: 1px solid var(--border);
+}
+.screen-title {
+  font-family: var(--font-game);
+  font-size: 1.3rem;
+  color: var(--c-primary);
+  letter-spacing: 2px;
+}
+.btn-back {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--t-muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  transition: all var(--dur);
+}
+.btn-back:hover { color: var(--t-primary); border-color: var(--c-primary); }
+
+/* ══════════════════════════════════════════════════════════════
+   MENÚ PRINCIPAL
+══════════════════════════════════════════════════════════════ */
+#screen-menu {
+  background: var(--bg-dark);
+  overflow: hidden;
+}
+
+/* Fondo animado con partículas CSS */
+.menu-bg-animation {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(108,99,255,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(255,107,107,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(79,195,247,0.1) 0%, transparent 50%);
+  animation: bg-pulse 6s ease-in-out infinite alternate;
+}
+@keyframes bg-pulse {
+  0%   { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* Estrellas animadas */
+#screen-menu::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 25%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 55%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 10%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 80%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(2px 2px at 35% 40%, rgba(108,99,255,0.8) 0%, transparent 100%),
+    radial-gradient(2px 2px at 75% 30%, rgba(255,107,107,0.6) 0%, transparent 100%);
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  0%   { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.menu-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.logo-wrap { text-align: center; }
+.logo-icon {
+  font-size: 4rem;
+  animation: runner-bounce 0.7s ease-in-out infinite alternate;
+  display: inline-block;
+}
+@keyframes runner-bounce {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-12px); }
+}
+
+.logo-title {
+  font-family: var(--font-game);
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-cyan) 50%, var(--c-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  letter-spacing: 4px;
+  filter: drop-shadow(0 0 20px rgba(108,99,255,0.6));
+}
+.logo-title span { color: var(--c-gold); -webkit-text-fill-color: var(--c-gold); }
+.logo-subtitle {
+  color: var(--t-muted);
+  font-size: 1rem;
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+/* ─── Botones del menú ─────────────────────────────────────────────────────── */
+.main-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+}
+
+.btn-menu {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-game);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.btn-menu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.1);
+  opacity: 0;
+  transition: opacity var(--dur);
+}
+.btn-menu:hover::after { opacity: 1; }
+.btn-menu:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--c-primary), var(--c-primary-dk));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(108,99,255,0.4), 0 0 0 0 rgba(108,99,255,0.4);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(108,99,255,0.6), 0 0 0 4px rgba(108,99,255,0.15);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--c-accent), var(--c-accent-dk));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(255,107,107,0.4);
+}
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(255,107,107,0.6);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--t-muted);
+}
+.btn-outline:hover {
+  border-color: var(--c-primary);
+  color: var(--t-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(108,99,255,0.2);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #D32F2F, #B71C1C);
+  color: #fff;
+}
+.btn-danger:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(211,47,47,0.5); }
+
+.btn-small { width: auto; padding: 8px 16px; font-size: 0.75rem; margin-top: 16px; }
+
+.btn-icon { font-size: 1rem; }
+.version-tag { color: var(--t-muted); font-size: 0.75rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   SELECCIÓN DE NIVELES
+══════════════════════════════════════════════════════════════ */
+#screen-levels {
+  background: var(--bg-dark);
+  padding-top: 80px;
+  overflow-y: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.levels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 32px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.level-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.level-card.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+.level-card:not(.locked):hover {
+  transform: translateY(-4px);
+  border-color: var(--c-primary);
+  box-shadow: var(--shadow-glow);
+}
+.level-card-number {
+  font-family: var(--font-game);
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--c-primary);
+  line-height: 1;
+}
+.level-card-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 8px 0 4px;
+}
+.level-card-diff {
+  font-size: 0.8rem;
+  color: var(--t-muted);
+}
+.level-card-stars { font-size: 1.1rem; margin-top: 8px; }
+.level-card-lock {
+  position: absolute;
+  top: 12px; right: 12px;
+  font-size: 1.2rem;
+}
+.level-card-record {
+  font-size: 0.78rem;
+  color: var(--c-gold);
+  margin-top: 6px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MULTIJUGADOR LOCAL OFFLINE — PANTALLA DIVIDIDA
+══════════════════════════════════════════════════════════════ */
+#screen-multiplayer {
+  background: var(--bg-dark);
+  padding-top: 70px;
+  overflow-y: auto;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.mp-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  border-radius: 999px;
+  font-family: var(--font-game);
+  font-size: 0.78rem;
+  letter-spacing: 1.5px;
+  color: #00F0FF;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+  margin-bottom: 8px;
+}
+
+.name-input {
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--t-primary);
+  font-family: var(--font-main);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--dur);
+  width: 100%;
+}
+.name-input:focus { border-color: var(--c-primary); }
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+.input-group label {
+  font-size: 0.8rem;
+  color: var(--t-muted);
+}
+
+.mp-local-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 90%;
+  max-width: 740px;
+}
+.mp-local-columns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: 100%;
+}
+.mp-local-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  max-width: 280px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.mp-local-card:hover {
+  transform: translateY(-4px);
+}
+.p1-card {
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+}
+.p2-card {
+  border-color: rgba(255, 0, 127, 0.4);
+  box-shadow: 0 0 25px rgba(255, 0, 127, 0.15);
+}
+.player-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-game);
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+.avatar-p1 {
+  background: linear-gradient(135deg, #00F0FF, #0077FF);
+  color: #000;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+}
+.avatar-p2 {
+  background: linear-gradient(135deg, #FF007F, #9C27B0);
+  color: #FFF;
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
+}
+.player-color-tag {
+  font-family: var(--font-game);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+.mp-local-card h3 {
+  font-family: var(--font-game);
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+.mp-local-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-game);
+  font-size: 2rem;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+}
+.mp-split-type-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.split-option-label {
+  font-size: 0.68rem;
+  color: var(--t-muted);
+  font-family: var(--font-main);
+  letter-spacing: 1px;
+}
+.split-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.btn-split-opt {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--t-muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: var(--font-game);
+  font-size: 0.65rem;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all var(--dur);
+}
+.btn-split-opt.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(255, 0, 127, 0.3));
+  border-color: #00F0FF;
+  color: #FFF;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+
+.mp-level-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  padding: 8px 18px;
+  border-radius: 12px;
+  font-family: var(--font-game);
+  font-size: 0.8rem;
+}
+.mp-level-selector label {
+  color: var(--t-muted);
+}
+.mp-select {
+  background: #14172B;
+  border: 1px solid var(--border);
+  color: #FFF;
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.controls-visual {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 14px;
+  border-radius: 10px;
+}
+.key-cap {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-game);
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #FFF;
+}
+.control-label {
+  font-size: 0.8rem;
+  color: var(--t-muted);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.powerups-guide-panel {
+  background: rgba(15, 18, 35, 0.75);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 14px;
+  padding: 12px 18px;
+  max-width: 620px;
+  width: 100%;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.guide-title {
+  font-family: var(--font-game);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #FFD700;
+  letter-spacing: 1.5px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.guide-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+}
+.guide-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--t-primary);
+}
+.guide-item .g-icon {
+  font-size: 0.95rem;
+}
+.guide-item strong {
+  color: #00F0FF;
+  font-family: var(--font-game);
+  font-size: 0.72rem;
+}
+.guide-tip {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--t-muted);
+  text-align: center;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  padding-top: 6px;
+}
+.guide-tip strong {
+  color: #FFF;
+}
+
+.mp-local-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PANTALLA DE JUEGO — HUD CYBERPUNK
+══════════════════════════════════════════════════════════════ */
+#screen-game {
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+/* Efecto de Daño PRO (Hit Glitch) */
+.glitch-effect {
+  animation: glitch-anim 0.15s ease-in-out infinite;
+  filter: sepia(0.5) hue-rotate(-50deg) saturate(200%) brightness(1.2);
+}
+@keyframes glitch-anim {
+  0% { transform: translate(0) }
+  20% { transform: translate(-8px, 4px) }
+  40% { transform: translate(-4px, -8px) }
+  60% { transform: translate(8px, 4px) }
+  80% { transform: translate(4px, -8px) }
+  100% { transform: translate(0) }
+}
+
+/* Controles Táctiles (PRO) */
+.touch-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 50;
+  pointer-events: none;
+}
+.touch-left, .touch-right {
+  display: flex;
+  gap: 15px;
+  pointer-events: auto;
+}
+.btn-touch {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: rgba(14, 16, 30, 0.6);
+  border: 2px solid rgba(0, 240, 255, 0.4);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+  transition: all 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-touch:active {
+  background: rgba(0, 240, 255, 0.3);
+  transform: scale(0.85);
+  border-color: rgba(0, 240, 255, 0.8);
+}
+@media (min-width: 900px) {
+  .touch-controls { display: none; }
+}
+
+/* ── Barra Superior Unificada ── */
+.game-top-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: linear-gradient(180deg, rgba(8, 10, 22, 0.95) 0%, rgba(8, 10, 22, 0.7) 70%, transparent 100%);
+  pointer-events: auto;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hud-level-tag {
+  font-family: var(--font-game);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #00F0FF;
+  letter-spacing: 2px;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.hud-time-tag {
+  font-family: var(--font-game);
+  font-size: 1rem;
+  font-weight: 900;
+  color: #FFD700;
+}
+
+.progress-bar-wrap {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 24px;
+}
+.progress-bar-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  position: relative;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00F0FF, #0088FF);
+  transition: width 0.05s linear;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+}
+.progress-bar-fill-p2 {
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #FF007F, #FF8E53);
+  transition: width 0.05s linear;
+  box-shadow: 0 0 10px rgba(255, 0, 127, 0.8);
+  opacity: 0.8;
+}
+.progress-icon {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+.progress-player { left: 0%; transition: left 0.05s linear; }
+.progress-opponent { left: 0%; transition: left 0.05s linear; }
+.progress-goal   { left: 100%; font-size: 1.2rem; }
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-hud-tool {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: var(--t-primary);
+  font-family: var(--font-game);
+  font-size: 0.72rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--dur);
+}
+.btn-hud-tool:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00F0FF;
+}
+
+.btn-pause {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  color: var(--t-primary);
+  font-size: 1.1rem;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--dur);
+}
+.btn-pause:hover { background: rgba(255,255,255,0.2); }
+
+/* ─── Contenedor de Viewports (Split-Screen y Solo) ─── */
+.viewports-container {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  width: 100%;
+  height: calc(100% - 52px);
+  background: #000;
+  overflow: hidden;
+}
+
+/* División Horizontal (Arriba / Abajo) */
+.viewports-container.split-horizontal {
+  flex-direction: column;
+}
+.viewports-container.split-horizontal .viewport-box {
+  width: 100%;
+  flex: 1;
+}
+
+/* División Vertical (Izquierda / Derecha) */
+.viewports-container.split-vertical {
+  flex-direction: row;
+}
+.viewports-container.split-vertical .viewport-box {
+  height: 100%;
+  flex: 1;
+}
+
+/* Caja de cada Viewport */
+.viewport-box {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex: 1;
+  background: #0B0D1B;
+}
+.viewport-box.viewport-p1 {
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+.viewport-box.viewport-p2 {
+  border-top: 1px solid rgba(255, 0, 127, 0.2);
+}
+.viewports-container.split-vertical .viewport-box.viewport-p1 {
+  border-bottom: none;
+  border-right: 1px solid rgba(0, 240, 255, 0.2);
+}
+.viewports-container.split-vertical .viewport-box.viewport-p2 {
+  border-top: none;
+  border-left: 1px solid rgba(255, 0, 127, 0.2);
+}
+
+.viewport-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Overlay HUD dentro de cada Viewport */
+.viewport-hud-overlay {
+  position: absolute;
+  top: 10px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 10;
+}
+.player-tag-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(14, 16, 30, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 5px 12px 5px 6px;
+  backdrop-filter: blur(8px);
+}
+.p1-badge {
+  border-color: rgba(0, 240, 255, 0.5);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+}
+.p2-badge {
+  border-color: rgba(255, 0, 127, 0.5);
+  box-shadow: 0 0 12px rgba(255, 0, 127, 0.2);
+}
+.player-tag-badge .p-avatar {
+  font-family: var(--font-game);
+  font-weight: 900;
+  font-size: 0.75rem;
+  padding: 3px 6px;
+  border-radius: 6px;
+}
+.p1-badge .p-avatar {
+  background: #00F0FF;
+  color: #000;
+}
+.p2-badge .p-avatar {
+  background: #FF007F;
+  color: #FFF;
+}
+.player-tag-badge .p-name {
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #FFF;
+}
+.player-tag-badge .p-rank {
+  font-family: var(--font-game);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFD700;
+}
+
+.viewport-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(14, 16, 30, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 5px 14px;
+  backdrop-filter: blur(8px);
+}
+.vp-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-game);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.vp-stat .lbl {
+  font-size: 0.6rem;
+  color: var(--t-muted);
+  font-family: var(--font-main);
+}
+.vp-stat .val {
+  color: #FFF;
+}
+
+/* Badges de Power-Ups en tiempo real por Viewport */
+.viewport-powerups {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.powerup-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: var(--font-game);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
+  animation: powerup-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+@keyframes powerup-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.badge-shield {
+  background: rgba(0, 240, 255, 0.18);
+  border: 1.5px solid #00F0FF;
+  color: #00F0FF;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+}
+.badge-magnet {
+  background: rgba(255, 215, 0, 0.18);
+  border: 1.5px solid #FFD700;
+  color: #FFD700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+}
+.badge-turbo {
+  background: rgba(255, 51, 102, 0.22);
+  border: 1.5px solid #FF3366;
+  color: #FF3366;
+  box-shadow: 0 0 14px rgba(255, 51, 102, 0.45);
+  animation: powerup-pop 0.25s forwards, turbo-pulse 0.6s infinite alternate;
+}
+@keyframes turbo-pulse {
+  from { filter: brightness(1); }
+  to   { filter: brightness(1.3); transform: scale(1.04); }
+}
+.badge-doublejump {
+  background: rgba(0, 255, 136, 0.18);
+  border: 1.5px solid #00FF88;
+  color: #00FF88;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.35);
+}
+.powerup-badge .pu-icon {
+  font-size: 0.9rem;
+}
+.powerup-badge .pu-timer {
+  font-size: 0.68rem;
+  opacity: 0.9;
+  min-width: 24px;
+}
+
+/* Divisor Neón */
+.split-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 20;
+}
+.split-horizontal .split-divider {
+  height: 14px;
+  width: 100%;
+}
+.split-vertical .split-divider {
+  width: 14px;
+  height: 100%;
+  flex-direction: column;
+}
+.split-divider-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, #00F0FF, #FF007F);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+}
+.split-vertical .split-divider-line {
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, #00F0FF, #FF007F);
+}
+.split-divider-badge {
+  background: #0E101E;
+  border: 1.5px solid #FFD700;
+  border-radius: 999px;
+  padding: 3px 14px;
+  font-family: var(--font-game);
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #FFD700;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.4);
+  animation: badge-pulse 1.5s ease-in-out infinite alternate;
+}
+@keyframes badge-pulse {
+  0%   { transform: scale(0.97); }
+  100% { transform: scale(1.03); }
+}
+
+/* Efecto Glitch aislado para cada Viewport */
+.viewport-box.glitch-effect {
+  animation: glitch-viewport 0.15s ease-in-out infinite;
+  filter: sepia(0.5) hue-rotate(-50deg) saturate(200%) brightness(1.2);
+}
+@keyframes glitch-viewport {
+  0% { transform: translate(0); }
+  25% { transform: translate(-4px, 3px); }
+  50% { transform: translate(3px, -3px); }
+  75% { transform: translate(-3px, -2px); }
+  100% { transform: translate(0); }
+}
+
+/* Resultados comparativos P1 vs P2 */
+.results-comparison {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+.result-col {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.result-col h3 {
+  font-family: var(--font-game);
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+.res-stat-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--t-muted);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 4px;
+}
+.res-stat-item span:last-child {
+  font-family: var(--font-game);
+  font-weight: 700;
+  color: #FFF;
+}
+.res-stat-item .highlight {
+  color: #FFD700 !important;
+  font-weight: 900;
+}
+.res-divider {
+  width: 2px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.hidden { display: none !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   PAUSA
+══════════════════════════════════════════════════════════════ */
+.pause-container, .gameover-container, .results-container, .victory-container {
+  background: var(--bg-glass);
+  border: 1.5px solid var(--border);
+  border-radius: 24px;
+  padding: 40px 48px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-card);
+  width: 90%;
+  max-width: 480px;
+}
+
+.pause-title {
+  font-family: var(--font-game);
+  font-size: 2rem;
+  margin-bottom: 24px;
+  color: var(--c-primary);
+}
+.pause-stats {
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 28px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.95rem;
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-row span:last-child {
+  font-family: var(--font-game);
+  font-weight: 700;
+  color: var(--c-gold);
+}
+.pause-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GAME OVER
+══════════════════════════════════════════════════════════════ */
+.gameover-icon { font-size: 4rem; margin-bottom: 8px; }
+.gameover-title {
+  font-family: var(--font-game);
+  font-size: 2.5rem;
+  color: var(--c-accent);
+  margin-bottom: 8px;
+}
+.gameover-sub { color: var(--t-muted); margin-bottom: 24px; }
+.result-stats {
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 28px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESULTADOS
+══════════════════════════════════════════════════════════════ */
+.results-container {
+  max-width: 560px;
+}
+.results-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.results-badge { font-size: 3.5rem; }
+.results-title {
+  font-family: var(--font-game);
+  font-size: 1.6rem;
+  color: var(--c-green);
+  letter-spacing: 2px;
+}
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.results-item {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.results-icon { font-size: 1.5rem; }
+.results-label { font-size: 0.75rem; color: var(--t-muted); }
+.results-value {
+  font-family: var(--font-game);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--c-gold);
+}
+
+.unlock-banner {
+  background: linear-gradient(135deg, rgba(76,175,80,0.2), rgba(76,175,80,0.1));
+  border: 1px solid rgba(76,175,80,0.4);
+  border-radius: 10px;
+  padding: 12px 20px;
+  color: var(--c-green);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  animation: unlock-glow 1s ease-in-out infinite alternate;
+}
+@keyframes unlock-glow {
+  0%   { box-shadow: 0 0 0px rgba(76,175,80,0.3); }
+  100% { box-shadow: 0 0 20px rgba(76,175,80,0.5); }
+}
+
+.results-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+
+/* MP results */
+.mp-results { margin-bottom: 16px; }
+.mp-results h3 { font-family: var(--font-game); font-size: 1rem; margin-bottom: 12px; color: var(--c-primary); }
+.mp-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.mp-result-row.winner {
+  background: rgba(255,215,0,0.1);
+  border: 1px solid rgba(255,215,0,0.3);
+}
+.mp-result-name { font-weight: 600; }
+.mp-result-badge { font-size: 1.2rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   VICTORIA FINAL
+══════════════════════════════════════════════════════════════ */
+#screen-victory {
+  overflow: hidden;
+}
+.victory-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+.victory-container { position: relative; z-index: 1; }
+.victory-trophy {
+  font-size: 5rem;
+  animation: trophy-spin 2s ease-in-out infinite;
+  display: inline-block;
+}
+@keyframes trophy-spin {
+  0%, 100% { transform: rotate(-8deg) scale(1); }
+  50%       { transform: rotate(8deg) scale(1.1); }
+}
+.victory-title {
+  font-family: var(--font-game);
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, var(--c-gold), #FFE57F);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 8px 0;
+}
+.victory-sub { color: var(--t-muted); line-height: 1.6; margin-bottom: 24px; }
+
+/* ══════════════════════════════════════════════════════════════
+   RÉCORDS
+══════════════════════════════════════════════════════════════ */
+#screen-records {
+  background: var(--bg-dark);
+  padding-top: 80px;
+  overflow-y: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.records-container {
+  padding: 24px 32px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.record-level-title {
+  font-family: var(--font-game);
+  font-size: 0.9rem;
+  color: var(--c-primary);
+  letter-spacing: 2px;
+  margin: 20px 0 10px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.record-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+.record-row .record-val {
+  font-family: var(--font-game);
+  color: var(--c-gold);
+  font-size: 0.95rem;
+}
+.no-records { color: var(--t-muted); text-align: center; margin-top: 40px; font-size: 0.95rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIGURACIÓN
+══════════════════════════════════════════════════════════════ */
+#screen-settings {
+  background: var(--bg-dark);
+  padding-top: 80px;
+  overflow-y: auto;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.settings-container {
+  padding: 24px 32px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.setting-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 24px;
+}
+.setting-group h3 {
+  font-family: var(--font-game);
+  font-size: 0.85rem;
+  color: var(--c-primary);
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.9rem;
+  color: var(--t-muted);
+}
+.setting-row:last-child { border-bottom: none; }
+
+/* Toggle switch */
+.toggle { position: relative; width: 48px; height: 26px; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  transition: all var(--dur);
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  left: 3px; top: 3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--t-muted);
+  transition: all var(--dur);
+}
+.toggle input:checked + .toggle-slider { background: var(--c-primary); }
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(22px);
+  background: #fff;
+}
+
+/* Slider de volumen */
+.slider {
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  outline: none;
+  width: 140px;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(108,99,255,0.6);
+}
+
+/* Colores de personaje */
+.color-options { display: flex; gap: 8px; }
+.color-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all var(--dur);
+}
+.color-btn.active { border-color: #fff; transform: scale(1.15); }
+.color-btn:hover { transform: scale(1.1); }
+
+/* Controles */
+.controls-info { display: flex; flex-direction: column; gap: 6px; }
+.control-row { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+kbd {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-family: var(--font-game);
+  font-size: 0.75rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+══════════════════════════════════════════════════════════════ */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  color: var(--t-primary);
+  font-size: 0.9rem;
+  backdrop-filter: blur(8px);
+  animation: toast-in 0.3s var(--ease) forwards;
+  box-shadow: var(--shadow-card);
+}
+.toast.success { border-color: rgba(76,175,80,0.5); }
+.toast.error   { border-color: rgba(255,107,107,0.5); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(24px); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCROLLBAR PERSONALIZADO
+══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-primary); }
+
+</style>
+  <script>
+    window.addEventListener('error', (e) => {
+      console.error('Captured Global Error:', e.error || e.message);
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('Unhandled Promise Rejection:', e.reason);
+    });
+  </script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 1: MENÚ PRINCIPAL DEL PROTOTIPO
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-menu" class="screen active">
+    <div class="menu-bg-animation"></div>
+    <div class="menu-container">
+      <div class="logo-wrap">
+        <div class="logo-icon">🏃⚡</div>
+        <h1 class="logo-title">RUNNER<br/><span>CHALLENGE</span></h1>
+        <p class="logo-subtitle">Prototipo de Videojuego 2D — Avance 1</p>
+      </div>
+      <nav class="main-menu">
+        <button id="btn-play-solo" class="btn-menu btn-primary">
+          <span class="btn-icon">▶</span> JUGAR SOLO (DEMO)
+        </button>
+        <button id="btn-multiplayer" class="btn-menu btn-secondary">
+          <span class="btn-icon">👥</span> MULTIPLAYER LOCAL (2 JUGADORES)
+        </button>
+        <button id="btn-online" class="btn-menu btn-secondary">
+          <span class="btn-icon">🌐</span> MULTIPLAYER ONLINE (NUEVO)
+        </button>
+        <button id="btn-levels" class="btn-menu btn-outline">
+          <span class="btn-icon">📋</span> NIVELES (DEMO)
+        </button>
+        <button id="btn-records" class="btn-menu btn-outline">
+          <span class="btn-icon">🏆</span> RÉCORDS
+        </button>
+        <button id="btn-settings" class="btn-menu btn-outline">
+          <span class="btn-icon">⚙️</span> CONFIGURACIÓN
+        </button>
+      </nav>
+      <p class="version-tag">Demo Funcional · Avance de Proyecto Universitario</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 2: SELECCIÓN DE NIVELES
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-levels" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-levels">← Volver</button>
+      <h2 class="screen-title">SELECCIÓN DE NIVEL</h2>
+    </div>
+    <div class="levels-grid" id="levels-grid">
+      <!-- Generado dinámicamente por ui.js -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 3: MULTIPLAYER LOCAL - CONFIGURACIÓN PANTALLA DIVIDIDA
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-multiplayer" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-mp">← Volver</button>
+      <h2 class="screen-title">PANTALLA DIVIDIDA (2 JUGADORES)</h2>
+    </div>
+    
+    <div class="mp-local-container">
+      <div class="mp-mode-badge">
+        <span class="mp-mode-icon">🖥️⚡</span>
+        <span class="mp-mode-text">MODO MULTIJUGADOR LOCAL: PANTALLA DIVIDIDA (SPLIT-SCREEN)</span>
+      </div>
+
+      <div class="mp-local-columns">
+        <!-- Jugador 1 -->
+        <div class="mp-local-card p1-card">
+          <div class="player-avatar avatar-p1">P1</div>
+          <h3>PLAYER 1</h3>
+          <span class="player-color-tag" style="color: var(--c-cyan);">CYAN NEON</span>
+          
+          <div class="input-group">
+            <label for="mp-p1-name">Nombre:</label>
+            <input type="text" id="mp-p1-name" class="name-input" value="Player 1" maxlength="12" />
+          </div>
+          
+          <div class="controls-visual">
+            <div class="key-cap">W</div>
+            <span class="control-label">SALTAR</span>
+          </div>
+          <div class="controls-visual">
+            <div class="key-cap">S</div>
+            <span class="control-label">AGACHARSE</span>
+          </div>
+          <div class="controls-visual">
+            <div class="key-cap">D</div>
+            <span class="control-label">DASH</span>
+          </div>
+        </div>
+
+        <div class="mp-local-vs">
+          <span>VS</span>
+          <div class="mp-split-type-toggle" id="mp-split-type-group">
+            <label class="split-option-label">División:</label>
+            <div class="split-buttons">
+              <button type="button" class="btn-split-opt active" id="opt-split-h" data-split="horizontal" title="Pantalla dividida Arriba / Abajo">HORIZONTAL</button>
+              <button type="button" class="btn-split-opt" id="opt-split-v" data-split="vertical" title="Pantalla dividida Izquierda / Derecha">VERTICAL</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jugador 2 -->
+        <div class="mp-local-card p2-card">
+          <div class="player-avatar avatar-p2">P2</div>
+          <h3>PLAYER 2</h3>
+          <span class="player-color-tag" style="color: var(--c-accent);">MAGENTA NEON</span>
+          
+          <div class="input-group">
+            <label for="mp-p2-name">Nombre:</label>
+            <input type="text" id="mp-p2-name" class="name-input" value="Player 2" maxlength="12" />
+          </div>
+          
+          <div class="controls-visual">
+            <div class="key-cap">▲</div>
+            <span class="control-label">SALTAR</span>
+          </div>
+          <div class="controls-visual">
+            <div class="key-cap">▼</div>
+            <span class="control-label">AGACHARSE</span>
+          </div>
+          <div class="controls-visual">
+            <div class="key-cap">▶</div>
+            <span class="control-label">DASH</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selector de Nivel para Multijugador -->
+      <div class="mp-level-selector">
+        <label for="mp-select-level">Nivel de Carrera:</label>
+        <select id="mp-select-level" class="mp-select">
+          <option value="1">Nivel 1: Iniciación (Fácil)</option>
+          <option value="2">Nivel 2: Velocidad Media (Normal)</option>
+          <option value="3">Nivel 3: Desafío Final (Difícil)</option>
+        </select>
+      </div>
+      
+      <!-- Guía Rápida de Power-Ups e Habilidades -->
+      <div class="powerups-guide-panel">
+        <h4 class="guide-title">⚡ POTENCIADORES EN PISTA ⚡</h4>
+        <div class="guide-grid">
+          <div class="guide-item"><span class="g-icon">🛡️</span><strong>ESCUDO:</strong> Absorbe 1 impacto</div>
+          <div class="guide-item"><span class="g-icon">🧲</span><strong>IMÁN:</strong> Atrae monedas (8s)</div>
+          <div class="guide-item"><span class="g-icon">⚡</span><strong>TURBO:</strong> Invencible y destruye todo (4.5s)</div>
+          <div class="guide-item"><span class="g-icon">🦘</span><strong>DOBLE SALTO:</strong> Salta en el aire (10s)</div>
+        </div>
+        <p class="guide-tip">💡 <em>TIP MAESTRO:</em> Pulsa <strong>AGACHARSE en el aire</strong> para caer en picada rápida al piso.</p>
+      </div>
+
+      <div class="mp-local-actions">
+        <button id="btn-start-local-mp" class="btn-menu btn-primary">¡INICIAR CARRERA DIVIDIDA!</button>
+        <p class="lobby-hint">Cada jugador tendrá su propia cámara, carril y visión independiente en pantalla dividida.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 4: LOBBY ONLINE
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-lobby" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-lobby">← Volver</button>
+      <h2 class="screen-title">🌐 MULTIPLAYER ONLINE</h2>
+    </div>
+    
+    <div class="mp-local-container">
+      <div class="mp-mode-badge">
+        <span class="mp-mode-icon">🌍</span>
+        <span class="mp-mode-text">CONÉCTATE CON UN AMIGO VÍA RED</span>
+      </div>
+
+      <div class="mp-local-columns" style="display:flex; justify-content: center; gap: 40px; margin-top: 30px;">
+        
+        <!-- Crear Sala -->
+        <div class="mp-local-card p1-card" style="width: 100%; max-width: 300px;">
+          <h3>CREAR SALA</h3>
+          <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Inicia una partida y comparte el código.</p>
+          <button id="btn-create-room" class="btn-menu btn-primary">CREAR PARTIDA</button>
+          
+          <div id="room-code-display" class="hidden" style="margin-top: 20px;">
+            <p style="font-size: 0.85em; color: var(--c-muted); margin-bottom: 6px;">Tu código de sala:</p>
+            <h2 id="room-code-text" style="color: var(--c-cyan); letter-spacing: 3px; user-select: all; background: rgba(0,240,255,0.1); padding: 10px; border-radius: 8px; border: 1px dashed var(--c-cyan); margin-bottom: 12px;">---</h2>
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+              <button id="btn-copy-code" class="btn-menu btn-secondary" style="font-size: 0.8em; padding: 6px 12px;">📋 Copiar Código</button>
+              <button id="btn-copy-link" class="btn-menu btn-primary" style="font-size: 0.8em; padding: 6px 12px;">🔗 Copiar Enlace</button>
+            </div>
+            <p style="font-size: 0.85em; color: #ffd700; margin-top: 14px; animation: pulse 1.5s infinite;">⏳ Esperando que tu rival se una...</p>
+          </div>
+        </div>
+
+        <!-- Unirse a Sala -->
+        <div class="mp-local-card p2-card" style="width: 100%; max-width: 300px;">
+          <h3>UNIRSE A SALA</h3>
+          <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Ingresa el código que te compartió tu amigo.</p>
+          
+          <div class="input-group">
+            <input type="text" id="join-room-code" class="name-input" placeholder="CÓDIGO (ej. A1B2C3)" maxlength="6" style="text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; font-size: 1.1em;" />
+          </div>
+          <button id="btn-join-room" class="btn-menu btn-secondary" style="margin-top: 15px;">UNIRSE A LA SALA</button>
+          <p id="join-status-msg" style="font-size: 0.8em; color: #00f0ff; margin-top: 10px; min-height: 1.2em;"></p>
+        </div>
+      </div>
+      
+      <!-- Selector de Nivel (solo configurable por el Host) -->
+      <div class="mp-level-selector" id="online-level-selector" style="margin-top: 35px;">
+        <label for="mp-select-level-online" style="font-weight: 600; color: var(--c-cyan);">🏁 Nivel a competir (Elige el Host):</label>
+        <select id="mp-select-level-online" class="mp-select" style="max-width: 360px; margin: 8px auto; display: block;">
+          <!-- Poblado dinámicamente con los 20 niveles -->
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 5: CUENTA REGRESIVA
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-countdown" class="screen overlay-screen">
+    <div class="countdown-container">
+      <div class="countdown-number" id="countdown-number">3</div>
+      <p class="countdown-sub">¡Prepárense!</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 6: JUEGO (SOLO / PANTALLA DIVIDIDA MULTIJUGADOR)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-game" class="screen">
+    <!-- Barra superior unificada: Nivel, Cronómetro, Barra de Carrera Global, Controles -->
+    <header class="game-top-bar" id="game-top-bar">
+      <div class="top-bar-left">
+        <span class="hud-level-tag" id="hud-level-val">NIVEL 1</span>
+        <span class="hud-time-tag" id="hud-time-val">00:00</span>
+      </div>
+
+      <!-- Barra de progreso comparativa en tiempo real hacia la meta -->
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-bar-fill-p1"></div>
+          <div class="progress-bar-fill-p2 hidden" id="progress-bar-fill-p2"></div>
+          <span class="progress-icon progress-player" id="progress-icon-p1" style="color: var(--c-cyan)">🏃</span>
+          <span class="progress-icon progress-opponent hidden" id="progress-icon-p2" style="color: var(--c-accent)">🏃</span>
+          <span class="progress-icon progress-goal">🏁</span>
+        </div>
+      </div>
+
+      <div class="top-bar-right">
+        <button id="btn-toggle-split" class="btn-hud-tool hidden" title="Cambiar división de pantalla (Horizontal/Vertical)">
+          <span class="tool-icon">⬌</span> <span class="tool-text">DIVISIÓN</span>
+        </button>
+        <button id="btn-pause" class="btn-pause" title="Pausar juego">⏸</button>
+      </div>
+    </header>
+
+    <!-- Contenedor dinámico de Viewports (Solo / Pantalla Dividida) -->
+    <div class="viewports-container split-horizontal" id="viewports-container">
+
+      <!-- VIEWPORT PLAYER 1 (CYAN) -->
+      <div class="viewport-box viewport-p1" id="viewport-p1">
+        <div class="viewport-hud-overlay">
+          <div class="player-tag-badge p1-badge">
+            <span class="p-avatar">P1</span>
+            <span class="p-name" id="vp-p1-name">Player 1</span>
+            <span class="p-rank" id="vp-p1-rank">1º LUGAR</span>
+          </div>
+          <div class="viewport-stats">
+            <div class="vp-stat"><span class="lbl">PTS</span><span id="vp-p1-score" class="val">0</span></div>
+            <div class="vp-stat"><span class="lbl">🪙</span><span id="vp-p1-coins" class="val">0</span></div>
+            <div class="vp-stat"><span class="lbl">VIDAS</span><span id="vp-p1-lives" class="val">❤❤❤</span></div>
+          </div>
+          <div class="viewport-powerups" id="vp-p1-powerups"></div>
+        </div>
+        <canvas id="canvas-p1" class="viewport-canvas"></canvas>
+      </div>
+
+      <!-- DIVISOR NEÓN ENTRE PANTALLAS (Activo en Multijugador) -->
+      <div class="split-divider hidden" id="split-divider">
+        <div class="split-divider-line line-left"></div>
+        <div class="split-divider-badge" id="split-status-badge">⚡ P1 vs P2 ⚡</div>
+        <div class="split-divider-line line-right"></div>
+      </div>
+
+      <!-- VIEWPORT PLAYER 2 (MAGENTA - Activo en Multijugador) -->
+      <div class="viewport-box viewport-p2 hidden" id="viewport-p2">
+        <div class="viewport-hud-overlay">
+          <div class="player-tag-badge p2-badge">
+            <span class="p-avatar">P2</span>
+            <span class="p-name" id="vp-p2-name">Player 2</span>
+            <span class="p-rank" id="vp-p2-rank">2º LUGAR</span>
+          </div>
+          <div class="viewport-stats">
+            <div class="vp-stat"><span class="lbl">PTS</span><span id="vp-p2-score" class="val">0</span></div>
+            <div class="vp-stat"><span class="lbl">🪙</span><span id="vp-p2-coins" class="val">0</span></div>
+            <div class="vp-stat"><span class="lbl">VIDAS</span><span id="vp-p2-lives" class="val">❤❤❤</span></div>
+          </div>
+          <div class="viewport-powerups" id="vp-p2-powerups"></div>
+        </div>
+        <canvas id="canvas-p2" class="viewport-canvas"></canvas>
+      </div>
+
+    </div>
+
+    <!-- Controles Táctiles (Móviles) -->
+    <div class="touch-controls" id="touch-controls">
+      <div class="touch-left">
+        <button class="btn-touch" id="btn-touch-duck">⬇️</button>
+      </div>
+      <div class="touch-right">
+        <button class="btn-touch" id="btn-touch-dash">💨</button>
+        <button class="btn-touch" id="btn-touch-jump">⬆️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 7: PAUSA
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-pause" class="screen overlay-screen">
+    <div class="pause-container">
+      <h2 class="pause-title">⏸ PAUSA</h2>
+      <div class="pause-actions">
+        <button id="btn-resume" class="btn-menu btn-primary">▶ CONTINUAR</button>
+        <button id="btn-restart" class="btn-menu btn-outline">↺ REINICIAR</button>
+        <button id="btn-exit-game" class="btn-menu btn-danger">✖ SALIR AL MENÚ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 8: GAME OVER
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-gameover" class="screen overlay-screen">
+    <div class="gameover-container">
+      <div class="gameover-icon">💀</div>
+      <h2 class="gameover-title">FIN DE LA CARRERA</h2>
+      <p class="gameover-sub" id="go-message">¡El jugador se ha quedado sin vidas!</p>
+      
+      <div class="pause-actions">
+        <button id="btn-go-retry" class="btn-menu btn-primary">↺ REINTENTAR</button>
+        <button id="btn-go-menu" class="btn-menu btn-outline">🏠 MENÚ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 9: RESULTADOS DEL NIVEL
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-results" class="screen overlay-screen">
+    <div class="results-container">
+      <div class="results-header">
+        <div class="results-badge" id="results-badge">🥇</div>
+        <h2 class="results-title" id="results-title">CARRERA COMPLETADA</h2>
+      </div>
+
+      <!-- Resultados comparativos de los jugadores -->
+      <div class="results-comparison">
+        <!-- Columna P1 -->
+        <div class="result-col" id="res-p1-col">
+          <h3 style="color: var(--c-cyan)">PLAYER 1</h3>
+          <div class="res-stat-item"><span>Posición:</span><span id="res-p1-pos" class="highlight">WINNER</span></div>
+          <div class="res-stat-item"><span>Tiempo:</span><span id="res-p1-time">00:00</span></div>
+          <div class="res-stat-item"><span>Monedas:</span><span id="res-p1-coins">0</span></div>
+          <div class="res-stat-item"><span>Puntos:</span><span id="res-p1-score">0</span></div>
+        </div>
+
+        <div class="res-divider" id="res-mid-divider"></div>
+
+        <!-- Columna P2 -->
+        <div class="result-col hidden" id="res-p2-col">
+          <h3 style="color: var(--c-accent)">PLAYER 2</h3>
+          <div class="res-stat-item"><span>Posición:</span><span id="res-p2-pos" class="highlight">RUNNER-UP</span></div>
+          <div class="res-stat-item"><span>Tiempo:</span><span id="res-p2-time">00:00</span></div>
+          <div class="res-stat-item"><span>Monedas:</span><span id="res-p2-coins">0</span></div>
+          <div class="res-stat-item"><span>Puntos:</span><span id="res-p2-score">0</span></div>
+        </div>
+      </div>
+
+      <!-- Banner de desbloqueo -->
+      <div class="unlock-banner" id="unlock-banner">
+        <span>🔓 ¡NIVEL <span id="unlocked-level">2</span> DESBLOQUEADO!</span>
+      </div>
+
+      <div class="results-actions">
+        <button id="btn-res-next" class="btn-menu btn-primary">SIGUIENTE NIVEL ▶</button>
+        <button id="btn-res-retry" class="btn-menu btn-outline">↺ REINTENTAR</button>
+        <button id="btn-res-menu" class="btn-menu btn-outline">🏠 MENÚ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 10: VICTORIA FINAL
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-victory" class="screen overlay-screen">
+    <canvas id="victory-canvas" class="victory-canvas"></canvas>
+    <div class="victory-container">
+      <div class="victory-trophy">🏆</div>
+      <h2 class="victory-title">¡FELICITACIONES!</h2>
+      <p class="victory-sub">¡Completaron todos los niveles de Neon Run!</p>
+      
+      <div class="victory-summary" id="victory-summary-content">
+        <!-- Llenado dinámicamente -->
+      </div>
+      
+      <button id="btn-vic-menu" class="btn-menu btn-primary">🏠 MENÚ PRINCIPAL</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 11: RÉCORDS
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-records" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-records">← Volver</button>
+      <h2 class="screen-title">🏆 RÉCORDS</h2>
+    </div>
+    <div class="records-container" id="records-container">
+      <!-- Generado dinámicamente por ui.js -->
+    </div>
+    <button id="btn-clear-records" class="btn-menu btn-danger btn-small">Borrar Récords</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA 12: CONFIGURACIÓN
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-settings" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-settings">← Volver</button>
+      <h2 class="screen-title">⚙️ CONFIGURACIÓN</h2>
+    </div>
+    <div class="settings-container">
+      <div class="setting-group">
+        <h3>Jugador 1 (Solo)</h3>
+        <div class="setting-row">
+          <label for="setting-name">Nombre</label>
+          <input type="text" id="setting-name" class="name-input" maxlength="12" placeholder="Tu nombre" />
+        </div>
+        <div class="setting-row">
+          <label>Color</label>
+          <div class="color-options" id="color-options">
+            <button class="color-btn active" data-color="#4FC3F7" style="background:#4FC3F7"></button>
+            <button class="color-btn" data-color="#EF5350" style="background:#EF5350"></button>
+            <button class="color-btn" data-color="#66BB6A" style="background:#66BB6A"></button>
+            <button class="color-btn" data-color="#FFA726" style="background:#FFA726"></button>
+            <button class="color-btn" data-color="#AB47BC" style="background:#AB47BC"></button>
+          </div>
+        </div>
+      </div>
+      <div class="setting-group">
+        <h3>Audio</h3>
+        <div class="setting-row">
+          <label for="setting-music">Música de fondo</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-music" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label for="setting-sfx">Efectos de sonido</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-sfx" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <label for="setting-volume">Volumen</label>
+          <input type="range" id="setting-volume" min="0" max="100" value="70" class="slider" />
+        </div>
+      </div>
+      <button id="btn-save-settings" class="btn-menu btn-primary">💾 GUARDAR</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       NOTIFICACIONES TOAST
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="toast-container"></div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SCRIPTS — Cargados localmente en orden de dependencias
+  ═══════════════════════════════════════════════════════════════ -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    if (typeof io === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.socket.io/4.8.4/socket.io.min.js';
+      document.head.appendChild(s);
+    }
+  </script>
+  <script src="js/network.js"></script>
+  <script>
+
+// === audio.js ===
+/**
+ * audio.js — Sistema de audio de Runner Challenge
+ * 
+ * Utiliza la Web Audio API para generar sonidos proceduralmente,
+ * sin necesidad de archivos de audio externos (.mp3/.wav).
+ * 
+ * Sonidos disponibles:
+ *  - jump:    al saltar
+ *  - coin:    al recoger moneda
+ *  - hit:     al chocar con obstáculo
+ *  - goal:    al llegar a la meta
+ *  - gameover: al quedarse sin vidas
+ *  - levelup:  al desbloquear nivel
+ * 
+ * Música de fondo: tono ambient generado con osciladores.
+ */
+
+const AudioManager = (() => {
+  let ctx = null;           // AudioContext
+  let masterGain = null;    // Volumen maestro
+  let musicNodes = [];      // Nodos de música activos
+  let musicEnabled = true;
+  let sfxEnabled   = true;
+  let volume       = 0.7;
+
+  /**
+   * Inicializa el AudioContext.
+   * Debe llamarse tras un gesto del usuario (click/keypress).
+   */
+  function init() {
+    if (ctx) return;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = ctx.createGain();
+      masterGain.gain.value = volume;
+      masterGain.connect(ctx.destination);
+    } catch (e) {
+      console.warn('[Audio] Web Audio API no disponible:', e);
+    }
+  }
+
+  // Reanudar contexto si estaba suspendido (política autoplay)
+  function resume() {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+
+  // ── Generador de sonido genérico ─────────────────────────────────────────
+  /**
+   * Crea y reproduce un oscilador con envolvente de amplitud.
+   * @param {number} freq       Frecuencia inicial en Hz
+   * @param {string} type       Tipo de onda: 'sine'|'square'|'sawtooth'|'triangle'
+   * @param {number} duration   Duración total en segundos
+   * @param {number} gainPeak   Amplitud máxima (0-1)
+   * @param {number} freqEnd    Frecuencia final (para pitch bend)
+   */
+  function playTone(freq, type = 'sine', duration = 0.2, gainPeak = 0.4, freqEnd = null) {
+    if (!ctx || !sfxEnabled) return;
+    resume();
+
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (freqEnd !== null) {
+      osc.frequency.linearRampToValueAtTime(freqEnd, ctx.currentTime + duration);
+    }
+
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(gainPeak, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+    osc.connect(gain);
+    gain.connect(masterGain);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  }
+
+  // ── Sonidos del juego ─────────────────────────────────────────────────────
+  const sounds = {
+    /** Salto: pitch ascendente corto */
+    jump() {
+      playTone(280, 'sine', 0.15, 0.3, 520);
+    },
+
+    /** Recoger moneda: nota aguda brillante */
+    coin() {
+      playTone(880, 'sine', 0.12, 0.35, 1100);
+      setTimeout(() => playTone(1100, 'sine', 0.1, 0.25), 80);
+    },
+
+    /** Golpe con obstáculo: ruido grave */
+    hit() {
+      playTone(120, 'sawtooth', 0.3, 0.5, 60);
+      playTone(80,  'square',   0.2, 0.3, 40);
+    },
+
+    /** Llegada a la meta: fanfarria ascendente */
+    goal() {
+      const notes = [440, 554, 659, 880];
+      notes.forEach((f, i) => {
+        setTimeout(() => playTone(f, 'sine', 0.2, 0.5), i * 100);
+      });
+    },
+
+    /** Game over: descenso lento */
+    gameover() {
+      playTone(440, 'sawtooth', 0.4, 0.4, 220);
+      setTimeout(() => playTone(220, 'sawtooth', 0.6, 0.4, 110), 300);
+    },
+
+    /** Desbloqueo de nivel: acorde brillante */
+    levelup() {
+      [523, 659, 784, 1047].forEach((f, i) => {
+        setTimeout(() => playTone(f, 'triangle', 0.3, 0.4), i * 80);
+      });
+    },
+
+    /** Cuenta regresiva: tick */
+    tick() {
+      playTone(600, 'square', 0.1, 0.3);
+    },
+
+    /** Inicio de carrera: ¡CORRE! */
+    go() {
+      playTone(880, 'sine', 0.4, 0.6, 880);
+      setTimeout(() => playTone(1100, 'sine', 0.3, 0.5), 100);
+    },
+
+    /** Recoger Power-Up: arpegio brillante ascendente */
+    powerup() {
+      const notes = [523, 659, 784, 1046];
+      notes.forEach((f, i) => {
+        setTimeout(() => playTone(f, 'sine', 0.15, 0.4), i * 60);
+      });
+    },
+
+    /** Romper Escudo: distorsión eléctrica y crujido */
+    shieldBreak() {
+      playTone(340, 'sawtooth', 0.25, 0.5, 120);
+      playTone(180, 'square',   0.2,  0.4, 60);
+    },
+
+    /** Turbo activado: barrido ascendente supersónico */
+    turbo() {
+      playTone(300, 'sawtooth', 0.35, 0.45, 900);
+      setTimeout(() => playTone(600, 'sine', 0.25, 0.35, 1200), 120);
+    },
+
+    /** Doble salto: resorte ágil en el aire */
+    doubleJump() {
+      playTone(420, 'sine', 0.18, 0.4, 760);
+      setTimeout(() => playTone(760, 'sine', 0.12, 0.3, 980), 60);
+    },
+
+    /** Imán activado: resonancia magnética */
+    magnet() {
+      playTone(700, 'triangle', 0.2, 0.35, 880);
+      setTimeout(() => playTone(880, 'triangle', 0.2, 0.35, 1100), 80);
+    },
+
+    /** Caída rápida en picada: corte de aire descendente */
+    whoosh() {
+      playTone(550, 'sawtooth', 0.16, 0.35, 180);
+    },
+
+    /** Destrucción de obstáculo con Turbo: explosión sónica */
+    smash() {
+      playTone(160, 'sawtooth', 0.2, 0.5, 60);
+      playTone(280, 'square',   0.15, 0.4, 80);
+    }
+  };
+
+  // ── Música de fondo ───────────────────────────────────────────────────────
+  /**
+   * Genera música ambient de fondo con osciladores LFO.
+   * Muy simple, solo para ambiente.
+   */
+  function startMusic() {
+    if (!ctx || !musicEnabled || musicNodes.length > 0) return;
+    resume();
+
+    // Notas base de la escala (loop cada ~4 beats)
+    const baseFreqs = [130.81, 164.81, 196.00, 261.63]; // C3 E3 G3 C4
+
+    baseFreqs.forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const lfo  = ctx.createOscillator();
+      const lfoG = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.15 + i * 0.05; // modulación lenta
+      lfoG.gain.value = 0.02;
+
+      lfo.connect(lfoG);
+      lfoG.connect(osc.frequency);
+
+      gain.gain.value = 0.03; // volumen bajo (música de fondo)
+      osc.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start();
+      lfo.start();
+      musicNodes.push(osc, lfo, gain, lfoG);
+    });
+  }
+
+  function stopMusic() {
+    musicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+    musicNodes = [];
+  }
+
+  // ── API pública ───────────────────────────────────────────────────────────
+  return {
+    init,
+    resume,
+
+    play(soundName) {
+      if (!sfxEnabled) return;
+      if (sounds[soundName]) sounds[soundName]();
+    },
+
+    startMusic,
+    stopMusic,
+
+    setVolume(val) {
+      volume = Math.max(0, Math.min(1, val));
+      if (masterGain) masterGain.gain.value = volume;
+    },
+
+    setMusicEnabled(val) {
+      musicEnabled = val;
+      if (!val) stopMusic();
+    },
+
+    setSfxEnabled(val) { sfxEnabled = val; },
+
+    loadSettings(settings) {
+      this.setVolume(settings.volume ?? 0.7);
+      this.setMusicEnabled(settings.music ?? true);
+      this.setSfxEnabled(settings.sfx ?? true);
+    }
+  };
+})();
+
+
+// === score.js ===
+/**
+ * score.js — Sistema de Puntuación y Récords del Prototipo
+ * 
+ * Código simple y directo para explicar al profesor:
+ *  - Suma puntos por distancia recorrida y monedas recogidas (+50 pts c/u).
+ *  - Guarda y recupera récords por nivel usando localStorage del navegador.
+ *  - Desbloquea el siguiente nivel al cruzar la meta.
+ */
+
+const ScoreManager = (() => {
+  const STORAGE_KEY = 'runner_prototype_save';
+
+  const DEFAULT_DATA = {
+    unlockedLevels: [1],
+    records: { 1: 0, 2: 0, 3: 0 },
+    bestTimes: { 1: null, 2: null, 3: null },
+    settings: { music: true, sfx: true }
+  };
+
+  // Cargar desde localStorage
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : structuredClone(DEFAULT_DATA);
+    } catch (e) {
+      return structuredClone(DEFAULT_DATA);
+    }
+  }
+
+  // Guardar en localStorage
+  function save(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn('[Score] Error al guardar:', e);
+    }
+  }
+
+  let data = load();
+
+  /**
+   * [EXPLICACIÓN PROFESOR: Formato de Tiempo]
+   * Convierte segundos transcurridos en formato legible MM:SS.
+   */
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  /**
+   * [EXPLICACIÓN PROFESOR: Guardar Resultados y Desbloqueo]
+   * Compara si se batió récord y desbloquea el siguiente nivel.
+   */
+  function saveResults({ level, score, time }) {
+    let newRecord = false;
+    let unlockedNext = false;
+
+    if (!data.records[level] || score > data.records[level]) {
+      data.records[level] = score;
+      newRecord = true;
+    }
+    if (!data.bestTimes[level] || time < data.bestTimes[level]) {
+      data.bestTimes[level] = time;
+    }
+
+    // Desbloquear siguiente nivel (hasta el total de niveles)
+    const next = level + 1;
+    const maxLevels = typeof LevelConfig !== 'undefined' ? LevelConfig.TOTAL_LEVELS : 20;
+    if (next <= maxLevels && !data.unlockedLevels.includes(next)) {
+      data.unlockedLevels.push(next);
+      unlockedNext = true;
+    }
+
+    save(data);
+    return { newRecord, unlockedNext };
+  }
+
+  function isLevelUnlocked(levelNum) {
+    return data.unlockedLevels.includes(levelNum);
+  }
+
+  function getRecord(level) {
+    return data.records[level] || 0;
+  }
+
+  function getBestTime(level) {
+    return data.bestTimes[level];
+  }
+
+  function getSettings() {
+    return data.settings;
+  }
+
+  function saveSettings(s) {
+    Object.assign(data.settings, s);
+    save(data);
+  }
+
+  function clearAll() {
+    data = structuredClone(DEFAULT_DATA);
+    save(data);
+  }
+
+  return {
+    formatTime,
+    saveResults,
+    isLevelUnlocked,
+    getRecord,
+    getBestTime,
+    getSettings,
+    saveSettings,
+    clearAll,
+    getPlayerName: () => 'Jugador 1'
+  };
+})();
+
+
+// === levels.js ===
+/**
+ * levels.js — Configuración de los 20 Niveles de Runner Challenge: Neon Run
+ * 
+ * 20 niveles equilibrados con progresión matemática justa:
+ *  - Velocidades suaves de 5.0 px/frame hasta 9.6 px/frame en el nivel final.
+ *  - Distancia mínima entre obstáculos (minObstacleGap) calculada para permitir
+ *    tiempo suficiente de salto, aterrizaje, agacharse y caída rápida (fast-fall).
+ *  - Físicas adaptadas (jumpForce y gravity) para mantener el control a cualquier velocidad.
+ *  - Temáticas y paletas de colores Synthwave/Cyberpunk únicas para cada nivel.
+ */
+
+const LevelConfig = (() => {
+
+  const LEVELS = [
+    {
+      number:         1,
+      name:           'Nivel 1: Neon Highway',
+      difficulty:     'Fácil',
+      scrollSpeed:    5.0,
+      jumpForce:      -14.0,
+      gravity:        0.75,
+      levelLength:    2600,
+      minObstacleGap: 380,
+      stars:          1,
+      groundColor:    '#0B0D1B',
+      groundLine:     '#00F0FF'
+    },
+    {
+      number:         2,
+      name:           'Nivel 2: Cyber Alley',
+      difficulty:     'Fácil',
+      scrollSpeed:    5.3,
+      jumpForce:      -14.0,
+      gravity:        0.75,
+      levelLength:    2900,
+      minObstacleGap: 370,
+      stars:          1,
+      groundColor:    '#0A101D',
+      groundLine:     '#00E5FF'
+    },
+    {
+      number:         3,
+      name:           'Nivel 3: Retro Grid',
+      difficulty:     'Fácil',
+      scrollSpeed:    5.6,
+      jumpForce:      -14.2,
+      gravity:        0.76,
+      levelLength:    3200,
+      minObstacleGap: 360,
+      stars:          1,
+      groundColor:    '#081415',
+      groundLine:     '#00FF99'
+    },
+    {
+      number:         4,
+      name:           'Nivel 4: Techno Core',
+      difficulty:     'Normal',
+      scrollSpeed:    5.9,
+      jumpForce:      -14.2,
+      gravity:        0.76,
+      levelLength:    3500,
+      minObstacleGap: 350,
+      stars:          2,
+      groundColor:    '#07140B',
+      groundLine:     '#39FF14'
+    },
+    {
+      number:         5,
+      name:           'Nivel 5: Synthwave Sunset',
+      difficulty:     'Normal',
+      scrollSpeed:    6.2,
+      jumpForce:      -14.4,
+      gravity:        0.77,
+      levelLength:    3800,
+      minObstacleGap: 345,
+      stars:          2,
+      groundColor:    '#171207',
+      groundLine:     '#FFD700'
+    },
+    {
+      number:         6,
+      name:           'Nivel 6: Digital Mirage',
+      difficulty:     'Normal',
+      scrollSpeed:    6.5,
+      jumpForce:      -14.4,
+      gravity:        0.77,
+      levelLength:    4100,
+      minObstacleGap: 340,
+      stars:          2,
+      groundColor:    '#170F05',
+      groundLine:     '#FFA500'
+    },
+    {
+      number:         7,
+      name:           'Nivel 7: Pulse Station',
+      difficulty:     'Normal',
+      scrollSpeed:    6.8,
+      jumpForce:      -14.6,
+      gravity:        0.78,
+      levelLength:    4400,
+      minObstacleGap: 335,
+      stars:          2,
+      groundColor:    '#17080B',
+      groundLine:     '#FF7700'
+    },
+    {
+      number:         8,
+      name:           'Nivel 8: Voltage District',
+      difficulty:     'Difícil',
+      scrollSpeed:    7.0,
+      jumpForce:      -14.6,
+      gravity:        0.78,
+      levelLength:    4700,
+      minObstacleGap: 330,
+      stars:          3,
+      groundColor:    '#170512',
+      groundLine:     '#FF007F'
+    },
+    {
+      number:         9,
+      name:           'Nivel 9: Cyber Rooftops',
+      difficulty:     'Difícil',
+      scrollSpeed:    7.2,
+      jumpForce:      -14.8,
+      gravity:        0.79,
+      levelLength:    5000,
+      minObstacleGap: 325,
+      stars:          3,
+      groundColor:    '#180517',
+      groundLine:     '#FF1493'
+    },
+    {
+      number:         10,
+      name:           'Nivel 10: Matrix Overdrive',
+      difficulty:     'Difícil',
+      scrollSpeed:    7.5,
+      jumpForce:      -14.8,
+      gravity:        0.79,
+      levelLength:    5300,
+      minObstacleGap: 320,
+      stars:          3,
+      groundColor:    '#110518',
+      groundLine:     '#BA55D3'
+    },
+    {
+      number:         11,
+      name:           'Nivel 11: Quantum Tunnel',
+      difficulty:     'Difícil',
+      scrollSpeed:    7.7,
+      jumpForce:      -15.0,
+      gravity:        0.80,
+      levelLength:    5600,
+      minObstacleGap: 320,
+      stars:          3,
+      groundColor:    '#0C0518',
+      groundLine:     '#9933FF'
+    },
+    {
+      number:         12,
+      name:           'Nivel 12: Hologram Canyon',
+      difficulty:     'Muy Difícil',
+      scrollSpeed:    7.9,
+      jumpForce:      -15.0,
+      gravity:        0.80,
+      levelLength:    5900,
+      minObstacleGap: 315,
+      stars:          4,
+      groundColor:    '#090518',
+      groundLine:     '#7B2CBF'
+    },
+    {
+      number:         13,
+      name:           'Nivel 13: Laser Facility',
+      difficulty:     'Muy Difícil',
+      scrollSpeed:    8.1,
+      jumpForce:      -15.2,
+      gravity:        0.81,
+      levelLength:    6200,
+      minObstacleGap: 310,
+      stars:          4,
+      groundColor:    '#180509',
+      groundLine:     '#FF0055'
+    },
+    {
+      number:         14,
+      name:           'Nivel 14: Dark Cybercity',
+      difficulty:     'Muy Difícil',
+      scrollSpeed:    8.3,
+      jumpForce:      -15.2,
+      gravity:        0.81,
+      levelLength:    6500,
+      minObstacleGap: 310,
+      stars:          4,
+      groundColor:    '#170505',
+      groundLine:     '#E63946'
+    },
+    {
+      number:         15,
+      name:           'Nivel 15: Overclock Sector',
+      difficulty:     'Muy Difícil',
+      scrollSpeed:    8.5,
+      jumpForce:      -15.4,
+      gravity:        0.82,
+      levelLength:    6800,
+      minObstacleGap: 305,
+      stars:          4,
+      groundColor:    '#180A05',
+      groundLine:     '#FF4800'
+    },
+    {
+      number:         16,
+      name:           'Nivel 16: Zero Gravity',
+      difficulty:     'Extremo',
+      scrollSpeed:    8.7,
+      jumpForce:      -15.4,
+      gravity:        0.82,
+      levelLength:    7100,
+      minObstacleGap: 300,
+      stars:          5,
+      groundColor:    '#051817',
+      groundLine:     '#00FFF5'
+    },
+    {
+      number:         17,
+      name:           'Nivel 17: Hyperdrive Lab',
+      difficulty:     'Extremo',
+      scrollSpeed:    8.9,
+      jumpForce:      -15.6,
+      gravity:        0.83,
+      levelLength:    7400,
+      minObstacleGap: 300,
+      stars:          5,
+      groundColor:    '#051813',
+      groundLine:     '#05F1CD'
+    },
+    {
+      number:         18,
+      name:           'Nivel 18: Vortex Matrix',
+      difficulty:     'Extremo',
+      scrollSpeed:    9.1,
+      jumpForce:      -15.6,
+      gravity:        0.83,
+      levelLength:    7800,
+      minObstacleGap: 295,
+      stars:          5,
+      groundColor:    '#171605',
+      groundLine:     '#FFE600'
+    },
+    {
+      number:         19,
+      name:           'Nivel 19: Singularity',
+      difficulty:     'Demencial',
+      scrollSpeed:    9.3,
+      jumpForce:      -15.8,
+      gravity:        0.84,
+      levelLength:    8200,
+      minObstacleGap: 290,
+      stars:          5,
+      groundColor:    '#130518',
+      groundLine:     '#E0AAFF'
+    },
+    {
+      number:         20,
+      name:           'Nivel 20: Omega Neon (Final)',
+      difficulty:     'Mítico',
+      scrollSpeed:    9.6,
+      jumpForce:      -16.0,
+      gravity:        0.85,
+      levelLength:    8800,
+      minObstacleGap: 285,
+      stars:          5,
+      groundColor:    '#101018',
+      groundLine:     '#FFFFFF'
+    }
+  ];
+
+  return {
+    getLevelData(num) {
+      return LEVELS.find(l => l.number === num) || LEVELS[0];
+    },
+    getAllLevels() {
+      return LEVELS;
+    },
+    TOTAL_LEVELS: LEVELS.length
+  };
+})();
+
+
+// === collision.js ===
+/**
+ * collision.js — Sistema de detección de colisiones 2D
+ * 
+ * Responsabilidades:
+ *  - Detección AABB precisa en coordenadas de mundo
+ *  - Margen de tolerancia elástico para jugabilidad fluida
+ *  - Detección circular para recolección de monedas / ítems
+ */
+
+const CollisionSystem = (() => {
+
+  /**
+   * [EXPLICACIÓN: Detección de Colisiones AABB (Axis-Aligned Bounding Box)]
+   * Comprueba si dos rectángulos alineados a los ejes se intersectan en 2D.
+   * La condición matemática de colisión requiere que se solapen simultáneamente en X e Y:
+   * (ax < bx + bw) && (ax + aw > bx) && (ay < by + bh) && (ay + ah > by)
+   * El parámetro 'shrink' reduce el área efectiva del obstáculo para dar un margen
+   * de tolerancia ("coyote time" / perdón de impacto) y evitar frustración al jugador.
+   */
+  function checkAABB(a, b, shrink = 6) {
+    const ax = a.x + shrink;
+    const ay = a.y + shrink;
+    const aw = Math.max(2, a.w - shrink * 2);
+    const ah = Math.max(2, a.h - shrink * 2);
+
+    return (
+      ax < b.x + b.w &&
+      ax + aw > b.x &&
+      ay < b.y + b.h &&
+      ay + ah > b.y
+    );
+  }
+
+  /**
+   * [EXPLICACIÓN: Colisión con Obstáculos]
+   * Modifica la caja de colisión (Hitbox) del jugador en tiempo real:
+   * Si está agachado (isDucking), su altura se reduce a duckHeight para
+   * permitir pasar por debajo de obstáculos altos.
+   */
+  function checkPlayerVsObstacles(player, obstacles) {
+    const px = player.worldX !== undefined ? player.worldX : player.x;
+    const currentH = player.isDucking ? player.duckHeight : player.h;
+    const pRect = {
+      x: px,
+      y: player.y,
+      w: player.w,
+      h: currentH
+    };
+
+    for (const obs of obstacles) {
+      const ox = obs.worldX !== undefined ? obs.worldX : obs.screenX;
+      const oRect = { x: ox, y: obs.y, w: obs.w, h: obs.h };
+      if (checkAABB(pRect, oRect, 6)) return obs;
+    }
+    return null;
+  }
+
+  /**
+   * [EXPLICACIÓN: Recolección de Monedas y Prevención de Tunneling]
+   * 1. Anti-tunneling: a altas velocidades o durante un Dash, el jugador podría
+   *    atravesar una moneda entre un frame y otro. Para evitarlo, estiramos la caja
+   *    hacia atrás por la distancia recorrida en ese frame.
+   * 2. Tolerancia negativa (-20px): expande el área de captura para que recoger monedas
+   *    se sienta suave y gratificante.
+   */
+  function checkPlayerVsCoins(player, coins) {
+    const px = player.worldX !== undefined ? player.worldX : player.x;
+    const currentH = player.isDucking ? player.duckHeight : player.h;
+    
+    // Caja estirada hacia atrás para cubrir la trayectoria del frame actual
+    const speed = player.currentSpeed || 0;
+    const pRect = {
+      x: px - speed,
+      y: player.y,
+      w: player.w + speed,
+      h: currentH
+    };
+
+    for (const coin of coins) {
+      if (coin.collected) continue;
+      
+      const cx = coin.worldX !== undefined ? coin.worldX : coin.screenX;
+      const cRect = { 
+        x: cx - coin.radius, 
+        y: coin.y - coin.radius, 
+        w: coin.radius * 2, 
+        h: coin.radius * 2 
+      };
+
+      // Tolerancia negativa (-20) = caja expandida para magnetismo/recolección generosa
+      if (checkAABB(pRect, cRect, -20)) return coin;
+    }
+    return null;
+  }
+
+  /**
+   * [EXPLICACIÓN: Detección de Colisión con Power-Ups]
+   * Detecta contacto con cápsulas de power-ups con margen generoso.
+   */
+  function checkPlayerVsPowerUps(player, powerups) {
+    if (!powerups || powerups.length === 0) return null;
+    const px = player.worldX !== undefined ? player.worldX : player.x;
+    const currentH = player.isDucking ? player.duckHeight : player.h;
+    const speed = player.currentSpeed || 0;
+    const pRect = {
+      x: px - speed,
+      y: player.y,
+      w: player.w + speed,
+      h: currentH
+    };
+
+    for (const item of powerups) {
+      if (item.collected) continue;
+      const iRect = {
+        x: item.worldX - item.radius,
+        y: item.y - item.radius,
+        w: item.radius * 2,
+        h: item.radius * 2
+      };
+      if (checkAABB(pRect, iRect, -16)) return item;
+    }
+    return null;
+  }
+
+  return {
+    checkAABB,
+    checkPlayerVsObstacles,
+    checkPlayerVsCoins,
+    checkPlayerVsPowerUps
+  };
+})();
+
+
+// === particles.js ===
+/**
+ * particles.js — Sistema de Efectos Visuales y "Game Juice"
+ * 
+ * Gestiona partículas en coordenadas de mundo renderizadas a través de la cámara:
+ *  - Chispas de impacto y salto
+ *  - Polvo y ondas expansivas (shockwaves) al caer/romper escudo
+ *  - Shards/fragmentos al destruir obstáculos con Turbo
+ *  - Textos flotantes de puntuación y power-ups con brillo de neón
+ */
+
+class ParticleSystem {
+  constructor() {
+    this.particles = [];
+    this.floatingTexts = [];
+    this.shockwaves = [];
+  }
+
+  clear() {
+    this.particles = [];
+    this.floatingTexts = [];
+    this.shockwaves = [];
+  }
+
+  /**
+   * Polvo al aterrizar o deslizarse
+   */
+  spawnDust(worldX, y, color = '#00F0FF', count = 5) {
+    for (let i = 0; i < count; i++) {
+      this.particles.push({
+        type: 'dust',
+        worldX: worldX + (Math.random() - 0.5) * 16,
+        y: y - Math.random() * 4,
+        vx: (Math.random() - 0.5) * 3.5,
+        vy: -Math.random() * 2.2 - 0.5,
+        radius: 3 + Math.random() * 3,
+        life: 22,
+        maxLife: 22,
+        color
+      });
+    }
+  }
+
+  /**
+   * Chispas luminosas de alta energía
+   */
+  spawnSparks(worldX, y, color = '#FF007F', count = 10, speedMult = 1) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (2 + Math.random() * 5) * speedMult;
+      this.particles.push({
+        type: 'spark',
+        worldX,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity: 0.18,
+        radius: 2 + Math.random() * 2,
+        life: 28,
+        maxLife: 28,
+        color
+      });
+    }
+  }
+
+  /**
+   * Anillo de onda expansiva (Shockwave)
+   */
+  spawnShockwave(worldX, y, color = '#00F0FF', maxRadius = 36) {
+    this.shockwaves.push({
+      worldX,
+      y,
+      radius: 4,
+      maxRadius,
+      lineWidth: 3.5,
+      color,
+      life: 20,
+      maxLife: 20
+    });
+  }
+
+  /**
+   * Fragmentos de rotura al destruir obstáculo con Turbo
+   */
+  spawnShatter(worldX, y, w = 30, h = 30, color = '#FF3366', count = 12) {
+    for (let i = 0; i < count; i++) {
+      this.particles.push({
+        type: 'shatter',
+        worldX: worldX + Math.random() * w,
+        y: y + Math.random() * h,
+        vx: (Math.random() - 0.4) * 8 + 3,
+        vy: (Math.random() - 0.5) * 8 - 2,
+        rot: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.4,
+        size: 3 + Math.random() * 5,
+        gravity: 0.25,
+        life: 30,
+        maxLife: 30,
+        color
+      });
+    }
+  }
+
+  /**
+   * Texto flotante de impacto (p. ej. "¡ESCUDO!", "¡TURBO!", "+100")
+   */
+  spawnFloatingText(worldX, y, text, color = '#00F0FF', fontSize = 14) {
+    this.floatingTexts.push({
+      worldX,
+      y,
+      text,
+      color,
+      fontSize,
+      vy: -1.4,
+      scale: 1.3,
+      life: 42,
+      maxLife: 42
+    });
+  }
+
+  update() {
+    // 1. Partículas
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.worldX += p.vx;
+      p.y += p.vy;
+      if (p.gravity) p.vy += p.gravity;
+      if (p.rot !== undefined) p.rot += p.vRot;
+      p.life--;
+      if (p.life <= 0) this.particles.splice(i, 1);
+    }
+
+    // 2. Shockwaves
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const s = this.shockwaves[i];
+      s.radius += (s.maxRadius - s.radius) * 0.22;
+      s.life--;
+      if (s.life <= 0) this.shockwaves.splice(i, 1);
+    }
+
+    // 3. Textos flotantes
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const t = this.floatingTexts[i];
+      t.y += t.vy;
+      t.vy *= 0.96;
+      if (t.scale > 1.0) t.scale -= 0.03;
+      t.life--;
+      if (t.life <= 0) this.floatingTexts.splice(i, 1);
+    }
+  }
+
+  /**
+   * Dibuja los efectos visuales proyectados en el viewport de la cámara
+   */
+  draw(ctx, camera) {
+    const W = ctx.canvas.width;
+
+    // 1. Dibujar shockwaves
+    for (const s of this.shockwaves) {
+      const sx = camera ? camera.worldToScreenX(s.worldX) : s.worldX;
+      if (sx < -60 || sx > W + 60) continue;
+
+      const alpha = Math.max(0, s.life / s.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.lineWidth * alpha;
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.ellipse(sx, s.y, s.radius * 1.2, s.radius * 0.6, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 2. Dibujar partículas (dust, spark, shatter)
+    for (const p of this.particles) {
+      const sx = camera ? camera.worldToScreenX(p.worldX) : p.worldX;
+      if (sx < -40 || sx > W + 40) continue;
+
+      const progress = p.life / p.maxLife;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, progress);
+
+      if (p.type === 'dust') {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(sx, p.y, p.radius * (1 - (1 - progress) * 0.4), 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'spark') {
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(sx, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'shatter') {
+        ctx.translate(sx, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 4;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      }
+      ctx.restore();
+    }
+
+    // 3. Dibujar textos flotantes
+    for (const t of this.floatingTexts) {
+      const sx = camera ? camera.worldToScreenX(t.worldX) : t.worldX;
+      if (sx < -80 || sx > W + 80) continue;
+
+      const alpha = Math.max(0, t.life / t.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = `900 ${Math.round(t.fontSize * t.scale)}px 'Orbitron', 'Outfit', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = t.color;
+      ctx.shadowColor = t.color;
+      ctx.shadowBlur = 8;
+      ctx.fillText(t.text, sx, t.y);
+      ctx.restore();
+    }
+  }
+}
+
+// Instancia global accesible
+window.GlobalParticles = new ParticleSystem();
+
+
+// === camera.js ===
+/**
+ * camera.js — Controlador de Cámara Dinámica Compartida para Multijugador Local
+ * 
+ * Responsabilidades:
+ *  - Seguir suavemente a 1 jugador (modo Solo) o al punto medio de 2 jugadores (Multiplayer Local).
+ *  - Calcular distancia horizontal entre jugadores y ajustar zoom dinámico suave (Lerp).
+ *  - NO empujar ni teletransportar artificialmente al rezagado (gameplay justo).
+ *  - Detectar rezago severo y activar aviso flotante "⚠️ ¡VAS ATRÁS!".
+ *  - Gestionar sacudidas de pantalla (Screen Shake) con amortiguación.
+ *  - Proveer transformaciones de coordenadas de mundo a pantalla.
+ */
+
+class CameraController {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.x = 0;             // Posición de la cámara en el mundo (X)
+    this.targetX = 0;       // Objetivo de seguimiento
+    this.scale = 1.0;       // Factor de zoom
+    this.targetScale = 1.0;
+
+    // Parámetros de interpolación y seguimiento
+    this.lerpSpeed = 0.12;
+    this.zoomLerpSpeed = 0.05;
+    this.minScale = 0.82;   // Zoom out máximo al separarse mucho
+    this.maxScale = 1.0;    // Zoom normal
+
+    // Desplazamiento base en pantalla (20% del ancho del viewport)
+    this.baseScreenOffsetX = 180;
+
+    // Screen Shake
+    this.shakeDuration = 0;
+    this.shakeIntensity = 0;
+    this.shakeOffsetX = 0;
+    this.shakeOffsetY = 0;
+
+    // Notificación "¡VAS ATRÁS!"
+    this.p1Lagging = false;
+    this.p2Lagging = false;
+    this.lagThreshold = 340; // Distancia en px para considerar que un jugador va muy atrás
+  }
+
+  /**
+   * Reinicia la cámara al inicio de un nivel
+   */
+  reset(initialWorldX = 0) {
+    this.x = initialWorldX;
+    this.targetX = initialWorldX;
+    this.scale = 1.0;
+    this.targetScale = 1.0;
+    this.shakeDuration = 0;
+    this.shakeIntensity = 0;
+    this.shakeOffsetX = 0;
+    this.shakeOffsetY = 0;
+    this.p1Lagging = false;
+    this.p2Lagging = false;
+    this._updateWarningTags();
+  }
+
+  /**
+   * Dispara sacudida de pantalla por impacto
+   */
+  triggerShake(durationFrames = 14, intensity = 8) {
+    this.shakeDuration = durationFrames;
+    this.shakeIntensity = intensity;
+  }
+
+  /**
+   * Actualiza el seguimiento de cámara centrado en el jugador del viewport
+   * @param {Player|Array<Player>} playerOrPlayers - Jugador o lista de jugadores
+   * @param {number} canvasW - Ancho del canvas del viewport
+   */
+  update(playerOrPlayers, canvasW) {
+    if (!playerOrPlayers) return;
+    const player = Array.isArray(playerOrPlayers) ? playerOrPlayers[0] : playerOrPlayers;
+    if (!player) return;
+
+    this.baseScreenOffsetX = Math.floor(canvasW * 0.22);
+    this.targetX = player.worldX;
+    this.targetScale = 1.0;
+    this.p1Lagging = false;
+    this.p2Lagging = false;
+
+    // ── Interpolación suave (Lerp) ───────────────────────────────────────────
+    this.x += (this.targetX - this.x) * this.lerpSpeed;
+    this.scale += (this.targetScale - this.scale) * this.zoomLerpSpeed;
+
+    // ── Actualizar sacudida de pantalla ──────────────────────────────────────
+    if (this.shakeDuration > 0) {
+      this.shakeOffsetX = (Math.random() - 0.5) * this.shakeIntensity * 2;
+      this.shakeOffsetY = (Math.random() - 0.5) * this.shakeIntensity * 2;
+      this.shakeDuration--;
+    } else {
+      this.shakeOffsetX = 0;
+      this.shakeOffsetY = 0;
+    }
+
+    this._updateWarningTags();
+  }
+
+  /**
+   * Actualiza el cartel "¡VAS ATRÁS!" en el DOM
+   */
+  _updateWarningTags() {
+    const elP1 = document.getElementById('warning-p1');
+    const elP2 = document.getElementById('warning-p2');
+
+    if (elP1) {
+      if (this.p1Lagging) elP1.classList.remove('hidden');
+      else elP1.classList.add('hidden');
+    }
+    if (elP2) {
+      if (this.p2Lagging) elP2.classList.remove('hidden');
+      else elP2.classList.add('hidden');
+    }
+  }
+
+  /**
+   * Convierte una coordenada del mundo a la posición X en pantalla
+   */
+  worldToScreenX(worldX) {
+    return (worldX - this.x) * this.scale + this.baseScreenOffsetX;
+  }
+
+  /**
+   * Convierte una posición en pantalla a coordenada en el mundo
+   */
+  screenToWorldX(screenX) {
+    return (screenX - this.baseScreenOffsetX) / this.scale + this.x;
+  }
+
+  /**
+   * Aplica la matriz de transformación de la cámara (Zoom + Shake + Offset)
+   */
+  applyTransform(ctx, groundY) {
+    ctx.save();
+
+    // Aplicar sacudida de pantalla
+    if (this.shakeOffsetX !== 0 || this.shakeOffsetY !== 0) {
+      ctx.translate(this.shakeOffsetX, this.shakeOffsetY);
+    }
+
+    // Aplicar zoom centrado en el suelo
+    if (this.scale !== 1.0) {
+      ctx.translate(this.baseScreenOffsetX, groundY);
+      ctx.scale(this.scale, this.scale);
+      ctx.translate(-this.baseScreenOffsetX, -groundY);
+    }
+  }
+
+  /**
+   * Restaura el contexto después de dibujar los elementos con la cámara
+   */
+  restoreTransform(ctx) {
+    ctx.restore();
+  }
+}
+
+
+// === coins.js ===
+/**
+ * coins.js — Sistema de Monedas del Prototipo
+ * 
+ * Código simple y directo para explicar al profesor:
+ *  - Genera monedas coleccionables en el aire o sobre el suelo.
+ *  - Soporta dos patrones geométricos sencillos:
+ *     1. Línea horizontal (LINE).
+ *     2. Arco de salto parabólico (ARC).
+ *  - Al tocarse, se marca collected = true y suma +50 puntos.
+ */
+
+class CoinSystem {
+  constructor(levelData, seed = 54321) {
+    this.levelData        = levelData;
+    this.coins            = [];
+    this.popups           = [];
+    this.lastSpawnWorldX  = 300;
+    this.spawnInterval    = 280;
+    this.seed             = seed;
+    this._rngState        = seed;
+  }
+
+  _random() {
+    let t = (this._rngState += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  /**
+   * [EXPLICACIÓN: Generación de Monedas]
+   * Crea un grupo de monedas alineadas o en arco parabólico.
+   */
+  spawnPattern(patternType, startWorldX, groundY) {
+    const numCoins = 4;
+    const spacing  = 40;
+
+    for (let i = 0; i < numCoins; i++) {
+      let yOffset = -45; // Altura estándar del suelo
+
+      if (patternType === 'ARC') {
+        // [FÓRMULA PARABÓLICA]: Acompaña la curva del salto
+        const mid = (numCoins - 1) / 2;
+        const dist = i - mid;
+        yOffset = -75 + (dist * dist) * 14;
+      }
+
+      this.coins.push({
+        worldX: startWorldX + i * spacing,
+        y: groundY + yOffset,
+        radius: 10,
+        collected: false
+      });
+    }
+  }
+
+  /**
+   * [EXPLICACIÓN: Actualización de Monedas]
+   * 1. Spawnea monedas adelante a medida que el jugador avanza.
+   * 2. Efecto de atracción magnética si el jugador tiene el Imán activo.
+   * 3. Actualiza los textos flotantes (+50).
+   * 4. Descarta monedas que ya quedaron atrás.
+   */
+  update(maxPlayerWorldX, groundY, goalWorldX, activePlayer = null) {
+    const spawnHorizon = maxPlayerWorldX + 900;
+
+    if (this.lastSpawnWorldX < spawnHorizon && this.lastSpawnWorldX < goalWorldX - 200) {
+      const type = this._random() > 0.5 ? 'ARC' : 'LINE';
+      this.spawnPattern(type, this.lastSpawnWorldX, groundY);
+      this.lastSpawnWorldX += this.spawnInterval + this._random() * 100;
+    }
+
+    // Efecto de Imán activo: atrae monedas en radio de 280px hacia el corredor
+    if (activePlayer && activePlayer.magnetTimer > 0 && activePlayer.isAlive) {
+      const px = activePlayer.worldX + activePlayer.w / 2;
+      const py = activePlayer.y + (activePlayer.isDucking ? activePlayer.duckHeight : activePlayer.h) / 2;
+      const magnetRadius = 280;
+
+      for (const coin of this.coins) {
+        if (coin.collected) continue;
+        const dx = px - coin.worldX;
+        const dy = py - coin.y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq < magnetRadius * magnetRadius) {
+          const dist = Math.sqrt(distSq);
+          if (dist > 2) {
+            const pullSpeed = Math.min(18, 6 + (1 - dist / magnetRadius) * 16);
+            coin.worldX += (dx / dist) * pullSpeed;
+            coin.y      += (dy / dist) * pullSpeed;
+          }
+        }
+      }
+    }
+
+    // Actualizar popups de puntuación
+    for (let i = this.popups.length - 1; i >= 0; i--) {
+      const pop = this.popups[i];
+      pop.y -= 1.2;
+      pop.life--;
+      if (pop.life <= 0) this.popups.splice(i, 1);
+    }
+
+    // Filtrar monedas lejanas
+    this.coins = this.coins.filter(c => !c.collected && c.worldX > maxPlayerWorldX - 400);
+  }
+
+  /**
+   * [EXPLICACIÓN: Recolección de Moneda]
+   * Marca la moneda como recogida y crea un indicador visual de puntos.
+   */
+  collectCoin(coin, camera) {
+    coin.collected = true;
+    this.popups.push({
+      worldX: coin.worldX,
+      y: coin.y - 10,
+      text: '+50',
+      life: 30
+    });
+
+    if (window.GlobalParticles) {
+      window.GlobalParticles.spawnSparks(coin.worldX, coin.y, '#FFD700', 6, 0.8);
+    }
+  }
+
+  /**
+   * [EXPLICACIÓN: Dibujo en Canvas]
+   * Dibuja las monedas como círculos dorados brillantes usando ctx.arc().
+   */
+  draw(ctx, camera) {
+    // 1. Monedas activas
+    for (const coin of this.coins) {
+      if (coin.collected) continue;
+      const screenX = camera ? camera.worldToScreenX(coin.worldX) : coin.worldX;
+      if (screenX < -20 || screenX > ctx.canvas.width + 20) continue;
+
+      ctx.save();
+      // Moneda dorada exterior
+      ctx.fillStyle = '#FFD700';
+      ctx.strokeStyle = '#FFA500';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(screenX, coin.y, coin.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Brillo interior
+      ctx.fillStyle = '#FFF275';
+      ctx.beginPath();
+      ctx.arc(screenX - 2, coin.y - 2, coin.radius * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 2. Textos flotantes (+50)
+    for (const pop of this.popups) {
+      const screenX = camera ? camera.worldToScreenX(pop.worldX) : pop.worldX;
+      ctx.save();
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillStyle = '#FFD700';
+      ctx.textAlign = 'center';
+      ctx.fillText(pop.text, screenX, pop.y);
+      ctx.restore();
+    }
+  }
+}
+
+
+// === obstacles.js ===
+/**
+ * obstacles.js — Sistema de Obstáculos del Prototipo
+ * 
+ * Código sencillo y claro para explicar al profesor:
+ *  - Genera obstáculos en el eje X del mundo con una distancia mínima de seguridad (gap).
+ *  - Tipos de obstáculos de prueba:
+ *     1. Bloque de Suelo (Caja de peligro para saltar).
+ *     2. Barrera / Pincho Láser (Obstáculo vertical más alto).
+ *     3. Drone Flotante (Obstáculo con oscilación senoidal).
+ *  - Limpieza de memoria: Elimina del arreglo los obstáculos que ya quedaron atrás.
+ */
+
+class ObstacleSystem {
+  constructor(levelData, seed = 12345) {
+    this.levelData        = levelData;
+    this.obstacles        = [];
+    this.lastSpawnWorldX  = 450;
+    this.minGap           = levelData?.minObstacleGap ?? 300;
+    this.animTimer        = 0;
+    this.seed             = seed;
+    this._rngState        = seed;
+  }
+
+  _random() {
+    let t = (this._rngState += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  /**
+   * [EXPLICACIÓN: Generación de Obstáculo Balanceado]
+   * Diseñado con medidas exactas para garantizar que cada obstáculo sea 100% esquivable:
+   *  - Obstáculos de suelo (SPIKE, ROCK): altura 36-40px. El salto del jugador (130px) los supera fácilmente.
+   *  - Obstáculos flotantes (LASER, DRONE): suspendidos a más de 34px sobre el suelo.
+   *    Un jugador agachado (28px de altura) pasa por debajo con total seguridad.
+   */
+  spawnObstacle(worldX, groundY) {
+    const types = ['SPIKE', 'ROCK', 'LASER', 'DRONE'];
+    const typeName = types[Math.floor(this._random() * types.length)];
+
+    let w = 32;
+    let h = 38;
+    let color = '#FF0055';
+    let isMoving = false;
+    let originY = groundY - h;
+
+    if (typeName === 'SPIKE') {
+      w = 28;
+      h = 40;
+      color = '#FF0055';
+      originY = groundY - h;
+    } else if (typeName === 'ROCK') {
+      w = 34;
+      h = 36;
+      color = '#FF3366';
+      originY = groundY - h;
+    } else if (typeName === 'LASER') {
+      // Barrera horizontal flotante: se esquiva agachándose (o con caída rápida)
+      w = 50;
+      h = 14;
+      color = '#00F0FF';
+      originY = groundY - 50; // La base queda a groundY - 36px (agachado mide 28px, pasa limpio)
+    } else if (typeName === 'DRONE') {
+      // Drone patrulla flotante: se puede saltar por encima o pasar agachado por debajo
+      w = 38;
+      h = 24;
+      color = '#FFAA00';
+      isMoving = true;
+      originY = groundY - 74; // Oscila entre -81px y -67px, base a -43px del suelo
+    }
+
+    const obs = {
+      typeName,
+      worldX,
+      y: originY,
+      w,
+      h,
+      color,
+      isMoving,
+      originY,
+      phase: this._random() * Math.PI * 2
+    };
+
+    this.obstacles.push(obs);
+    this.lastSpawnWorldX = worldX;
+  }
+
+  /**
+   * [EXPLICACIÓN: Actualización de Obstáculos]
+   * 1. Genera nuevos obstáculos por delante del avance de los corredores.
+   * 2. Si el obstáculo es flotante (drone), oscila suavemente con Math.sin().
+   * 3. Descarta los obstáculos que ya salieron de la pantalla para optimizar memoria.
+   */
+  update(maxPlayerWorldX, groundY, goalWorldX) {
+    this.animTimer += 0.06;
+    const spawnHorizon = maxPlayerWorldX + 900;
+
+    // 1. Crear obstáculo adelante respetando la separación mínima
+    if (this.lastSpawnWorldX < spawnHorizon && this.lastSpawnWorldX < goalWorldX - 250) {
+      const gap = this.minGap + this._random() * 160;
+      this.spawnObstacle(this.lastSpawnWorldX + gap, groundY);
+    }
+
+    // 2. Animar drones flotantes suavemente
+    for (const obs of this.obstacles) {
+      if (obs.isMoving) {
+        obs.phase += 0.04;
+        obs.y = obs.originY + Math.sin(obs.phase) * 7;
+      }
+    }
+
+    // 3. Eliminar los que quedaron muy atrás o fueron destruidos por Turbo
+    this.obstacles = this.obstacles.filter(o => !o.destroyed && o.worldX + o.w > maxPlayerWorldX - 400);
+  }
+
+  /**
+   * [EXPLICACIÓN: Dibujo en Canvas]
+   * Dibuja los obstáculos de manera limpia y clara según su tipo.
+   */
+  draw(ctx, camera) {
+    for (const obs of this.obstacles) {
+      if (obs.destroyed) continue;
+      const screenX = camera ? camera.worldToScreenX(obs.worldX) : obs.worldX;
+      if (screenX < -60 || screenX > ctx.canvas.width + 60) continue;
+
+      ctx.save();
+      ctx.fillStyle = obs.color;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
+
+      if (obs.typeName === 'SPIKE') {
+        // Triángulo de peligro / Pincho de suelo
+        ctx.beginPath();
+        ctx.moveTo(screenX, obs.y + obs.h);
+        ctx.lineTo(screenX + obs.w / 2, obs.y);
+        ctx.lineTo(screenX + obs.w, obs.y + obs.h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (obs.typeName === 'LASER') {
+        // Barrera láser flotante con brillo
+        ctx.shadowColor = obs.color;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = obs.color;
+        ctx.fillRect(screenX, obs.y, obs.w, obs.h);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(screenX + 4, obs.y + 4, obs.w - 8, obs.h - 8);
+        ctx.shadowBlur = 0;
+      } else if (obs.typeName === 'DRONE') {
+        // Drone flotante redondeado
+        ctx.beginPath();
+        ctx.roundRect(screenX, obs.y, obs.w, obs.h, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Núcleo brillante
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(screenX + obs.w / 2, obs.y + obs.h / 2, 4, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Bloque / Caja estándar
+        ctx.beginPath();
+        ctx.roundRect(screenX, obs.y, obs.w, obs.h, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // Señal X de advertencia
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(screenX + 6, obs.y + 6);
+        ctx.lineTo(screenX + obs.w - 6, obs.y + obs.h - 6);
+        ctx.moveTo(screenX + obs.w - 6, obs.y + 6);
+        ctx.lineTo(screenX + 6, obs.y + obs.h - 6);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+}
+
+
+// === powerups.js ===
+/**
+ * powerups.js — Sistema de Power-Ups e Ítems Especiales
+ * 
+ * Gestiona la aparición, animación, recolección y efectos de los 4 potenciadores:
+ *  1. 🛡️ ESCUDO (SHIELD): Absorbe 1 impacto sin perder vidas.
+ *  2. 🧲 IMÁN (MAGNET): Atrae monedas automáticamente en un radio de 280px.
+ *  3. ⚡ TURBO (TURBO): +55% velocidad, invencibilidad y destruye obstáculos al paso.
+ *  4. 🦘 DOBLE SALTO (DOUBLE_JUMP): Permite saltar de nuevo en el aire con impulso acrobático.
+ */
+
+const PowerUpTypes = {
+  SHIELD: {
+    type: 'SHIELD',
+    name: 'ESCUDO',
+    icon: '🛡️',
+    color: '#00F0FF',
+    glowColor: 'rgba(0, 240, 255, 0.6)',
+    durationSecs: 0 // Permanente hasta recibir golpe
+  },
+  MAGNET: {
+    type: 'MAGNET',
+    name: 'IMÁN',
+    icon: '🧲',
+    color: '#FFD700',
+    glowColor: 'rgba(255, 215, 0, 0.6)',
+    durationSecs: 8
+  },
+  TURBO: {
+    type: 'TURBO',
+    name: 'TURBO',
+    icon: '⚡',
+    color: '#FF3366',
+    glowColor: 'rgba(255, 51, 102, 0.7)',
+    durationSecs: 4.5
+  },
+  DOUBLE_JUMP: {
+    type: 'DOUBLE_JUMP',
+    name: 'DOBLE SALTO',
+    icon: '🦘',
+    color: '#00FF88',
+    glowColor: 'rgba(0, 255, 136, 0.6)',
+    durationSecs: 10
+  }
+};
+
+class PowerUpSystem {
+  constructor(levelData, seed = 8888) {
+    this.levelData       = levelData;
+    this.items           = [];
+    this.lastSpawnWorldX = 550;
+    this.spawnInterval   = 700;
+    this.animTimer       = 0;
+    this.seed            = seed;
+    this._rngState       = seed;
+  }
+
+  _random() {
+    let t = (this._rngState += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
+  /**
+   * Spawnea un potenciador en la pista
+   */
+  spawnPowerUp(worldX, groundY, typeOverride = null) {
+    const keys = Object.keys(PowerUpTypes);
+    const chosenKey = typeOverride || keys[Math.floor(this._random() * keys.length)];
+    const def = PowerUpTypes[chosenKey];
+
+    // Flota a una altura accesible tanto en carrera como en salto bajo
+    const baseY = groundY - 50;
+
+    this.items.push({
+      type: def.type,
+      name: def.name,
+      icon: def.icon,
+      color: def.color,
+      glowColor: def.glowColor,
+      durationSecs: def.durationSecs,
+      worldX,
+      baseY,
+      y: baseY,
+      w: 32,
+      h: 32,
+      radius: 16,
+      collected: false,
+      rotOffset: this._random() * Math.PI * 2
+    });
+  }
+
+  /**
+   * Actualiza posiciones y spawn de power-ups
+   */
+  update(maxPlayerWorldX, groundY, goalWorldX) {
+    this.animTimer += 0.05;
+
+    // Generar nuevos power-ups hacia adelante
+    const spawnHorizon = maxPlayerWorldX + 950;
+    if (this.lastSpawnWorldX < spawnHorizon && this.lastSpawnWorldX < goalWorldX - 350) {
+      this.spawnPowerUp(this.lastSpawnWorldX, groundY);
+      this.lastSpawnWorldX += this.spawnInterval + this._random() * 250;
+    }
+
+    // Animación de levitación senoidal
+    for (const item of this.items) {
+      if (item.collected) continue;
+      item.y = item.baseY + Math.sin(this.animTimer * 2 + item.rotOffset) * 7;
+    }
+
+    // Descartar ítems lejanos que quedaron atrás
+    this.items = this.items.filter(it => !it.collected && it.worldX > maxPlayerWorldX - 300);
+  }
+
+  /**
+   * Recolección de Power-Up por parte del jugador
+   */
+  collectPowerUp(item, player) {
+    if (item.collected) return;
+    item.collected = true;
+
+    // Aplicar mejora al jugador
+    player.applyPowerUp(item.type, item.durationSecs);
+
+    // Efectos de partículas (Shockwave + Chispas + Texto Flotante)
+    if (window.GlobalParticles) {
+      window.GlobalParticles.spawnShockwave(item.worldX, item.y, item.color, 44);
+      window.GlobalParticles.spawnSparks(item.worldX, item.y, item.color, 14, 1.3);
+      window.GlobalParticles.spawnFloatingText(item.worldX, item.y - 18, `¡${item.name}!`, item.color, 15);
+    }
+
+    // Efectos de sonido específicos
+    if (typeof AudioManager !== 'undefined') {
+      if (item.type === 'SHIELD') {
+        AudioManager.play('powerup');
+      } else if (item.type === 'TURBO') {
+        AudioManager.play('turbo');
+      } else if (item.type === 'MAGNET') {
+        AudioManager.play('magnet');
+      } else if (item.type === 'DOUBLE_JUMP') {
+        AudioManager.play('doubleJump');
+      } else {
+        AudioManager.play('powerup');
+      }
+    }
+  }
+
+  /**
+   * Dibuja los power-ups con estilo cápsula cibernética de neón
+   */
+  draw(ctx, camera) {
+    const W = ctx.canvas.width;
+
+    for (const item of this.items) {
+      if (item.collected) continue;
+
+      const sx = camera ? camera.worldToScreenX(item.worldX) : item.worldX;
+      if (sx < -40 || sx > W + 40) continue;
+
+      ctx.save();
+
+      // 1. Resplandor exterior pulsante
+      const pulse = 1 + Math.sin(this.animTimer * 4 + item.rotOffset) * 0.15;
+      ctx.shadowColor = item.color;
+      ctx.shadowBlur = 14 * pulse;
+
+      // 2. Anillo de energía exterior rotatorio
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(sx, item.y, item.radius * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 3. Fondo interior translúcido
+      ctx.fillStyle = 'rgba(15, 18, 35, 0.85)';
+      ctx.beginPath();
+      ctx.arc(sx, item.y, item.radius - 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 4. Diamante/Rombo interior
+      ctx.save();
+      ctx.translate(sx, item.y);
+      ctx.rotate(this.animTimer * 1.5 + item.rotOffset);
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-item.radius * 0.5, -item.radius * 0.5, item.radius, item.radius);
+      ctx.restore();
+
+      // 5. Ícono central
+      ctx.shadowBlur = 0;
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(item.icon, sx, item.y + 1);
+
+      ctx.restore();
+    }
+  }
+}
+
+window.PowerUpTypes = PowerUpTypes;
+window.PowerUpSystem = PowerUpSystem;
+
+
+// === player.js ===
+/**
+ * player.js — Prototipo del Jugador con Efectos y Power-Ups
+ * 
+ * Físicas 2D, Acciones y "Game Juice":
+ *  - Salto y Doble Salto acrobático en el aire
+ *  - Agacharse en el suelo y Caída Rápida en Picada (Fast-Fall / Slam)
+ *  - Estela Neón (Ghost Trail) de velocidad
+ *  - Power-Ups activos:
+ *     1. 🛡️ Escudo cibernético (absorbe 1 impacto sin perder vidas)
+ *     2. 🧲 Imán (atrae monedas cercanas)
+ *     3. ⚡ Turbo / Hiper-Dash (acelera +55%, invencible y destruye obstáculos)
+ *     4. 🦘 Doble Salto (salto acrobático en pleno aire)
+ */
+
+class Player {
+  constructor({ worldX = 0, groundY = 320, color = '#00F0FF', name = 'Player', levelData, playerIndex = 0 }) {
+    this.playerIndex = playerIndex;
+    this.isP1        = playerIndex === 0;
+    this.name        = name;
+    this.color       = color;
+    this.groundY     = groundY;
+
+    // Dimensiones básicas del personaje
+    this.w          = 36;
+    this.h          = 52;
+    this.duckHeight = 28; // Altura reducida al agacharse
+
+    // Coordenadas y físicas
+    this.worldX       = worldX;
+    this.y            = groundY - this.h;
+    this.vy           = 0;
+    this.gravity      = levelData?.gravity ?? 0.75;
+    this.jumpForce    = levelData?.jumpForce ?? -14;
+    this.currentSpeed = levelData?.scrollSpeed ?? 5;
+
+    // Estados de movimiento
+    this.onGround      = true;
+    this.isJumping     = false;
+    this.isDucking     = false;
+    this.isFastFalling = false;
+
+    // Vidas y partida
+    this.lives       = 3;
+    this.isAlive     = true;
+    this.hasFinished = false;
+    this.finishTime  = 0;
+    this.isWinner    = false;
+
+    // Invulnerabilidad tras golpe
+    this.invulnerable = false;
+    this.invulnTimer  = 0;
+
+    // Animación de correr
+    this.animTimer = 0;
+
+    // ── Power-Ups y Mejoras ──
+    this.shield          = false; // 🛡️ Escudo protector
+    this.magnetTimer     = 0;     // 🧲 Imán de monedas (frames)
+    this.turboTimer      = 0;     // ⚡ Hiper-Velocidad (frames)
+    this.doubleJumpTimer = 0;     // 🦘 Habilidad de doble salto (frames)
+    this.canDoubleJump   = false; // Bandera de recarga de doble salto
+
+    // ── Estela Neón / Ghost Trail ──
+    this.trail = [];
+    this.trailCounter = 0;
+  }
+
+  /**
+   * Reinicia al jugador para una nueva partida
+   */
+  reset(groundY, levelData) {
+    this.groundY      = groundY;
+    this.gravity      = levelData?.gravity ?? 0.75;
+    this.jumpForce    = levelData?.jumpForce ?? -14;
+    this.currentSpeed = levelData?.scrollSpeed ?? 5;
+    this.y            = groundY - this.h;
+    this.vy           = 0;
+    this.onGround     = true;
+    this.isJumping    = false;
+    this.isDucking    = false;
+    this.isFastFalling= false;
+    this.lives        = 3;
+    this.isAlive      = true;
+    this.hasFinished  = false;
+    this.isWinner     = false;
+    this.invulnerable = false;
+    this.invulnTimer  = 0;
+
+    // Resetear power-ups
+    this.shield          = false;
+    this.magnetTimer     = 0;
+    this.turboTimer      = 0;
+    this.doubleJumpTimer = 0;
+    this.canDoubleJump   = false;
+    this.trail           = [];
+  }
+
+  /**
+   * Aplica un Power-Up recogido
+   */
+  applyPowerUp(type, durationSecs) {
+    const frames = Math.round((durationSecs || 0) * 60);
+
+    if (type === 'SHIELD') {
+      this.shield = true;
+    } else if (type === 'MAGNET') {
+      this.magnetTimer = frames;
+    } else if (type === 'TURBO') {
+      this.turboTimer = frames;
+    } else if (type === 'DOUBLE_JUMP') {
+      this.doubleJumpTimer = frames;
+      this.canDoubleJump = true;
+    }
+  }
+
+  /**
+   * [EXPLICACIÓN: Salto y Doble Salto Acrobático]
+   * - Si está en el suelo: salto estándar hacia arriba.
+   * - Si está en el aire y tiene el buff de Doble Salto activo: realiza un segundo salto con onda de energía.
+   */
+  jump() {
+    if (!this.isAlive || this.hasFinished) return;
+
+    if (this.onGround && !this.isDucking) {
+      // Salto normal desde el suelo
+      this.vy = this.jumpForce;
+      this.onGround = false;
+      this.isJumping = true;
+      this.canDoubleJump = true; // Recargar potencial de doble salto
+
+      if (typeof AudioManager !== 'undefined') AudioManager.play('jump');
+
+      if (window.GlobalParticles) {
+        window.GlobalParticles.spawnDust(this.worldX + this.w / 2, this.groundY, this.color, 4);
+      }
+    } else if (!this.onGround && this.doubleJumpTimer > 0 && this.canDoubleJump) {
+      // ¡DOBLE SALTO EN EL AIRE!
+      this.vy = this.jumpForce * 0.92;
+      this.canDoubleJump = false;
+      this.isFastFalling = false;
+
+      if (typeof AudioManager !== 'undefined') AudioManager.play('doubleJump');
+
+      if (window.GlobalParticles) {
+        window.GlobalParticles.spawnShockwave(this.worldX + this.w / 2, this.y + this.h, '#00FF88', 34);
+        window.GlobalParticles.spawnSparks(this.worldX + this.w / 2, this.y + this.h, '#00FF88', 10, 1.2);
+        window.GlobalParticles.spawnFloatingText(this.worldX + this.w / 2, this.y - 12, '¡DOBLE SALTO!', '#00FF88', 13);
+      }
+    }
+  }
+
+  /**
+   * [EXPLICACIÓN: Agacharse y Caída Rápida en el Aire (Fast-Fall / Slam)]
+   * - En el suelo: reduce la altura del personaje a duckHeight para esquivar obstáculos altos.
+   * - En el aire: lanza al personaje inmediatamente en picada hacia el suelo
+   *   para aterrizar rápido y esquivar obstáculos flotantes.
+   */
+  setDucking(ducking) {
+    if (!this.isAlive) return;
+    this.isDucking = ducking;
+
+    // Si se presiona agacharse en el aire, impulso descendente instantáneo
+    if (ducking && !this.onGround) {
+      if (this.vy < 15) {
+        this.vy = 16;
+        if (!this.isFastFalling && typeof AudioManager !== 'undefined') {
+          AudioManager.play('whoosh');
+        }
+      }
+      this.isFastFalling = true;
+    } else if (!ducking) {
+      this.isFastFalling = false;
+    }
+  }
+
+  /**
+   * Impulso rápido opcional (Dash)
+   */
+  dash() {
+    if (!this.isAlive || this.hasFinished) return;
+    this.worldX += 25;
+    if (window.GlobalParticles) {
+      window.GlobalParticles.spawnSparks(this.worldX, this.y + this.h / 2, this.color, 6, 1.5);
+    }
+  }
+
+  /**
+   * [EXPLICACIÓN: Daño, Escudo y Pérdida de Vidas]
+   * - Si el Escudo está activo: lo consume, genera una onda expansiva y NO pierde vidas.
+   * - Si el Turbo está activo: es invulnerable y no recibe daño.
+   * - Sin escudo: pierde 1 vida, salta hacia atrás e inicia invulnerabilidad temporal.
+   */
+  takeDamage() {
+    if (!this.isAlive || this.hasFinished) return false;
+
+    // 1. Inmunidad durante Turbo
+    if (this.turboTimer > 0) return false;
+
+    // 2. Absorción por Escudo Cibernético
+    if (this.shield) {
+      this.shield = false;
+      this.invulnerable = true;
+      this.invulnTimer = 35; // Ventana de perdón
+      this.vy = -3;
+
+      if (typeof AudioManager !== 'undefined') AudioManager.play('shieldBreak');
+
+      if (window.GlobalParticles) {
+        window.GlobalParticles.spawnShockwave(this.worldX + this.w / 2, this.y + this.h / 2, '#00F0FF', 55);
+        window.GlobalParticles.spawnSparks(this.worldX + this.w / 2, this.y + this.h / 2, '#00F0FF', 14, 1.5);
+        window.GlobalParticles.spawnFloatingText(this.worldX + this.w / 2, this.y - 18, '¡ESCUDO ROTO!', '#00F0FF', 14);
+      }
+      return false; // ¡Salvado por el escudo!
+    }
+
+    if (this.invulnerable) return false;
+
+    // 3. Daño normal
+    this.lives--;
+    this.invulnerable = true;
+    this.invulnTimer = 60;
+    this.vy = -4;
+
+    if (typeof AudioManager !== 'undefined') AudioManager.play('hit');
+
+    if (window.GlobalParticles) {
+      window.GlobalParticles.spawnSparks(this.worldX + this.w / 2, this.y + this.h / 2, '#FF0055', 12, 1.2);
+    }
+
+    if (this.lives <= 0) {
+      this.isAlive = false;
+      this.lives = 0;
+      return true; // Murió
+    }
+    return false;
+  }
+
+  /**
+   * [EXPLICACIÓN: Actualización por Frame]
+   * 1. Manejo de temporizadores de Power-Ups.
+   * 2. Velocidad horizontal (acelerada con Turbo).
+   * 3. Físicas de caída/salto y detección de suelo.
+   * 4. Registro de estela luminosa (Ghost Trail).
+   */
+  update(scrollSpeed) {
+    if (this.hasFinished) {
+      this.worldX += this.currentSpeed * 0.8;
+      return;
+    }
+    if (!this.isAlive) return;
+
+    // 1. Temporizadores de Power-Ups
+    if (this.magnetTimer > 0)     this.magnetTimer--;
+    if (this.turboTimer > 0)      this.turboTimer--;
+    if (this.doubleJumpTimer > 0) this.doubleJumpTimer--;
+
+    // 2. Velocidad con Turbo (+55% boost)
+    const isTurbo = this.turboTimer > 0;
+    this.currentSpeed = isTurbo ? scrollSpeed * 1.55 : scrollSpeed;
+    this.worldX += this.currentSpeed;
+
+    // 3. Físicas de caída / salto
+    const effectiveGravity = (this.isDucking && !this.onGround) ? this.gravity * 2.2 : this.gravity;
+    this.vy += effectiveGravity;
+    this.y += this.vy;
+
+    const currentH = this.isDucking ? this.duckHeight : this.h;
+    const targetGroundY = this.groundY - currentH;
+
+    // 4. Detener caída al tocar el suelo
+    if (this.y >= targetGroundY) {
+      this.y = targetGroundY;
+      this.vy = 0;
+      this.onGround = true;
+      this.isJumping = false;
+      this.canDoubleJump = true; // Recarga doble salto al pisar suelo
+
+      if (this.isFastFalling) {
+        this.isFastFalling = false;
+        if (window.GlobalParticles) {
+          window.GlobalParticles.spawnShockwave(this.worldX + this.w / 2, this.groundY, this.color, 36);
+          window.GlobalParticles.spawnDust(this.worldX + this.w / 2, this.groundY, this.color, 8);
+        }
+      }
+    } else {
+      this.onGround = false;
+    }
+
+    // 5. Temporizador de invulnerabilidad
+    if (this.invulnerable) {
+      this.invulnTimer--;
+      if (this.invulnTimer <= 0) this.invulnerable = false;
+    }
+
+    // Animación de correr
+    if (this.onGround) this.animTimer += 0.22;
+
+    // 6. Registro de Estela Neón (Ghost Trail)
+    this.trailCounter++;
+    const shouldAddTrail = isTurbo || this.isFastFalling || (!this.onGround && this.trailCounter % 2 === 0) || (this.trailCounter % 3 === 0);
+
+    if (shouldAddTrail) {
+      let trailColor = this.color;
+      if (isTurbo) {
+        const rainbow = ['#FF0055', '#FF7700', '#00F0FF', '#00FF88', '#FFFF00'];
+        trailColor = rainbow[Math.floor(Math.random() * rainbow.length)];
+      }
+
+      this.trail.push({
+        worldX: this.worldX,
+        y: this.y,
+        h: currentH,
+        color: trailColor,
+        alpha: isTurbo ? 0.8 : 0.45,
+        isTurbo
+      });
+    }
+
+    // Actualizar y desvanecer estelas
+    for (let i = this.trail.length - 1; i >= 0; i--) {
+      const t = this.trail[i];
+      t.alpha -= t.isTurbo ? 0.07 : 0.05;
+      if (t.alpha <= 0) this.trail.splice(i, 1);
+    }
+  }
+
+  /**
+   * [EXPLICACIÓN: Dibujo en Canvas con Estela Neón y Efectos Visuales]
+   */
+  draw(ctx, camera, overrideGroundY = null) {
+    if (!this.isAlive && this.lives <= 0) return;
+
+    // Parpadeo cuando está invulnerable (excepto si tiene escudo)
+    if (this.invulnerable && !this.shield && Math.floor(this.invulnTimer / 6) % 2 === 0) return;
+
+    const screenX = camera ? camera.worldToScreenX(this.worldX) : this.worldX;
+    if (screenX < -90 || screenX > ctx.canvas.width + 90) return;
+
+    const gY = overrideGroundY !== null ? overrideGroundY : this.groundY;
+    const currentH = this.isDucking ? this.duckHeight : this.h;
+    const drawY = overrideGroundY !== null ? (gY + (this.y - this.groundY)) : this.y;
+    const isTurbo = this.turboTimer > 0;
+
+    ctx.save();
+
+    // ══════════════════════════════════════════════════════════════
+    // 1. ESTELA NEÓN (GHOST TRAIL)
+    // ══════════════════════════════════════════════════════════════
+    for (const t of this.trail) {
+      const tsx = camera ? camera.worldToScreenX(t.worldX) : t.worldX;
+      if (tsx < -60 || tsx > ctx.canvas.width + 60) continue;
+
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, t.alpha);
+      ctx.fillStyle = t.color;
+      ctx.shadowColor = t.color;
+      ctx.shadowBlur = t.isTurbo ? 10 : 4;
+      ctx.beginPath();
+      ctx.roundRect(tsx, t.y, this.w, t.h, 6);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // 2. SOMBRA EN EL PISO
+    // ══════════════════════════════════════════════════════════════
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.beginPath();
+    ctx.ellipse(screenX + this.w / 2, gY, this.w * 0.5, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ══════════════════════════════════════════════════════════════
+    // 3. EFECTOS ESPECIALES DE CAÍDA RÁPIDA (VIENTO VERTICAL)
+    // ══════════════════════════════════════════════════════════════
+    if (this.isFastFalling) {
+      ctx.save();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(screenX + 6, drawY - 14);
+      ctx.lineTo(screenX + 6, drawY);
+      ctx.moveTo(screenX + this.w - 6, drawY - 14);
+      ctx.lineTo(screenX + this.w - 6, drawY);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // 4. CUERPO DEL CORREDOR
+    // ══════════════════════════════════════════════════════════════
+    ctx.fillStyle = '#1A1C2E';
+    ctx.strokeStyle = isTurbo ? '#FF3366' : this.color;
+    ctx.lineWidth = isTurbo ? 3.5 : 2.5;
+
+    ctx.beginPath();
+    ctx.roundRect(screenX, drawY, this.w, currentH, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    // Visor de neón
+    ctx.fillStyle = isTurbo ? '#FFD700' : this.color;
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = isTurbo ? 14 : 8;
+    const visorY = drawY + 8;
+    ctx.fillRect(screenX + 8, visorY, this.w - 12, this.isDucking ? 6 : 9);
+    ctx.shadowBlur = 0;
+
+    // Propulsor de Turbo trasero
+    if (isTurbo) {
+      ctx.save();
+      ctx.fillStyle = '#FFAA00';
+      ctx.shadowColor = '#FF3300';
+      ctx.shadowBlur = 12;
+      const flameLen = 14 + Math.random() * 10;
+      ctx.beginPath();
+      ctx.moveTo(screenX, drawY + currentH * 0.5 - 5);
+      ctx.lineTo(screenX - flameLen, drawY + currentH * 0.5);
+      ctx.lineTo(screenX, drawY + currentH * 0.5 + 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Piernas animadas si está en el suelo
+    if (this.onGround && !this.isDucking) {
+      const legOffset = Math.sin(this.animTimer) * 5;
+      ctx.strokeStyle = this.color;
+      ctx.lineWidth = 3;
+      // Pierna 1
+      ctx.beginPath();
+      ctx.moveTo(screenX + 10, drawY + currentH - 4);
+      ctx.lineTo(screenX + 10 + legOffset, drawY + currentH + 3);
+      ctx.stroke();
+      // Pierna 2
+      ctx.beginPath();
+      ctx.moveTo(screenX + 26, drawY + currentH - 4);
+      ctx.lineTo(screenX + 26 - legOffset, drawY + currentH + 3);
+      ctx.stroke();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // 5. EFECTO VISUAL: ESCUDO CIBERNÉTICO (SHIELD)
+    // ══════════════════════════════════════════════════════════════
+    if (this.shield) {
+      ctx.save();
+      const shieldPulse = 1 + Math.sin(this.animTimer * 3) * 0.08;
+      const centerX = screenX + this.w / 2;
+      const centerY = drawY + currentH / 2;
+      const radX = (this.w * 0.75 + 10) * shieldPulse;
+      const radY = (currentH * 0.65 + 10) * shieldPulse;
+
+      ctx.strokeStyle = '#00F0FF';
+      ctx.lineWidth = 2.5;
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.15)';
+      ctx.shadowColor = '#00F0FF';
+      ctx.shadowBlur = 12;
+
+      ctx.beginPath();
+      ctx.ellipse(centerX, centerY, radX, radY, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Nodos orbitales del escudo
+      const angle = this.animTimer * 2;
+      for (let i = 0; i < 3; i++) {
+        const a = angle + (i * Math.PI * 2 / 3);
+        const nx = centerX + Math.cos(a) * radX;
+        const ny = centerY + Math.sin(a) * radY;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(nx, ny, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // 6. EFECTO VISUAL: AURA DE IMÁN (MAGNET)
+    // ══════════════════════════════════════════════════════════════
+    if (this.magnetTimer > 0) {
+      ctx.save();
+      const centerX = screenX + this.w / 2;
+      const centerY = drawY + currentH / 2;
+      ctx.strokeStyle = '#FFD700';
+      ctx.lineWidth = 1.8;
+      ctx.globalAlpha = 0.5 + Math.sin(this.animTimer * 5) * 0.3;
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, this.w * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // 7. EFECTO VISUAL: ALAS DE DOBLE SALTO (DOUBLE JUMP)
+    // ══════════════════════════════════════════════════════════════
+    if (this.doubleJumpTimer > 0) {
+      ctx.save();
+      ctx.strokeStyle = '#00FF88';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#00FF88';
+      ctx.shadowBlur = 8;
+
+      // Alas estilizadas en los talones
+      const footY = drawY + currentH;
+      ctx.beginPath();
+      ctx.moveTo(screenX - 4, footY - 8);
+      ctx.lineTo(screenX + 4, footY - 2);
+      ctx.moveTo(screenX + this.w + 4, footY - 8);
+      ctx.lineTo(screenX + this.w - 4, footY - 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // 8. ETIQUETA P1 O P2 SOBRE LA CABEZA
+    // ══════════════════════════════════════════════════════════════
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = this.color;
+    ctx.fillText(this.isP1 ? 'P1' : 'P2', screenX + this.w / 2, drawY - 8);
+
+    ctx.restore();
+  }
+}
+
+
+// === renderer.js ===
+/**
+ * renderer.js — Renderizado del Escenario y Efectos de Velocidad
+ * 
+ * Dibuja el escenario del juego con estética ciberpunk:
+ *  - Cielo con estrellas parpadeantes y gradiente neón.
+ *  - Suelo con cuadrícula de perspectiva en movimiento continuo.
+ *  - Líneas de velocidad dinámicas (speed lines) a altas velocidades y en modo Turbo.
+ *  - Portal / Meta final con iluminación de neón y bandera de cuadros.
+ */
+
+class Renderer {
+  constructor(canvas, levelData) {
+    this.canvas    = canvas;
+    this.ctx       = canvas.getContext('2d');
+    this.levelData = levelData;
+    this.gridOffset = 0;
+    this.stars = [];
+    this._initStars();
+    this.resize();
+  }
+
+  _initStars() {
+    this.stars = [];
+    for (let i = 0; i < 45; i++) {
+      this.stars.push({
+        x: Math.random() * 1600,
+        y: Math.random() * 300,
+        r: 0.8 + Math.random() * 1.5,
+        alpha: 0.3 + Math.random() * 0.7
+      });
+    }
+  }
+
+  resize() {
+    this.canvas.width  = this.canvas.offsetWidth  || window.innerWidth;
+    this.canvas.height = this.canvas.offsetHeight || window.innerHeight;
+    const bottomMargin = this.canvas.height < 420 ? 55 : 75;
+    this.groundY = Math.floor(this.canvas.height - bottomMargin);
+  }
+
+  get W() { return this.canvas.width; }
+  get H() { return this.canvas.height; }
+
+  /**
+   * Dibuja el fondo, estrellas y el suelo con cuadrícula de movimiento
+   */
+  drawBackground(camera, scrollSpeed, isTurbo = false) {
+    const ctx = this.ctx;
+
+    // 1. Cielo con gradiente profundo
+    const grad = ctx.createLinearGradient(0, 0, 0, this.groundY);
+    grad.addColorStop(0, '#090B16');
+    grad.addColorStop(0.7, '#121528');
+    grad.addColorStop(1, '#1C203A');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, this.W, this.groundY);
+
+    // 2. Estrellas de fondo con paralaje sutil
+    ctx.save();
+    const camX = camera ? camera.x : 0;
+    for (const star of this.stars) {
+      const sx = (star.x - camX * 0.1) % (this.W + 40);
+      const drawX = sx < 0 ? sx + this.W + 40 : sx;
+      if (star.y < this.groundY - 10) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+        ctx.beginPath();
+        ctx.arc(drawX, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // 3. Suelo Synthwave
+    ctx.fillStyle = '#0B0D18';
+    ctx.fillRect(0, this.groundY, this.W, this.H - this.groundY);
+
+    // Línea superior del suelo con neón
+    const groundColor = this.levelData?.groundLine || '#00F0FF';
+    ctx.save();
+    ctx.strokeStyle = groundColor;
+    ctx.shadowColor = groundColor;
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, this.groundY);
+    ctx.lineTo(this.W, this.groundY);
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Cuadrícula de velocidad en el suelo
+    this.gridOffset = (this.gridOffset - scrollSpeed) % 60;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+    ctx.lineWidth = 2;
+    for (let x = this.gridOffset; x < this.W; x += 60) {
+      ctx.beginPath();
+      ctx.moveTo(x, this.groundY);
+      ctx.lineTo(x - 45, this.H);
+      ctx.stroke();
+    }
+
+    // 5. Líneas cinéticas de velocidad (Speed Lines)
+    this.drawSpeedLines(scrollSpeed, isTurbo);
+  }
+
+  /**
+   * Líneas de viento cinético a altas velocidades o durante Turbo
+   */
+  drawSpeedLines(scrollSpeed, isTurbo) {
+    if (scrollSpeed < 6.8 && !isTurbo) return;
+
+    const ctx = this.ctx;
+    const count = isTurbo ? 14 : 7;
+    ctx.save();
+    ctx.strokeStyle = isTurbo ? 'rgba(255, 80, 130, 0.45)' : 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = isTurbo ? 2.5 : 1.5;
+
+    for (let i = 0; i < count; i++) {
+      const y = (i * 39 + Math.abs(this.gridOffset) * 2.5) % (this.groundY - 30);
+      const len = (60 + ((i * 47) % 110)) * (isTurbo ? 1.6 : 1);
+      const startX = ((i * 137 - this.gridOffset * 5) % (this.W + 250)) - 120;
+      ctx.beginPath();
+      ctx.moveTo(startX, y);
+      ctx.lineTo(startX + len, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Dibuja la Meta del nivel (Banner de llegada con iluminación de neón)
+   */
+  drawGoalPortal(goalWorldX, camera) {
+    const screenX = camera ? camera.worldToScreenX(goalWorldX) : goalWorldX;
+    if (screenX < -120 || screenX > this.W + 120) return;
+
+    const ctx = this.ctx;
+    const gateH = 145;
+    const gateY = this.groundY - gateH;
+
+    ctx.save();
+    // Postes luminosos
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = '#00F0FF';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(screenX - 8, gateY, 16, gateH);
+
+    // Cartel META
+    ctx.fillStyle = '#00F0FF';
+    ctx.shadowBlur = 15;
+    ctx.fillRect(screenX - 50, gateY - 32, 100, 30);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#000000';
+    ctx.font = "bold 13px 'Orbitron', 'Outfit', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.fillText('🏁 META', screenX, gateY - 12);
+
+    ctx.restore();
+  }
+}
+
+
+// === game.js ===
+/**
+ * game.js — Motor de Juego de Runner Challenge: Neon Run
+ * 
+ * Responsabilidades:
+ *  - Bucle principal requestAnimationFrame (60 FPS estables)
+ *  - Modo Solo (Pantalla Completa) y Modo Multijugador (Pantalla Dividida / Split-Screen)
+ *  - Soporte de Pantalla Dividida Horizontal (Arriba/Abajo) y Vertical (Izquierda/Derecha)
+ *  - Cámaras independientes por jugador (seguimiento dedicado y sacudida de impacto aislada)
+ *  - Pistas simétricas y justas (generación determinista de obstáculos y monedas con semilla)
+ *  - Telemetría de carrera en tiempo real (posiciones 1º/2º, metros de ventaja, badge VS dinámico)
+ *  - Mapeo de controles simultáneo en 1 PC:
+ *      * Player 1: W / Espacio (Saltar), S (Agacharse), D / Shift (Dash)
+ *      * Player 2: Flecha Arriba (Saltar), Flecha Abajo (Agacharse), Flecha Derecha (Dash)
+ */
+
+const Game = (() => {
+
+  const STATE = {
+    IDLE:           'idle',
+    PLAYING:        'playing',
+    PAUSED:         'paused',
+    GAMEOVER:       'gameover',
+    LEVEL_COMPLETE: 'levelcomplete',
+    VICTORY:        'victory'
+  };
+
+  let state          = STATE.IDLE;
+  let rafId          = null;
+  let lastTime       = 0;
+  let hitStopFrames  = 0; // Pausa temporal por hit-stop
+
+  // Configuración de partida
+  let currentLevel   = 1;
+  let levelData      = null;
+  let isMultiplayer  = false;
+  let splitMode      = 'horizontal'; // 'horizontal' | 'vertical'
+  let isOnline       = false;
+  let networkSeed    = null;
+  let networkOpponentState = null;
+
+  // Componentes Viewport 1 (Player 1)
+  let canvas1        = null;
+  let renderer1      = null;
+  let camera1        = null;
+  let obstacles1     = null;
+  let coinSystem1    = null;
+  let powerUpSystem1 = null;
+
+  // Componentes Viewport 2 (Player 2)
+  let canvas2        = null;
+  let renderer2      = null;
+  let camera2        = null;
+  let obstacles2     = null;
+  let coinSystem2    = null;
+  let powerUpSystem2 = null;
+
+  // Jugadores y Estadísticas
+  let players        = []; // [Player 1] o [Player 1, Player 2]
+  let p1Stats        = { score: 0, coins: 0, time: 0, isWinner: false, isAlive: true };
+  let p2Stats        = { score: 0, coins: 0, time: 0, isWinner: false, isAlive: true };
+  let startTime      = 0;
+  let goalWorldX     = 3000;
+  let raceFinished   = false;
+  let winnerChosen   = false;
+
+  // Teclado
+  const keys = {};
+
+  /**
+   * Inicializa el motor de juego y sus escuchadores de eventos
+   */
+  function init() {
+    canvas1 = document.getElementById('canvas-p1');
+    canvas2 = document.getElementById('canvas-p2');
+
+    // Eventos de teclado
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup',   onKeyUp);
+
+    // Controles de botones de UI
+    document.getElementById('btn-pause')?.addEventListener('click', pause);
+    document.getElementById('btn-resume')?.addEventListener('click', resume);
+    document.getElementById('btn-restart')?.addEventListener('click', () => {
+      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+    });
+    document.getElementById('btn-exit-game')?.addEventListener('click', () => {
+      stopLoop();
+      UI.showScreen('menu');
+    });
+
+    // Alternar modo de división (Horizontal / Vertical)
+    document.getElementById('btn-toggle-split')?.addEventListener('click', toggleSplitMode);
+
+    // Game Over
+    document.getElementById('btn-go-retry')?.addEventListener('click', () => {
+      UI.hideScreen('gameover');
+      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+    });
+    document.getElementById('btn-go-menu')?.addEventListener('click', () => {
+      stopLoop();
+      UI.showScreen('menu');
+    });
+
+    // Resultados
+    document.getElementById('btn-res-next')?.addEventListener('click', onNextLevel);
+    document.getElementById('btn-res-retry')?.addEventListener('click', () => {
+      UI.hideScreen('results');
+      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+    });
+    document.getElementById('btn-res-menu')?.addEventListener('click', () => {
+      stopLoop();
+      UI.showScreen('menu');
+    });
+
+    // Victoria
+    document.getElementById('btn-vic-menu')?.addEventListener('click', () => {
+      stopLoop();
+      UI.showScreen('menu');
+    });
+
+    // Controles Táctiles (Móviles)
+    const bindTouch = (id, key) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); keys[key] = true; });
+      el.addEventListener('pointerup',   (e) => { e.preventDefault(); keys[key] = false; });
+      el.addEventListener('pointerleave',(e) => { e.preventDefault(); keys[key] = false; });
+    };
+    bindTouch('btn-touch-jump', 'Space');
+    bindTouch('btn-touch-duck', 'KeyS');
+    bindTouch('btn-touch-dash', 'KeyD');
+
+    // Redimensionamiento dinámico de viewports
+    window.addEventListener('resize', onWindowResize);
+  }
+
+  /**
+   * Manejador de redimensionamiento
+   */
+  function onWindowResize() {
+    if (renderer1) {
+      renderer1.resize();
+      if (players[0]) players[0].groundY = renderer1.groundY;
+    }
+    if (isMultiplayer && renderer2) {
+      renderer2.resize();
+      if (players[1]) players[1].groundY = renderer2.groundY;
+    }
+  }
+
+  /**
+   * Alterna entre pantalla dividida horizontal y vertical
+   */
+  function toggleSplitMode() {
+    setSplitMode(splitMode === 'horizontal' ? 'vertical' : 'horizontal');
+  }
+
+  function setSplitMode(mode) {
+    splitMode = mode;
+    const container = document.getElementById('viewports-container');
+    if (container) {
+      container.className = `viewports-container split-${splitMode}`;
+    }
+    setTimeout(onWindowResize, 50);
+  }
+
+  /**
+   * Inicia un nivel en modo Solo o Multiplayer con Pantalla Dividida
+   * @param {number} levelNum
+   * @param {boolean} multiplayer
+   * @param {string} p1Name
+   * @param {string} p2Name
+   */
+  function startLevel(levelNum = 1, multiplayer = false, p1Name = 'Player 1', p2Name = 'Player 2', online = false, seed = null) {
+    currentLevel  = levelNum;
+    isMultiplayer = multiplayer;
+    isOnline      = online;
+    networkSeed   = seed;
+    levelData     = LevelConfig.getLevelData(levelNum);
+    raceFinished  = false;
+    winnerChosen  = false;
+    
+    if (isOnline && typeof Network !== 'undefined') {
+      Network.onOpponentState = (state) => {
+        networkOpponentState = state;
+      };
+      Network.onOpponentDisconnected = () => {
+        if (state === STATE.PLAYING && !raceFinished) {
+          UI.showToast('⚠️ Tu rival se ha desconectado. ¡Victoria por abandono!', 'warning');
+          winnerChosen = true;
+          if (players[0]) {
+            players[0].isWinner = true;
+            p1Stats.isWinner = true;
+            p1Stats.score += 500;
+          }
+          if (players[1]) {
+            players[1].isAlive = false;
+            p2Stats.isAlive = false;
+          }
+          raceFinished = true;
+          setTimeout(() => {
+            _onRaceComplete();
+          }, 1200);
+        }
+      };
+    }
+
+    if (!levelData) {
+      console.error('[Game] Error: Nivel no encontrado:', levelNum);
+      return;
+    }
+
+    // Configurar elementos de Pantalla Dividida en el DOM
+    const container   = document.getElementById('viewports-container');
+    const viewportP2  = document.getElementById('viewport-p2');
+    const splitDiv    = document.getElementById('split-divider');
+    const btnSplit    = document.getElementById('btn-toggle-split');
+    const p2Progress  = document.getElementById('progress-bar-fill-p2');
+    const p2Icon      = document.getElementById('progress-icon-p2');
+
+    if (container) {
+      container.className = `viewports-container split-${splitMode}`;
+    }
+
+    if (multiplayer) {
+      viewportP2?.classList.remove('hidden');
+      splitDiv?.classList.remove('hidden');
+      btnSplit?.classList.remove('hidden');
+      p2Progress?.classList.remove('hidden');
+      p2Icon?.classList.remove('hidden');
+    } else {
+      viewportP2?.classList.add('hidden');
+      splitDiv?.classList.add('hidden');
+      btnSplit?.classList.add('hidden');
+      p2Progress?.classList.add('hidden');
+      p2Icon?.classList.add('hidden');
+    }
+
+    // Inicializar Renderers para cada Viewport
+    if (!renderer1) {
+      renderer1 = new Renderer(canvas1, levelData);
+    } else {
+      renderer1.levelData = levelData;
+      renderer1.resize();
+    }
+
+    if (multiplayer) {
+      if (!renderer2) {
+        renderer2 = new Renderer(canvas2, levelData);
+      } else {
+        renderer2.levelData = levelData;
+        renderer2.resize();
+      }
+    }
+
+    // Resetear Partículas Globales
+    if (window.GlobalParticles) {
+      window.GlobalParticles.clear();
+    }
+
+    // Inicializar Cámaras dedicadas para cada jugador
+    if (!camera1) camera1 = new CameraController(canvas1);
+    camera1.reset(0);
+
+    if (multiplayer) {
+      if (!camera2) camera2 = new CameraController(canvas2);
+      camera2.reset(0);
+    }
+
+    // Meta del nivel
+    goalWorldX = levelData.levelLength ?? 3200;
+
+    // Generación determinista con semilla para pistas justas e idénticas
+    const levelSeed = isOnline ? networkSeed : (levelNum * 1000 + 42);
+    obstacles1     = new ObstacleSystem(levelData, levelSeed);
+    coinSystem1    = new CoinSystem(levelData, levelSeed + 500);
+    powerUpSystem1 = new PowerUpSystem(levelData, levelSeed + 250);
+
+    if (multiplayer) {
+      obstacles2     = new ObstacleSystem(levelData, levelSeed);
+      coinSystem2    = new CoinSystem(levelData, levelSeed + 500);
+      powerUpSystem2 = new PowerUpSystem(levelData, levelSeed + 250);
+    }
+
+    // Instanciar Corredores
+    players = [];
+
+    // Player 1 (Cyan)
+    const p1 = new Player({
+      worldX: 0,
+      groundY: renderer1.groundY,
+      color: '#00F0FF',
+      name: p1Name || 'Player 1',
+      levelData,
+      playerIndex: 0
+    });
+    players.push(p1);
+
+    // Player 2 (Magenta) — Sólo en modo Multijugador
+    if (multiplayer) {
+      const p2 = new Player({
+        worldX: 0,
+        groundY: renderer2.groundY,
+        color: '#FF007F',
+        name: p2Name || 'Player 2',
+        levelData,
+        playerIndex: 1
+      });
+      players.push(p2);
+    }
+
+    // Inicializar estadísticas de sesión
+    startTime = performance.now();
+    p1Stats   = { score: 0, coins: 0, time: 0, isWinner: false, isAlive: true };
+    p2Stats   = { score: 0, coins: 0, time: 0, isWinner: false, isAlive: true };
+
+    // Actualizar nombres en los badges de cada Viewport
+    const p1NameEl = document.getElementById('vp-p1-name');
+    const p2NameEl = document.getElementById('vp-p2-name');
+    if (p1NameEl) p1NameEl.textContent = p1.name;
+    if (p2NameEl) p2NameEl.textContent = players[1]?.name || 'Player 2';
+
+    document.getElementById('hud-level-val').textContent = `NIVEL ${currentLevel}`;
+
+    // Mostrar pantalla de juego
+    UI.showScreen('game');
+
+    // Iniciar Audio
+    AudioManager.resume();
+    AudioManager.startMusic();
+
+    // Iniciar Bucle a 60 FPS
+    state = STATE.PLAYING;
+    if (rafId) cancelAnimationFrame(rafId);
+    lastTime = performance.now();
+    rafId = requestAnimationFrame(gameLoop);
+  }
+
+  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42) {
+    const p1Name = isRoomHost ? 'Host (P1)' : 'Client (P2)';
+    const p2Name = isRoomHost ? 'Client (P2)' : 'Host (P1)';
+    startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed);
+  }
+
+  /**
+   * Bucle Principal a 60 FPS
+   */
+  function gameLoop(timestamp) {
+    rafId = requestAnimationFrame(gameLoop);
+
+    const delta = Math.min(timestamp - lastTime, 50);
+    lastTime = timestamp;
+
+    if (state === STATE.PLAYING) {
+      if (hitStopFrames > 0) {
+        hitStopFrames--;
+      } else {
+        update(delta);
+      }
+      draw();
+    } else if (state === STATE.PAUSED) {
+      draw();
+    }
+  }
+
+  function stopLoop() {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    state = STATE.IDLE;
+    AudioManager.stopMusic();
+  }
+
+  /**
+   * Actualización física y lógica de la partida
+   */
+  function update(delta) {
+    if (!levelData || players.length === 0) return;
+
+    const scrollSpeed = levelData.scrollSpeed;
+    const p1 = players[0];
+    const p2 = players[1];
+
+    // ── 1. Procesar Inputs P1 (W, S, D, ShiftLeft, Espacio) ─────────────────
+    if (p1 && p1.isAlive) {
+      const p1JumpPressed = keys['KeyW'] || keys['Space'];
+      if (p1JumpPressed && !p1._jumpKeyHeld) {
+        p1.jump();
+      }
+      p1._jumpKeyHeld = p1JumpPressed;
+
+      p1.setDucking(Boolean(keys['KeyS']));
+      if (keys['KeyD'] || keys['ShiftLeft']) {
+        p1.dash();
+      }
+    }
+
+    // ── 2. Procesar Inputs P2 (Flechas Direccionales o Red) ─────────────────
+    if (isMultiplayer && p2) {
+      if (isOnline) {
+        if (networkOpponentState) {
+          // Interpolación suave de coordenadas
+          p2.worldX += (networkOpponentState.worldX - p2.worldX) * 0.35;
+          p2.y += (networkOpponentState.y - p2.y) * 0.35;
+          
+          p2.vy = networkOpponentState.vy;
+          p2.isDucking = networkOpponentState.isDucking;
+          p2.hasFinished = networkOpponentState.hasFinished;
+          
+          // Sincronización de telemetría, vidas y estado
+          if (networkOpponentState.lives !== undefined) p2.lives = networkOpponentState.lives;
+          if (networkOpponentState.isAlive !== undefined) p2.isAlive = networkOpponentState.isAlive;
+          if (networkOpponentState.score !== undefined) p2Stats.score = networkOpponentState.score;
+          if (networkOpponentState.coins !== undefined) p2Stats.coins = networkOpponentState.coins;
+          if (networkOpponentState.isWinner && !winnerChosen) {
+            winnerChosen = true;
+            p2.isWinner = true;
+            p2Stats.isWinner = true;
+          }
+          
+          // Power-ups sincronizados visualmente
+          p2.turboTimer = networkOpponentState.turboTimer || 0;
+          p2.shield = networkOpponentState.shield || false;
+        }
+      } else if (p2.isAlive) {
+        const p2JumpPressed = keys['ArrowUp'];
+        if (p2JumpPressed && !p2._jumpKeyHeld) {
+          p2.jump();
+        }
+        p2._jumpKeyHeld = p2JumpPressed;
+
+        p2.setDucking(Boolean(keys['ArrowDown']));
+        if (keys['ArrowRight'] || keys['ShiftRight']) {
+          p2.dash();
+        }
+      }
+    }
+
+    // ── 3. Actualizar Jugador 1 y su Viewport ────────────────────────────────
+    if (p1) {
+      p1.update(scrollSpeed);
+      camera1.update(p1, canvas1.width);
+      obstacles1.update(p1.worldX, renderer1.groundY, goalWorldX);
+      coinSystem1.update(p1.worldX, renderer1.groundY, goalWorldX, p1);
+      if (powerUpSystem1) powerUpSystem1.update(p1.worldX, renderer1.groundY, goalWorldX);
+    }
+
+    // ── 4. Actualizar Jugador 2 y su Viewport (Multijugador) ─────────────────
+    if (isMultiplayer && p2) {
+      if (!isOnline) {
+        p2.update(scrollSpeed);
+      }
+      camera2.update(p2, canvas2.width);
+      obstacles2.update(p2.worldX, renderer2.groundY, goalWorldX);
+      coinSystem2.update(p2.worldX, renderer2.groundY, goalWorldX, p2);
+      if (powerUpSystem2) powerUpSystem2.update(p2.worldX, renderer2.groundY, goalWorldX);
+    }
+    
+    // ── Enviar estado de red P1 ──────────────────────────────────────────────
+    if (isOnline && p1 && typeof Network !== 'undefined') {
+      Network.sendState({
+        worldX: p1.worldX,
+        y: p1.y,
+        vy: p1.vy,
+        isDucking: p1.isDucking,
+        hasFinished: p1.hasFinished,
+        turboTimer: p1.turboTimer,
+        shield: p1.shield,
+        score: p1Stats.score,
+        coins: p1Stats.coins,
+        lives: p1.lives,
+        isAlive: p1.isAlive,
+        isWinner: p1Stats.isWinner
+      });
+    }
+
+    // ── 5. Partículas Globales ──────────────────────────────────────────────
+    if (window.GlobalParticles) {
+      window.GlobalParticles.update();
+    }
+
+    // ── 6. Colisiones independientes por carril ─────────────────────────────
+    _handleCollisions();
+
+    // ── 7. Puntuación por avance ────────────────────────────────────────────
+    if (p1.isAlive && !p1.hasFinished) {
+      p1Stats.score += Math.floor(scrollSpeed * 0.1);
+    }
+    if (isMultiplayer && p2?.isAlive && !p2?.hasFinished) {
+      p2Stats.score += Math.floor(scrollSpeed * 0.1);
+    }
+
+    // ── 8. Comprobar Llegada a la Meta ───────────────────────────────────────
+    _checkGoalArrival();
+
+    // ── 9. Comprobar Fin de Partida / Derrota ────────────────────────────────
+    _checkEndConditions();
+
+    // ── 10. Actualizar HUD y Telemetría de Pantalla Dividida ─────────────────
+    _updateHUD();
+  }
+
+  /**
+   * Dibuja los viewports correspondientes (Solo o Pantalla Dividida)
+   */
+  function draw() {
+    if (!renderer1 || players.length === 0) return;
+
+    const scrollSpeed = levelData?.scrollSpeed ?? 6;
+    const p1 = players[0];
+    const p2 = players[1];
+
+    // ══════════════════════════════════════════════════════════════
+    // VIEWPORT 1: PLAYER 1 (CYAN)
+    // ══════════════════════════════════════════════════════════════
+    const ctx1 = renderer1.ctx;
+    ctx1.clearRect(0, 0, renderer1.W, renderer1.H);
+
+    // Fondo y suelo de P1 (con speed lines dinámicas en Turbo o alta velocidad)
+    renderer1.drawBackground(camera1, scrollSpeed, p1.turboTimer > 0);
+
+    // Matriz de cámara P1
+    camera1.applyTransform(ctx1, renderer1.groundY);
+
+    // Meta, Monedas, Power-Ups y Obstáculos de P1
+    renderer1.drawGoalPortal(goalWorldX, camera1);
+    coinSystem1.draw(ctx1, camera1);
+    if (powerUpSystem1) powerUpSystem1.draw(ctx1, camera1);
+    obstacles1.draw(ctx1, camera1);
+
+    // Si es multijugador, renderizar también al rival como fantasma translúcido en el carril
+    if (isMultiplayer && p2 && p2.isAlive) {
+      ctx1.save();
+      ctx1.globalAlpha = 0.45;
+      p2.draw(ctx1, camera1, renderer1.groundY);
+      ctx1.restore();
+    }
+
+    // Corredor principal P1
+    p1.draw(ctx1, camera1, renderer1.groundY);
+
+    if (window.GlobalParticles) {
+      window.GlobalParticles.draw(ctx1, camera1);
+    }
+
+    camera1.restoreTransform(ctx1);
+
+    // ══════════════════════════════════════════════════════════════
+    // VIEWPORT 2: PLAYER 2 (MAGENTA) — SÓLO EN MULTIJUGADOR
+    // ══════════════════════════════════════════════════════════════
+    if (isMultiplayer && renderer2 && p2) {
+      const ctx2 = renderer2.ctx;
+      ctx2.clearRect(0, 0, renderer2.W, renderer2.H);
+
+      // Fondo y suelo de P2
+      renderer2.drawBackground(camera2, scrollSpeed, p2.turboTimer > 0);
+
+      // Matriz de cámara P2
+      camera2.applyTransform(ctx2, renderer2.groundY);
+
+      // Meta, Monedas, Power-Ups y Obstáculos de P2
+      renderer2.drawGoalPortal(goalWorldX, camera2);
+      coinSystem2.draw(ctx2, camera2);
+      if (powerUpSystem2) powerUpSystem2.draw(ctx2, camera2);
+      obstacles2.draw(ctx2, camera2);
+
+      // Renderizar al rival P1 como fantasma translúcido en el carril de P2
+      if (p1 && p1.isAlive) {
+        ctx2.save();
+        ctx2.globalAlpha = 0.45;
+        p1.draw(ctx2, camera2, renderer2.groundY);
+        ctx2.restore();
+      }
+
+      // Corredor principal P2
+      p2.draw(ctx2, camera2, renderer2.groundY);
+
+      if (window.GlobalParticles) {
+        window.GlobalParticles.draw(ctx2, camera2);
+      }
+
+      camera2.restoreTransform(ctx2);
+    }
+  }
+
+  /**
+   * Manejo de colisiones independiente para cada carril/pantalla
+   */
+  function _handleCollisions() {
+    const p1 = players[0];
+    const p2 = players[1];
+
+    // Colisiones P1
+    if (p1 && p1.isAlive && !p1.hasFinished) {
+      // Power-Ups P1
+      if (powerUpSystem1) {
+        const hitPU1 = CollisionSystem.checkPlayerVsPowerUps(p1, powerUpSystem1.items);
+        if (hitPU1) {
+          powerUpSystem1.collectPowerUp(hitPU1, p1);
+        }
+      }
+
+      // Monedas P1
+      const hitCoin1 = CollisionSystem.checkPlayerVsCoins(p1, coinSystem1.coins);
+      if (hitCoin1) {
+        coinSystem1.collectCoin(hitCoin1, camera1);
+        p1Stats.coins++;
+        p1Stats.score += 50;
+        AudioManager.play('coin');
+      }
+
+      // Obstáculos P1
+      const hitObs1 = CollisionSystem.checkPlayerVsObstacles(p1, obstacles1.obstacles);
+      if (hitObs1) {
+        if (p1.turboTimer > 0) {
+          // TURBO SMASH: Destruye el obstáculo al paso
+          hitObs1.destroyed = true;
+          p1Stats.score += 100;
+          if (typeof AudioManager !== 'undefined') AudioManager.play('smash');
+          if (window.GlobalParticles) {
+            window.GlobalParticles.spawnShatter(hitObs1.worldX, hitObs1.y, hitObs1.w, hitObs1.h, hitObs1.color, 14);
+            window.GlobalParticles.spawnShockwave(hitObs1.worldX + hitObs1.w / 2, hitObs1.y + hitObs1.h / 2, '#FF0055', 40);
+            window.GlobalParticles.spawnFloatingText(hitObs1.worldX, hitObs1.y - 15, '¡DESTRUIDO! +100', '#FFD700', 14);
+          }
+          camera1.triggerShake(8, 4);
+        } else if (!p1.invulnerable) {
+          const died = p1.takeDamage();
+          camera1.triggerShake(16, 9);
+          hitStopFrames = 5;
+
+          // Efecto Glitch aislado para el viewport de P1
+          const vpP1 = document.getElementById('viewport-p1');
+          vpP1?.classList.add('glitch-effect');
+          setTimeout(() => vpP1?.classList.remove('glitch-effect'), 150);
+
+          if (died) p1Stats.isAlive = false;
+        }
+      }
+    }
+
+    // Colisiones P2 (Multijugador)
+    if (isMultiplayer && p2 && p2.isAlive && !p2.hasFinished) {
+      if (isOnline) {
+        // En modo online, el rival calcula sus propias colisiones, daño y monedas en su cliente
+        // para garantizar que la partida sea 100% justa y libre de desync por latencia.
+        return;
+      }
+
+      // Power-Ups P2
+      if (powerUpSystem2) {
+        const hitPU2 = CollisionSystem.checkPlayerVsPowerUps(p2, powerUpSystem2.items);
+        if (hitPU2) {
+          powerUpSystem2.collectPowerUp(hitPU2, p2);
+        }
+      }
+
+      // Monedas P2
+      const hitCoin2 = CollisionSystem.checkPlayerVsCoins(p2, coinSystem2.coins);
+      if (hitCoin2) {
+        coinSystem2.collectCoin(hitCoin2, camera2);
+        p2Stats.coins++;
+        p2Stats.score += 50;
+        AudioManager.play('coin');
+      }
+
+      // Obstáculos P2
+      const hitObs2 = CollisionSystem.checkPlayerVsObstacles(p2, obstacles2.obstacles);
+      if (hitObs2) {
+        if (p2.turboTimer > 0) {
+          // TURBO SMASH: Destruye el obstáculo al paso
+          hitObs2.destroyed = true;
+          p2Stats.score += 100;
+          if (typeof AudioManager !== 'undefined') AudioManager.play('smash');
+          if (window.GlobalParticles) {
+            window.GlobalParticles.spawnShatter(hitObs2.worldX, hitObs2.y, hitObs2.w, hitObs2.h, hitObs2.color, 14);
+            window.GlobalParticles.spawnShockwave(hitObs2.worldX + hitObs2.w / 2, hitObs2.y + hitObs2.h / 2, '#FF0055', 40);
+            window.GlobalParticles.spawnFloatingText(hitObs2.worldX, hitObs2.y - 15, '¡DESTRUIDO! +100', '#FFD700', 14);
+          }
+          camera2.triggerShake(8, 4);
+        } else if (!p2.invulnerable) {
+          const died = p2.takeDamage();
+          camera2.triggerShake(16, 9);
+          hitStopFrames = 5;
+
+          // Efecto Glitch aislado para el viewport de P2
+          const vpP2 = document.getElementById('viewport-p2');
+          vpP2?.classList.add('glitch-effect');
+          setTimeout(() => vpP2?.classList.remove('glitch-effect'), 150);
+
+          if (died) p2Stats.isAlive = false;
+        }
+      }
+    }
+  }
+
+  /**
+   * Determinación de llegada a la meta y asignación de ganador
+   */
+  function _checkGoalArrival() {
+    const elapsedSecs = Math.floor((performance.now() - startTime) / 1000);
+
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+      if (player.isAlive && !player.hasFinished && player.worldX >= goalWorldX) {
+        player.hasFinished = true;
+        player.finishTime  = elapsedSecs;
+
+        const stats = i === 0 ? p1Stats : p2Stats;
+        stats.time  = elapsedSecs;
+
+        // El primer jugador en llegar es el GANADOR
+        if (!winnerChosen) {
+          winnerChosen    = true;
+          player.isWinner = true;
+          stats.isWinner  = true;
+          stats.score    += 500; // Bonus victoria
+          AudioManager.play('goal');
+        } else {
+          stats.score += 250; // Bonus completar carrera
+        }
+      }
+    }
+  }
+
+  /**
+   * Comprobar fin de partida
+   */
+  function _checkEndConditions() {
+    if (raceFinished) return;
+
+    const allFinishedOrDead = players.every(p => !p.isAlive || p.hasFinished);
+    const anyFinished       = players.some(p => p.hasFinished);
+
+    if (allFinishedOrDead) {
+      raceFinished = true;
+      state = anyFinished ? STATE.LEVEL_COMPLETE : STATE.GAMEOVER;
+      AudioManager.stopMusic();
+
+      setTimeout(() => {
+        if (anyFinished) {
+          _onRaceComplete();
+        } else {
+          _onGameOver();
+        }
+      }, 700);
+    }
+  }
+
+  /**
+   * Finalización de carrera con resultados
+   */
+  function _onRaceComplete() {
+    const elapsed = Math.floor((performance.now() - startTime) / 1000);
+
+    // Guardar récord de P1
+    const { newRecord, unlockedNext } = ScoreManager.saveResults({
+      level: currentLevel,
+      score: p1Stats.score,
+      time:  elapsed,
+      coins: p1Stats.coins
+    });
+
+    if (currentLevel === LevelConfig.TOTAL_LEVELS && !isMultiplayer) {
+      _showVictory();
+      return;
+    }
+
+    UI.showResults({
+      level: currentLevel,
+      isMultiplayer,
+      p1: {
+        name:     players[0]?.name || 'Player 1',
+        score:    p1Stats.score,
+        coins:    p1Stats.coins,
+        time:     ScoreManager.formatTime(p1Stats.time || elapsed),
+        isWinner: p1Stats.isWinner,
+        isAlive:  players[0]?.isAlive
+      },
+      p2: isMultiplayer ? {
+        name:     players[1]?.name || 'Player 2',
+        score:    p2Stats.score,
+        coins:    p2Stats.coins,
+        time:     ScoreManager.formatTime(p2Stats.time || elapsed),
+        isWinner: p2Stats.isWinner,
+        isAlive:  players[1]?.isAlive
+      } : null,
+      record: ScoreManager.getRecord(currentLevel),
+      unlockedLevel: unlockedNext ? currentLevel + 1 : null
+    });
+  }
+
+  function _onGameOver() {
+    state = STATE.GAMEOVER;
+    UI.showGameOver({
+      level: currentLevel,
+      isMultiplayer,
+      p1Score: p1Stats.score,
+      p2Score: isMultiplayer ? p2Stats.score : null
+    });
+  }
+
+  function _showVictory() {
+    state = STATE.VICTORY;
+    AudioManager.play('levelup');
+    UI.showVictory({
+      score: p1Stats.score,
+      coins: p1Stats.coins,
+      time:  ScoreManager.formatTime(p1Stats.time)
+    });
+  }
+
+  function onNextLevel() {
+    UI.hideScreen('results');
+    const next = currentLevel + 1;
+    if (next <= LevelConfig.TOTAL_LEVELS && ScoreManager.isLevelUnlocked(next)) {
+      startLevel(next, isMultiplayer, players[0]?.name, players[1]?.name);
+    } else {
+      UI.showScreen('levels');
+    }
+  }
+
+  /**
+   * Actualiza el HUD superior, los overlays de viewports y la telemetría del divisor
+   */
+  function _updateHUD() {
+    const elapsed = Math.floor((performance.now() - startTime) / 1000);
+    const timeValEl = document.getElementById('hud-time-val');
+    if (timeValEl) timeValEl.textContent = ScoreManager.formatTime(elapsed);
+
+    const p1 = players[0];
+    const p2 = players[1];
+
+    // HUD Viewport 1 (P1)
+    if (p1) {
+      document.getElementById('vp-p1-score').textContent = p1Stats.score;
+      document.getElementById('vp-p1-coins').textContent = p1Stats.coins;
+      document.getElementById('vp-p1-lives').textContent = '❤️'.repeat(Math.max(0, p1.lives));
+
+      const p1Progress = Math.min(100, Math.max(0, (p1.worldX / goalWorldX) * 100));
+      const p1Fill = document.getElementById('progress-bar-fill-p1');
+      const p1Icon = document.getElementById('progress-icon-p1');
+      if (p1Fill) p1Fill.style.width = p1Progress + '%';
+      if (p1Icon) p1Icon.style.left  = p1Progress + '%';
+
+      // Badges de Power-Ups P1
+      _renderPowerUpBadges(document.getElementById('vp-p1-powerups'), p1);
+    }
+
+    // HUD Viewport 2 (P2)
+    if (isMultiplayer && p2) {
+      document.getElementById('vp-p2-score').textContent = p2Stats.score;
+      document.getElementById('vp-p2-coins').textContent = p2Stats.coins;
+      document.getElementById('vp-p2-lives').textContent = '❤️'.repeat(Math.max(0, p2.lives));
+
+      const p2Progress = Math.min(100, Math.max(0, (p2.worldX / goalWorldX) * 100));
+      const p2Fill = document.getElementById('progress-bar-fill-p2');
+      const p2Icon = document.getElementById('progress-icon-p2');
+      if (p2Fill) p2Fill.style.width = p2Progress + '%';
+      if (p2Icon) p2Icon.style.left  = p2Progress + '%';
+
+      // Badges de Power-Ups P2
+      _renderPowerUpBadges(document.getElementById('vp-p2-powerups'), p2);
+
+      // ── Telemetría en Vivo de Pantalla Dividida ────────────────────────────
+      const rankP1 = document.getElementById('vp-p1-rank');
+      const rankP2 = document.getElementById('vp-p2-rank');
+      const statusBadge = document.getElementById('split-status-badge');
+
+      const distDiffPx = p1.worldX - p2.worldX;
+      const distDiffMeters = Math.round(Math.abs(distDiffPx) / 10);
+
+      if (distDiffPx > 30) {
+        if (rankP1) rankP1.textContent = '1º LUGAR ⚡';
+        if (rankP2) rankP2.textContent = '2º LUGAR';
+        if (statusBadge) {
+          statusBadge.textContent = `⚡ ${p1.name} LIDERANDO (+${distDiffMeters}m) ⚡`;
+          statusBadge.style.color = 'var(--c-cyan)';
+          statusBadge.style.borderColor = 'var(--c-cyan)';
+        }
+      } else if (distDiffPx < -30) {
+        if (rankP1) rankP1.textContent = '2º LUGAR';
+        if (rankP2) rankP2.textContent = '1º LUGAR ⚡';
+        if (statusBadge) {
+          statusBadge.textContent = `⚡ ${p2.name} LIDERANDO (+${distDiffMeters}m) ⚡`;
+          statusBadge.style.color = 'var(--c-accent)';
+          statusBadge.style.borderColor = 'var(--c-accent)';
+        }
+      } else {
+        if (rankP1) rankP1.textContent = 'EMPATADOS';
+        if (rankP2) rankP2.textContent = 'EMPATADOS';
+        if (statusBadge) {
+          statusBadge.textContent = `⚡ ¡CUELLO A CUELLO! ⚡`;
+          statusBadge.style.color = '#FFD700';
+          statusBadge.style.borderColor = '#FFD700';
+        }
+      }
+    }
+  }
+
+  /**
+   * Renderiza los badges de Power-Ups activos para el viewport del jugador
+   */
+  function _renderPowerUpBadges(containerEl, player) {
+    if (!containerEl || !player) return;
+    let html = '';
+    if (player.shield) {
+      html += `<div class="powerup-badge badge-shield"><span class="pu-icon">🛡️</span><span>ESCUDO</span></div>`;
+    }
+    if (player.magnetTimer > 0) {
+      const sec = (player.magnetTimer / 60).toFixed(1);
+      html += `<div class="powerup-badge badge-magnet"><span class="pu-icon">🧲</span><span>IMÁN</span><span class="pu-timer">${sec}s</span></div>`;
+    }
+    if (player.turboTimer > 0) {
+      const sec = (player.turboTimer / 60).toFixed(1);
+      html += `<div class="powerup-badge badge-turbo"><span class="pu-icon">⚡</span><span>TURBO</span><span class="pu-timer">${sec}s</span></div>`;
+    }
+    if (player.doubleJumpTimer > 0) {
+      const sec = (player.doubleJumpTimer / 60).toFixed(1);
+      html += `<div class="powerup-badge badge-doublejump"><span class="pu-icon">🦘</span><span>D. SALTO</span><span class="pu-timer">${sec}s</span></div>`;
+    }
+    containerEl.innerHTML = html;
+  }
+
+  /**
+   * Gestión de Inputs de Teclado
+   */
+  function onKeyDown(e) {
+    keys[e.code] = true;
+    AudioManager.init();
+    AudioManager.resume();
+
+    if (e.code === 'Escape' || e.code === 'KeyP') {
+      if (state === STATE.PLAYING) pause();
+      else if (state === STATE.PAUSED) resume();
+    }
+
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowRight', 'KeyW', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
+      e.preventDefault();
+    }
+  }
+
+  function onKeyUp(e) {
+    keys[e.code] = false;
+  }
+
+  function pause() {
+    if (state !== STATE.PLAYING) return;
+    state = STATE.PAUSED;
+    UI.showPause({
+      p1Score: p1Stats.score,
+      p2Score: isMultiplayer ? p2Stats.score : null
+    });
+  }
+
+  function resume() {
+    if (state !== STATE.PAUSED) return;
+    state = STATE.PLAYING;
+    UI.hidePause();
+    lastTime = performance.now();
+  }
+
+  return {
+    init,
+    startLevel,
+    startLevelOnline,
+    pause,
+    resume,
+    onNextLevel,
+    stopLoop,
+    setSplitMode,
+    toggleSplitMode,
+    get state()         { return state; },
+    get isMultiplayer() { return isMultiplayer; },
+    get splitMode()     { return splitMode; }
+  };
+})();
+
+
+// === ui.js ===
+/**
+ * ui.js — Gestión de Pantallas, Menús y HUD de Runner Challenge: Neon Run
+ * 
+ * Responsabilidades:
+ *  - Navegación entre pantallas del juego (Glassmorphism Cyberpunk)
+ *  - Modos de inicio: Solo y Multijugador Local Offline (2 jugadores en 1 PC)
+ *  - Cuenta regresiva animada (3, 2, 1, ¡CORRE!)
+ *  - Pantalla de Resultados comparativa P1 vs P2 (WINNER / RUNNER-UP)
+ *  - Grid de niveles, configuración y récords persistentes
+ */
+
+const UI = (() => {
+
+  const SCREENS = [
+    'menu', 'levels', 'multiplayer', 'lobby',
+    'countdown', 'game', 'pause', 'gameover',
+    'results', 'victory', 'records', 'settings'
+  ];
+
+  let currentScreen = 'menu';
+  let countdownTimer = null;
+
+  /**
+   * Muestra una pantalla específica y oculta las demás.
+   */
+  function showScreen(screenName) {
+    SCREENS.forEach(name => {
+      const el = document.getElementById(`screen-${name}`);
+      if (el) {
+        if (name === screenName) el.classList.add('active');
+        else el.classList.remove('active');
+      }
+    });
+    currentScreen = screenName;
+
+    if (screenName === 'levels') _renderLevelsGrid();
+    if (screenName === 'multiplayer') _populateMpLevels();
+    if (screenName === 'lobby') _populateMpOnlineLevels();
+    if (screenName === 'records') _renderRecords();
+    if (screenName === 'settings') _loadSettings();
+  }
+
+  function hideScreen(screenName) {
+    const el = document.getElementById(`screen-${screenName}`);
+    if (el) el.classList.remove('active');
+  }
+
+  /**
+   * Llena el selector de niveles para multijugador con los 20 niveles disponibles
+   */
+  function _populateMpLevels() {
+    const select = document.getElementById('mp-select-level');
+    if (!select) return;
+    const currentVal = select.value || '1';
+    select.innerHTML = '';
+    const levels = LevelConfig.getAllLevels();
+    levels.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.number;
+      opt.textContent = `${l.name} (${l.difficulty})`;
+      if (String(l.number) === String(currentVal)) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  /**
+   * Llena el selector de niveles para multijugador online con los 20 niveles disponibles
+   */
+  function _populateMpOnlineLevels() {
+    const select = document.getElementById('mp-select-level-online');
+    if (!select) return;
+    const currentVal = select.value || '1';
+    select.innerHTML = '';
+    const levels = LevelConfig.getAllLevels();
+    levels.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.number;
+      opt.textContent = `${l.name} (${l.difficulty})`;
+      if (String(l.number) === String(currentVal)) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  /**
+   * Renderiza la cuadrícula de niveles
+   */
+  function _renderLevelsGrid() {
+    const grid = document.getElementById('levels-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const levels = LevelConfig.getAllLevels();
+    const starEmojis = ['', '⭐', '⭐⭐', '⭐⭐⭐', '⭐⭐⭐⭐', '⭐⭐⭐⭐⭐'];
+    const diffColors = {
+      'Fácil': '#00F0FF', 'Normal': '#00E5FF',
+      'Difícil': '#FFD700', 'Muy Difícil': '#FF7700', 'Legendario': '#FF007F',
+      'Extremo': '#9900FF', 'Demencial': '#00FFFF', 'Imposible': '#FFFF00', 'Infierno': '#FF0055', 'Mítico': '#FFFFFF'
+    };
+
+    levels.forEach(level => {
+      const unlocked = ScoreManager.isLevelUnlocked(level.number);
+      const record   = ScoreManager.getRecord(level.number);
+      const bestTime = ScoreManager.getBestTime(level.number);
+
+      const card = document.createElement('div');
+      card.className = `level-card ${unlocked ? '' : 'locked'}`;
+      card.innerHTML = `
+        ${!unlocked ? '<div class="level-card-lock">🔒</div>' : ''}
+        <div class="level-card-number" style="color:${diffColors[level.difficulty] || '#00F0FF'}">
+          ${level.number}
+        </div>
+        <div class="level-card-name">${level.name}</div>
+        <div class="level-card-diff" style="color:${diffColors[level.difficulty] || '#9E9EC8'}">
+          ${level.difficulty}
+        </div>
+        <div class="level-card-stars">${starEmojis[level.stars] || ''}</div>
+        ${record ? `<div class="level-card-record">🏆 ${record} pts</div>` : ''}
+        ${bestTime ? `<div class="level-card-record">⏱ ${ScoreManager.formatTime(bestTime)}</div>` : ''}
+      `;
+
+      if (unlocked) {
+        card.addEventListener('click', () => {
+          AudioManager.init();
+          startCountdown(() => {
+            Game.startLevel(level.number, false, ScoreManager.getPlayerName());
+          });
+        });
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  /**
+   * Cuenta regresiva previa al inicio (3.. 2.. 1.. ¡CORRE!)
+   */
+  function startCountdown(callback) {
+    showScreen('countdown');
+    const numberEl = document.getElementById('countdown-number');
+    let count = 3;
+    if (numberEl) numberEl.textContent = count;
+    AudioManager.play('countdown');
+
+    if (countdownTimer) clearInterval(countdownTimer);
+
+    countdownTimer = setInterval(() => {
+      count--;
+      if (count > 0) {
+        if (numberEl) numberEl.textContent = count;
+        AudioManager.play('countdown');
+      } else if (count === 0) {
+        if (numberEl) numberEl.textContent = '¡CORRE!';
+        AudioManager.play('goal');
+      } else {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        callback();
+      }
+    }, 850);
+  }
+
+  /**
+   * Muestra la pantalla de pausa
+   */
+  function showPause({ p1Score, p2Score }) {
+    const el = document.getElementById('screen-pause');
+    if (el) el.classList.add('active');
+  }
+
+  function hidePause() {
+    hideScreen('pause');
+  }
+
+  /**
+   * Muestra la pantalla de Game Over
+   */
+  function showGameOver({ level, isMultiplayer, p1Score, p2Score }) {
+    const msg = document.getElementById('go-message');
+    if (msg) {
+      msg.textContent = isMultiplayer
+        ? '¡Ambos corredores fueron eliminados!'
+        : '¡Te has quedado sin vidas!';
+    }
+    const el = document.getElementById('screen-gameover');
+    if (el) el.classList.add('active');
+  }
+
+  /**
+   * Muestra los resultados comparativos del nivel (P1 vs P2)
+   */
+  function showResults({ level, isMultiplayer, p1, p2, record, unlockedLevel }) {
+    const title = document.getElementById('results-title');
+    const badge = document.getElementById('results-badge');
+
+    if (isMultiplayer && p1 && p2) {
+      if (p1.isWinner) {
+        title.textContent = `¡${p1.name} GANA LA CARRERA!`;
+        badge.textContent = '🥇';
+      } else if (p2.isWinner) {
+        title.textContent = `¡${p2.name} GANA LA CARRERA!`;
+        badge.textContent = '🥇';
+      } else {
+        title.textContent = 'CARRERA TERMINADA';
+        badge.textContent = '🏁';
+      }
+
+      // Columna P1
+      document.getElementById('res-p1-col')?.classList.remove('hidden');
+      document.getElementById('res-p1-pos').textContent = p1.isWinner ? 'WINNER 🏆' : (p1.isAlive ? 'RUNNER-UP' : 'ELIMINADO 💀');
+      document.getElementById('res-p1-time').textContent = p1.time;
+      document.getElementById('res-p1-coins').textContent = p1.coins;
+      document.getElementById('res-p1-score').textContent = p1.score;
+
+      // Columna P2
+      document.getElementById('res-p2-col')?.classList.remove('hidden');
+      document.getElementById('res-mid-divider')?.classList.remove('hidden');
+      document.getElementById('res-p2-pos').textContent = p2.isWinner ? 'WINNER 🏆' : (p2.isAlive ? 'RUNNER-UP' : 'ELIMINADO 💀');
+      document.getElementById('res-p2-time').textContent = p2.time;
+      document.getElementById('res-p2-coins').textContent = p2.coins;
+      document.getElementById('res-p2-score').textContent = p2.score;
+    } else {
+      // Modo Solo
+      title.textContent = '¡NIVEL COMPLETADO!';
+      badge.textContent = '🥇';
+
+      document.getElementById('res-p1-col')?.classList.remove('hidden');
+      document.getElementById('res-p1-pos').textContent = 'COMPLETADO ✨';
+      document.getElementById('res-p1-time').textContent = p1.time;
+      document.getElementById('res-p1-coins').textContent = p1.coins;
+      document.getElementById('res-p1-score').textContent = p1.score;
+
+      document.getElementById('res-p2-col')?.classList.add('hidden');
+      document.getElementById('res-mid-divider')?.classList.add('hidden');
+    }
+
+    // Banner de desbloqueo
+    const banner = document.getElementById('unlock-banner');
+    if (banner) {
+      if (unlockedLevel) {
+        document.getElementById('unlocked-level').textContent = unlockedLevel;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    const el = document.getElementById('screen-results');
+    if (el) el.classList.add('active');
+  }
+
+  /**
+   * Pantalla de Victoria Final (Completar todos los niveles)
+   */
+  function showVictory({ score, coins, time }) {
+    const summary = document.getElementById('victory-summary-content');
+    if (summary) {
+      summary.innerHTML = `
+        <div class="vic-stat"><span>Puntuación Final:</span><strong>${score} pts</strong></div>
+        <div class="vic-stat"><span>Monedas Totales:</span><strong>🪙 ${coins}</strong></div>
+        <div class="vic-stat"><span>Tiempo:</span><strong>⏱ ${time}</strong></div>
+      `;
+    }
+    const el = document.getElementById('screen-victory');
+    if (el) el.classList.add('active');
+  }
+
+  /**
+   * Renderiza la tabla de récords
+   */
+  function _renderRecords() {
+    const container = document.getElementById('records-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const levels = LevelConfig.getAllLevels();
+    levels.forEach(lvl => {
+      const record = ScoreManager.getRecord(lvl.number);
+      const time   = ScoreManager.getBestTime(lvl.number);
+
+      const row = document.createElement('div');
+      row.className = 'record-row';
+      row.innerHTML = `
+        <div class="rec-level">NIVEL ${lvl.number}: ${lvl.name}</div>
+        <div class="rec-score">${record ? `🏆 ${record} pts` : '—'}</div>
+        <div class="rec-time">${time ? `⏱ ${ScoreManager.formatTime(time)}` : '—'}</div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  /**
+   * Carga la configuración guardada
+   */
+  function _loadSettings() {
+    const nameInput = document.getElementById('setting-name');
+    if (nameInput) nameInput.value = ScoreManager.getPlayerName();
+
+    const settings = ScoreManager.getSettings();
+    const musicToggle = document.getElementById('setting-music');
+    const sfxToggle   = document.getElementById('setting-sfx');
+    const volumeSlider= document.getElementById('setting-volume');
+
+    if (musicToggle) musicToggle.checked = settings.music;
+    if (sfxToggle)   sfxToggle.checked   = settings.sfx;
+    if (volumeSlider)volumeSlider.value  = Math.floor(settings.volume * 100);
+  }
+
+  function _saveSettings() {
+    const name = document.getElementById('setting-name')?.value.trim() || 'Player 1';
+    const music = document.getElementById('setting-music')?.checked ?? true;
+    const sfx   = document.getElementById('setting-sfx')?.checked ?? true;
+    const volume = (parseInt(document.getElementById('setting-volume')?.value ?? 70, 10)) / 100;
+
+    ScoreManager.saveSettings({ name, music, sfx, volume });
+    AudioManager.loadSettings({ music, sfx, volume });
+    showToast('Configuración guardada 💾');
+    showScreen('menu');
+  }
+
+  /**
+   * Notificación Toast flotante
+   */
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 400);
+    }, 2500);
+  }
+
+  /**
+   * Conecta todos los eventos de UI
+   */
+  function setupEvents() {
+    // ── Menú Principal ──────────────────────────────────────────────────────
+    document.getElementById('btn-play-solo')?.addEventListener('click', () => {
+      AudioManager.init();
+      startCountdown(() => {
+        Game.startLevel(1, false, ScoreManager.getPlayerName());
+      });
+    });
+
+    document.getElementById('btn-multiplayer')?.addEventListener('click', () => {
+      AudioManager.init();
+      showScreen('multiplayer');
+    });
+
+    document.getElementById('btn-levels')?.addEventListener('click', () => {
+      showScreen('levels');
+    });
+
+    document.getElementById('btn-records')?.addEventListener('click', () => {
+      showScreen('records');
+    });
+
+    document.getElementById('btn-settings')?.addEventListener('click', () => {
+      showScreen('settings');
+    });
+
+    // ── Helper para poblar los 20 niveles en el selector Online ────────────
+    function _populateOnlineLevels() {
+      const select = document.getElementById('mp-select-level-online');
+      if (!select || select.children.length > 0) return;
+      const allLevels = LevelConfig.getAllLevels ? LevelConfig.getAllLevels() : [];
+      select.innerHTML = allLevels.map(lvl => 
+        `<option value="${lvl.number}">${lvl.name} — [${lvl.difficulty}]</option>`
+      ).join('');
+    }
+
+    // ── Lobby Online ────────────────────────────────────────────────────────
+    document.getElementById('btn-online')?.addEventListener('click', () => {
+      AudioManager.init();
+      showScreen('lobby');
+      Network.init();
+      _populateOnlineLevels();
+      document.getElementById('room-code-display')?.classList.add('hidden');
+    });
+    
+    document.getElementById('btn-back-lobby')?.addEventListener('click', () => {
+      showScreen('menu');
+    });
+
+    document.getElementById('btn-create-room')?.addEventListener('click', () => {
+      _populateOnlineLevels();
+      Network.createRoom((res) => {
+        if (res.success) {
+          document.getElementById('room-code-display')?.classList.remove('hidden');
+          const codeEl = document.getElementById('room-code-text');
+          if (codeEl) codeEl.textContent = res.roomId;
+          showToast(`¡Sala ${res.roomId} creada! Comparte el código o el enlace`, 'success');
+          
+          Network.onPlayerJoined = (data) => {
+            showToast('⚡ ¡Rival conectado! La carrera comenzará en breve...', 'success');
+            const selectedLevel = parseInt(document.getElementById('mp-select-level-online')?.value || '1', 10);
+            
+            // Notificar al cliente para sincronizar inicio
+            Network.sendLevelStart({ level: selectedLevel, seed: data.seed });
+            
+            setTimeout(() => {
+              startCountdown(() => {
+                Game.startLevelOnline(selectedLevel, true, true, data.seed);
+              });
+            }, 1000);
+          };
+        } else {
+          showToast('Error al crear sala: ' + (res.message || 'Sin conexión'), 'danger');
+        }
+      });
+    });
+
+    // Botones para copiar Código y Enlace de Invitación
+    document.getElementById('btn-copy-code')?.addEventListener('click', () => {
+      const code = document.getElementById('room-code-text')?.textContent;
+      if (code && code !== '---') {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast('📋 ¡Código ' + code + ' copiado al portapapeles!', 'info');
+        }).catch(() => {
+          showToast('Código: ' + code, 'info');
+        });
+      }
+    });
+
+    document.getElementById('btn-copy-link')?.addEventListener('click', () => {
+      const code = document.getElementById('room-code-text')?.textContent;
+      if (code && code !== '---') {
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${code}`;
+        navigator.clipboard.writeText(inviteUrl).then(() => {
+          showToast('🔗 ¡Enlace de invitación copiado! Envíalo a tu amigo', 'success');
+        }).catch(() => {
+          prompt('Copia este enlace de invitación:', inviteUrl);
+        });
+      }
+    });
+
+    document.getElementById('btn-join-room')?.addEventListener('click', () => {
+      const codeInput = document.getElementById('join-room-code');
+      const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+      if (code.length !== 6) {
+        showToast('El código debe tener exactamente 6 letras', 'danger');
+        return;
+      }
+
+      const statusEl = document.getElementById('join-status-msg');
+      if (statusEl) statusEl.textContent = 'Conectando con la sala ' + code + '...';
+
+      Network.joinRoom(code, (res) => {
+        if (res.success) {
+          if (statusEl) statusEl.textContent = '✅ Conectado. Esperando que el Host inicie la partida...';
+          showToast('¡Conectado a la sala! Esperando al Host...', 'success');
+          
+          Network.onOpponentStart = (data) => {
+            startCountdown(() => {
+              Game.startLevelOnline(data.level, true, false, data.seed);
+            });
+          };
+        } else {
+          if (statusEl) statusEl.textContent = '❌ ' + (res.message || 'Error al unirse');
+          showToast(res.message || 'Error al unirse a la sala', 'danger');
+        }
+      });
+    });
+
+    // Detección automática de parámetro ?room=XYZ en la URL
+    setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = (params.get('room') || window.location.hash.replace('#room=', '')).trim().toUpperCase();
+      if (roomParam && roomParam.length === 6) {
+        showScreen('lobby');
+        Network.init();
+        _populateOnlineLevels();
+        const input = document.getElementById('join-room-code');
+        if (input) input.value = roomParam;
+        showToast(`🎮 ¡Invitación detectada para la sala ${roomParam}! Haz clic en UNIRSE`, 'info');
+      }
+    }, 400);
+
+    // ── Opciones de División de Pantalla (Horizontal / Vertical) ────────────
+    const optSplitH = document.getElementById('opt-split-h');
+    const optSplitV = document.getElementById('opt-split-v');
+
+    optSplitH?.addEventListener('click', () => {
+      optSplitH.classList.add('active');
+      optSplitV?.classList.remove('active');
+      Game.setSplitMode('horizontal');
+    });
+
+    optSplitV?.addEventListener('click', () => {
+      optSplitV.classList.add('active');
+      optSplitH?.classList.remove('active');
+      Game.setSplitMode('vertical');
+    });
+
+    // ── Multijugador Local: Iniciar Carrera Dividida ─────────────────────────
+    document.getElementById('btn-start-local-mp')?.addEventListener('click', () => {
+      AudioManager.init();
+      const p1Name = document.getElementById('mp-p1-name')?.value.trim() || 'Player 1';
+      const p2Name = document.getElementById('mp-p2-name')?.value.trim() || 'Player 2';
+      const selectedLevel = parseInt(document.getElementById('mp-select-level')?.value || '1', 10);
+
+      startCountdown(() => {
+        Game.startLevel(selectedLevel, true, p1Name, p2Name);
+      });
+    });
+
+    // ── Botones de Volver ───────────────────────────────────────────────────
+    document.getElementById('btn-back-levels')?.addEventListener('click', () => showScreen('menu'));
+    document.getElementById('btn-back-mp')?.addEventListener('click', () => showScreen('menu'));
+    document.getElementById('btn-back-records')?.addEventListener('click', () => showScreen('menu'));
+    document.getElementById('btn-back-settings')?.addEventListener('click', () => showScreen('menu'));
+
+    // ── Configuración ──────────────────────────────────────────────────────
+    document.getElementById('btn-save-settings')?.addEventListener('click', _saveSettings);
+
+    // ── Borrar récords ──────────────────────────────────────────────────────
+    document.getElementById('btn-clear-records')?.addEventListener('click', () => {
+      if (confirm('¿Deseas reiniciar todos los récords?')) {
+        ScoreManager.clearAll();
+        _renderRecords();
+        showToast('Récords reiniciados.');
+      }
+    });
+  }
+
+  return {
+    showScreen,
+    hideScreen,
+    showPause,
+    hidePause,
+    showGameOver,
+    showResults,
+    showVictory,
+    startCountdown,
+    showToast,
+    setupEvents,
+    get currentScreen() { return currentScreen; }
+  };
+})();
+
+
+// === main.js ===
+/**
+ * main.js — Punto de entrada de Runner Challenge
+ * 
+ * Este archivo es el primero que se ejecuta después de cargar todos
+ * los módulos JS. Sus responsabilidades son mínimas:
+ * 
+ *  1. Esperar a que el DOM esté listo
+ *  2. Inicializar el motor de juego (Game.init)
+ *  3. Conectar los eventos de UI (UI.setupEvents)
+ *  4. Mostrar el menú principal
+ *  5. Aplicar configuración de audio guardada
+ * 
+ * Todos los demás módulos se inicializan lazy (cuando se necesitan).
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  // ── 1. Cargar configuración guardada ─────────────────────────────────────
+  const settings = ScoreManager.getSettings();
+  AudioManager.loadSettings(settings);
+
+  // ── 2. Inicializar motor de juego ─────────────────────────────────────────
+  Game.init();
+
+  // ── 3. Conectar eventos de UI ─────────────────────────────────────────────
+  UI.setupEvents();
+
+  // ── 4. Mostrar menú principal ─────────────────────────────────────────────
+  UI.showScreen('menu');
+
+  // ── 5. Activar audio tras primer gesto del usuario ────────────────────────
+  // (La política de autoplay del navegador requiere un gesto del usuario)
+  document.addEventListener('click', () => {
+    AudioManager.init();
+    AudioManager.resume();
+  }, { once: true });
+
+  document.addEventListener('keydown', () => {
+    AudioManager.init();
+    AudioManager.resume();
+  }, { once: true });
+
+  console.log('%c🎮 Runner Challenge v1.0 — Iniciado', 'color:#6C63FF;font-size:14px;font-weight:bold;');
+  console.log('%c📚 Proyecto Académico | Node.js + Socket.IO + Canvas', 'color:#4FC3F7;font-size:12px;');
+});
+
+
+</script>
+</body>
+</html>
+

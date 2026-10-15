@@ -1,0 +1,16 @@
+{
+  "name": "runner-challenge",
+  "version": "1.0.0",
+  "description": "Videojuego 2D runner por niveles con multijugador - Proyecto Académico",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.8.4"
+  },
+  "author": "Proyecto Universitario",
+  "license": "MIT"
+}
