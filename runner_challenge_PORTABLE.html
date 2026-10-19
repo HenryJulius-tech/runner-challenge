@@ -1,9 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Runner Challenge: Neon Run — Videojuego 2D runner cyberpunk con modo multijugador local offline. Proyecto académico universitario." />
+  <meta name="description"
+    content="Runner Challenge: Neon Run — Videojuego 2D runner cyberpunk con modo multijugador local offline. Proyecto académico universitario." />
   <title>Runner Challenge — Prototipo (Avance 1)</title>
   
   
@@ -1891,7 +1893,9 @@ kbd {
       console.error('Unhandled Promise Rejection:', e.reason);
     });
   </script>
+  <meta name="google-site-verification" content="cxbF6xUGe14Q8PIZ4ASj-SjNXDxt3m0oYiWJ9Z6m7c0" />
 </head>
+
 <body>
 
   <!-- ═══════════════════════════════════════════════════════════════
@@ -1902,7 +1906,7 @@ kbd {
     <div class="menu-container">
       <div class="logo-wrap">
         <div class="logo-icon">🏃⚡</div>
-        <h1 class="logo-title">RUNNER<br/><span>CHALLENGE</span></h1>
+        <h1 class="logo-title">RUNNER<br /><span>CHALLENGE</span></h1>
         <p class="logo-subtitle">Prototipo de Videojuego 2D — Avance 1</p>
       </div>
       <nav class="main-menu">
@@ -1950,7 +1954,7 @@ kbd {
       <button class="btn-back" id="btn-back-mp">← Volver</button>
       <h2 class="screen-title">PANTALLA DIVIDIDA (2 JUGADORES)</h2>
     </div>
-    
+
     <div class="mp-local-container">
       <div class="mp-mode-badge">
         <span class="mp-mode-icon">🖥️⚡</span>
@@ -1963,12 +1967,12 @@ kbd {
           <div class="player-avatar avatar-p1">P1</div>
           <h3>PLAYER 1</h3>
           <span class="player-color-tag" style="color: var(--c-cyan);">CYAN NEON</span>
-          
+
           <div class="input-group">
             <label for="mp-p1-name">Nombre:</label>
             <input type="text" id="mp-p1-name" class="name-input" value="Player 1" maxlength="12" />
           </div>
-          
+
           <div class="controls-visual">
             <div class="key-cap">W</div>
             <span class="control-label">SALTAR</span>
@@ -1988,8 +1992,10 @@ kbd {
           <div class="mp-split-type-toggle" id="mp-split-type-group">
             <label class="split-option-label">División:</label>
             <div class="split-buttons">
-              <button type="button" class="btn-split-opt active" id="opt-split-h" data-split="horizontal" title="Pantalla dividida Arriba / Abajo">HORIZONTAL</button>
-              <button type="button" class="btn-split-opt" id="opt-split-v" data-split="vertical" title="Pantalla dividida Izquierda / Derecha">VERTICAL</button>
+              <button type="button" class="btn-split-opt active" id="opt-split-h" data-split="horizontal"
+                title="Pantalla dividida Arriba / Abajo">HORIZONTAL</button>
+              <button type="button" class="btn-split-opt" id="opt-split-v" data-split="vertical"
+                title="Pantalla dividida Izquierda / Derecha">VERTICAL</button>
             </div>
           </div>
         </div>
@@ -1999,12 +2005,12 @@ kbd {
           <div class="player-avatar avatar-p2">P2</div>
           <h3>PLAYER 2</h3>
           <span class="player-color-tag" style="color: var(--c-accent);">MAGENTA NEON</span>
-          
+
           <div class="input-group">
             <label for="mp-p2-name">Nombre:</label>
             <input type="text" id="mp-p2-name" class="name-input" value="Player 2" maxlength="12" />
           </div>
-          
+
           <div class="controls-visual">
             <div class="key-cap">▲</div>
             <span class="control-label">SALTAR</span>
@@ -2029,22 +2035,26 @@ kbd {
           <option value="3">Nivel 3: Desafío Final (Difícil)</option>
         </select>
       </div>
-      
+
       <!-- Guía Rápida de Power-Ups e Habilidades -->
       <div class="powerups-guide-panel">
         <h4 class="guide-title">⚡ POTENCIADORES EN PISTA ⚡</h4>
         <div class="guide-grid">
           <div class="guide-item"><span class="g-icon">🛡️</span><strong>ESCUDO:</strong> Absorbe 1 impacto</div>
           <div class="guide-item"><span class="g-icon">🧲</span><strong>IMÁN:</strong> Atrae monedas (8s)</div>
-          <div class="guide-item"><span class="g-icon">⚡</span><strong>TURBO:</strong> Invencible y destruye todo (4.5s)</div>
-          <div class="guide-item"><span class="g-icon">🦘</span><strong>DOBLE SALTO:</strong> Salta en el aire (10s)</div>
+          <div class="guide-item"><span class="g-icon">⚡</span><strong>TURBO:</strong> Invencible y destruye todo (4.5s)
+          </div>
+          <div class="guide-item"><span class="g-icon">🦘</span><strong>DOBLE SALTO:</strong> Salta en el aire (10s)
+          </div>
         </div>
-        <p class="guide-tip">💡 <em>TIP MAESTRO:</em> Pulsa <strong>AGACHARSE en el aire</strong> para caer en picada rápida al piso.</p>
+        <p class="guide-tip">💡 <em>TIP MAESTRO:</em> Pulsa <strong>AGACHARSE en el aire</strong> para caer en picada
+          rápida al piso.</p>
       </div>
 
       <div class="mp-local-actions">
         <button id="btn-start-local-mp" class="btn-menu btn-primary">¡INICIAR CARRERA DIVIDIDA!</button>
-        <p class="lobby-hint">Cada jugador tendrá su propia cámara, carril y visión independiente en pantalla dividida.</p>
+        <p class="lobby-hint">Cada jugador tendrá su propia cámara, carril y visión independiente en pantalla dividida.
+        </p>
       </div>
     </div>
   </div>
@@ -2057,7 +2067,7 @@ kbd {
       <button class="btn-back" id="btn-back-lobby">← Volver</button>
       <h2 class="screen-title">🌐 MULTIPLAYER ONLINE</h2>
     </div>
-    
+
     <div class="mp-local-container">
       <div class="mp-mode-badge">
         <span class="mp-mode-icon">🌍</span>
@@ -2066,22 +2076,26 @@ kbd {
 
       <!-- VISTA 1: CREAR O UNIRSE A SALA -->
       <div id="mp-online-initial-view">
-        <div class="mp-local-columns" style="display:flex; justify-content: center; gap: 30px; margin-top: 25px; flex-wrap: wrap;">
-          
+        <div class="mp-local-columns"
+          style="display:flex; justify-content: center; gap: 30px; margin-top: 25px; flex-wrap: wrap;">
+
           <!-- Crear Sala -->
           <div class="mp-local-card p1-card" style="width: 100%; max-width: 320px;">
             <h3>CREAR SALA</h3>
-            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Inicia una nueva sala y comparte el código o enlace con tu rival.</p>
+            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Inicia una nueva sala y comparte el código o
+              enlace con tu rival.</p>
             <button id="btn-create-room" class="btn-menu btn-primary" style="width: 100%;">CREAR PARTIDA</button>
           </div>
 
           <!-- Unirse a Sala -->
           <div class="mp-local-card p2-card" style="width: 100%; max-width: 320px;">
             <h3>UNIRSE A SALA</h3>
-            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Ingresa el código de 6 letras que te compartió tu amigo.</p>
-            
+            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Ingresa el código de 6 letras que te
+              compartió tu amigo.</p>
+
             <div class="input-group" style="margin-bottom: 15px; width: 100%;">
-              <input type="text" id="join-room-code" class="name-input" placeholder="CÓDIGO (ej. A1B2C3)" maxlength="6" style="text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; font-size: 1.1em; width: 100%;" />
+              <input type="text" id="join-room-code" class="name-input" placeholder="CÓDIGO (ej. A1B2C3)" maxlength="6"
+                style="text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; font-size: 1.1em; width: 100%;" />
             </div>
             <button id="btn-join-room" class="btn-menu btn-secondary" style="width: 100%;">UNIRSE A LA SALA</button>
             <p id="join-status-msg" style="font-size: 0.8em; color: #00f0ff; margin-top: 10px; min-height: 1.2em;"></p>
@@ -2090,8 +2104,9 @@ kbd {
       </div>
 
       <!-- VISTA 2: SALA DE ESPERA ACTIVA (LOBBY MULTIJUGADOR) -->
-      <div id="mp-online-room-view" class="hidden" style="margin-top: 20px; width: 100%; max-width: 720px; margin-left: auto; margin-right: auto;">
-        
+      <div id="mp-online-room-view" class="hidden"
+        style="margin-top: 20px; width: 100%; max-width: 720px; margin-left: auto; margin-right: auto;">
+
         <!-- Barra de Sala y Enlace -->
         <div class="online-room-header-card">
           <div class="room-code-badge-group">
@@ -2108,14 +2123,18 @@ kbd {
         <!-- Selector / Estado de Nivel -->
         <div class="online-level-box">
           <div id="online-level-host-wrap">
-            <label for="mp-select-level-online" style="font-weight: 600; color: var(--c-cyan); display: block; margin-bottom: 6px;">🏁 Nivel a competir (Configura el Host):</label>
-            <select id="mp-select-level-online" class="mp-select" style="max-width: 420px; margin: 0 auto; display: block;">
+            <label for="mp-select-level-online"
+              style="font-weight: 600; color: var(--c-cyan); display: block; margin-bottom: 6px;">🏁 Nivel a competir
+              (Configura el Host):</label>
+            <select id="mp-select-level-online" class="mp-select"
+              style="max-width: 420px; margin: 0 auto; display: block;">
               <!-- Poblado dinámicamente con los 20 niveles -->
             </select>
           </div>
           <div id="online-level-guest-wrap" class="hidden">
             <span style="font-size: 0.85rem; color: var(--c-muted); font-weight: 600;">🏁 Nivel a competir:</span>
-            <div id="online-level-guest-text" style="color: #ffd700; font-weight: 700; font-size: 1.1rem; margin-top: 4px;">Nivel 1</div>
+            <div id="online-level-guest-text"
+              style="color: #ffd700; font-weight: 700; font-size: 1.1rem; margin-top: 4px;">Nivel 1</div>
           </div>
         </div>
 
@@ -2129,7 +2148,8 @@ kbd {
               <div class="online-player-name" id="online-p1-name">Host</div>
             </div>
             <div id="p1-name-edit-wrap" class="hidden" style="width: 100%;">
-              <input type="text" id="lobby-input-p1" class="lobby-name-input" maxlength="14" placeholder="Tu Nombre" value="Host" />
+              <input type="text" id="lobby-input-p1" class="lobby-name-input" maxlength="14" placeholder="Tu Nombre"
+                value="Host" />
             </div>
 
             <div class="online-player-role">HOST</div>
@@ -2140,7 +2160,8 @@ kbd {
               <div class="color-swatches" id="swatches-p1"></div>
             </div>
             <div id="p1-color-preview-wrap" class="rival-color-badge">
-              <span class="color-dot" id="dot-p1" style="background: #00F0FF;"></span> <span id="label-color-p1">Cyan Neón</span>
+              <span class="color-dot" id="dot-p1" style="background: #00F0FF;"></span> <span id="label-color-p1">Cyan
+                Neón</span>
             </div>
 
             <div class="lobby-status-pill status-waiting" id="lobby-p1-status">
@@ -2158,7 +2179,8 @@ kbd {
               <div class="online-player-name" id="online-p2-name">Esperando rival...</div>
             </div>
             <div id="p2-name-edit-wrap" class="hidden" style="width: 100%;">
-              <input type="text" id="lobby-input-p2" class="lobby-name-input" maxlength="14" placeholder="Tu Nombre" value="Rival" />
+              <input type="text" id="lobby-input-p2" class="lobby-name-input" maxlength="14" placeholder="Tu Nombre"
+                value="Rival" />
             </div>
 
             <div class="online-player-role">RIVAL</div>
@@ -2169,7 +2191,8 @@ kbd {
               <div class="color-swatches" id="swatches-p2"></div>
             </div>
             <div id="p2-color-preview-wrap" class="rival-color-badge">
-              <span class="color-dot" id="dot-p2" style="background: #FF007F;"></span> <span id="label-color-p2">Magenta Neón</span>
+              <span class="color-dot" id="dot-p2" style="background: #FF007F;"></span> <span id="label-color-p2">Magenta
+                Neón</span>
             </div>
 
             <div class="lobby-status-pill status-disconnected" id="lobby-p2-status">
@@ -2221,13 +2244,15 @@ kbd {
           <div class="progress-bar-fill" id="progress-bar-fill-p1"></div>
           <div class="progress-bar-fill-p2 hidden" id="progress-bar-fill-p2"></div>
           <span class="progress-icon progress-player" id="progress-icon-p1" style="color: var(--c-cyan)">🏃</span>
-          <span class="progress-icon progress-opponent hidden" id="progress-icon-p2" style="color: var(--c-accent)">🏃</span>
+          <span class="progress-icon progress-opponent hidden" id="progress-icon-p2"
+            style="color: var(--c-accent)">🏃</span>
           <span class="progress-icon progress-goal">🏁</span>
         </div>
       </div>
 
       <div class="top-bar-right">
-        <button id="btn-toggle-split" class="btn-hud-tool hidden" title="Cambiar división de pantalla (Horizontal/Vertical)">
+        <button id="btn-toggle-split" class="btn-hud-tool hidden"
+          title="Cambiar división de pantalla (Horizontal/Vertical)">
           <span class="tool-icon">⬌</span> <span class="tool-text">DIVISIÓN</span>
         </button>
         <button id="btn-pause" class="btn-pause" title="Pausar juego">⏸</button>
@@ -2316,7 +2341,7 @@ kbd {
       <div class="gameover-icon">💀</div>
       <h2 class="gameover-title">FIN DE LA CARRERA</h2>
       <p class="gameover-sub" id="go-message">¡El jugador se ha quedado sin vidas!</p>
-      
+
       <div class="pause-actions">
         <button id="btn-go-retry" class="btn-menu btn-primary">↺ REINTENTAR</button>
         <button id="btn-go-menu" class="btn-menu btn-outline">🏠 MENÚ</button>
@@ -2350,7 +2375,8 @@ kbd {
         <!-- Columna P2 -->
         <div class="result-col hidden" id="res-p2-col">
           <h3 style="color: var(--c-accent)">PLAYER 2</h3>
-          <div class="res-stat-item"><span>Posición:</span><span id="res-p2-pos" class="highlight">RUNNER-UP</span></div>
+          <div class="res-stat-item"><span>Posición:</span><span id="res-p2-pos" class="highlight">RUNNER-UP</span>
+          </div>
           <div class="res-stat-item"><span>Tiempo:</span><span id="res-p2-time">00:00</span></div>
           <div class="res-stat-item"><span>Monedas:</span><span id="res-p2-coins">0</span></div>
           <div class="res-stat-item"><span>Puntos:</span><span id="res-p2-score">0</span></div>
@@ -2379,11 +2405,11 @@ kbd {
       <div class="victory-trophy">🏆</div>
       <h2 class="victory-title">¡FELICITACIONES!</h2>
       <p class="victory-sub">¡Completaron todos los niveles de Neon Run!</p>
-      
+
       <div class="victory-summary" id="victory-summary-content">
         <!-- Llenado dinámicamente -->
       </div>
-      
+
       <button id="btn-vic-menu" class="btn-menu btn-primary">🏠 MENÚ PRINCIPAL</button>
     </div>
   </div>
@@ -7101,5 +7127,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 </body>
-</html>
 
+</html>
