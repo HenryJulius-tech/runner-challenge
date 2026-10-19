@@ -336,9 +336,9 @@ const Game = (() => {
     rafId = requestAnimationFrame(gameLoop);
   }
 
-  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42) {
-    const p1Name = isRoomHost ? 'Host (P1)' : 'Client (P2)';
-    const p2Name = isRoomHost ? 'Client (P2)' : 'Host (P1)';
+  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName) {
+    const p1Name = p1CustomName || (isRoomHost ? 'Host (P1)' : 'Rival (P2)');
+    const p2Name = p2CustomName || (isRoomHost ? 'Rival (P2)' : 'Host (P1)');
     startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed);
   }
 

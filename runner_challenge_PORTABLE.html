@@ -1526,6 +1526,272 @@ kbd {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-primary); }
 
+/* ══════════════════════════════════════════════════════════════
+   SALA DE ESPERA ONLINE (LOBBY MULTIPLAYER & BOTÓN LISTO)
+══════════════════════════════════════════════════════════════ */
+.online-room-header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+  backdrop-filter: blur(12px);
+  padding: 14px 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.room-code-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-label {
+  font-size: 0.85rem;
+  color: var(--c-muted, #94a3b8);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.room-code-highlight {
+  font-family: var(--font-game, 'Orbitron', monospace);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--c-cyan, #00f0ff);
+  letter-spacing: 4px;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+  user-select: all;
+  background: rgba(0, 240, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px dashed rgba(0, 240, 255, 0.5);
+}
+
+.room-actions-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-action-sm {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-sm:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-action-accent {
+  background: rgba(0, 240, 255, 0.18);
+  border-color: #00f0ff;
+  color: #00f0ff;
+}
+
+.btn-action-accent:hover {
+  background: rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+}
+
+.btn-action-danger {
+  background: rgba(255, 51, 102, 0.15);
+  border-color: rgba(255, 51, 102, 0.4);
+  color: #ff3366;
+}
+
+.btn-action-danger:hover {
+  background: rgba(255, 51, 102, 0.3);
+}
+
+.online-level-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.online-versus-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+@media (max-width: 600px) {
+  .online-versus-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+.online-player-card {
+  flex: 1;
+  max-width: 260px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.p1-online-card {
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.p2-online-card {
+  border-color: rgba(255, 0, 127, 0.4);
+}
+
+.online-player-name {
+  font-family: var(--font-game, sans-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.online-player-role {
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  color: var(--c-muted, #94a3b8);
+  font-weight: 700;
+}
+
+.lobby-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  transition: all 0.3s ease;
+}
+
+.status-waiting {
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.status-ready {
+  background: rgba(0, 255, 136, 0.18);
+  border: 1.5px solid #00ff88;
+  color: #00ff88;
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.4);
+  animation: pulse-ready 1.5s infinite;
+}
+
+@keyframes pulse-ready {
+  0% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+  50% { transform: scale(1.04); box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+  100% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+}
+
+.status-disconnected {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: #94a3b8;
+}
+
+.online-vs-badge {
+  font-family: var(--font-game, monospace);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 15px rgba(255, 0, 127, 0.7), 0 0 15px rgba(0, 240, 255, 0.7);
+  padding: 10px;
+}
+
+.online-ready-action-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-ready-toggle {
+  font-family: var(--font-game, sans-serif);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 16px 36px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #00ff88, #00b359);
+  color: #042410;
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 260px;
+}
+
+.btn-ready-toggle:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 0 35px rgba(0, 255, 136, 0.7);
+}
+
+.btn-ready-toggle:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-ready-toggle.is-ready {
+  background: linear-gradient(135deg, #ffd700, #ff8800);
+  color: #2b1700;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+}
+
+.btn-ready-toggle.both-ready {
+  background: linear-gradient(135deg, #00f0ff, #ff007f);
+  color: #fff;
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.8);
+  animation: pulse-ready 0.8s infinite;
+}
+
+.lobby-hint-text {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  text-align: center;
+  min-height: 1.4em;
+  transition: color 0.3s ease;
+}
+
+
 </style>
   <script>
     window.addEventListener('error', (e) => {
@@ -1708,44 +1974,97 @@ kbd {
         <span class="mp-mode-text">CONÉCTATE CON UN AMIGO VÍA RED</span>
       </div>
 
-      <div class="mp-local-columns" style="display:flex; justify-content: center; gap: 40px; margin-top: 30px;">
-        
-        <!-- Crear Sala -->
-        <div class="mp-local-card p1-card" style="width: 100%; max-width: 300px;">
-          <h3>CREAR SALA</h3>
-          <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Inicia una partida y comparte el código.</p>
-          <button id="btn-create-room" class="btn-menu btn-primary">CREAR PARTIDA</button>
+      <!-- VISTA 1: CREAR O UNIRSE A SALA -->
+      <div id="mp-online-initial-view">
+        <div class="mp-local-columns" style="display:flex; justify-content: center; gap: 30px; margin-top: 25px; flex-wrap: wrap;">
           
-          <div id="room-code-display" class="hidden" style="margin-top: 20px;">
-            <p style="font-size: 0.85em; color: var(--c-muted); margin-bottom: 6px;">Tu código de sala:</p>
-            <h2 id="room-code-text" style="color: var(--c-cyan); letter-spacing: 3px; user-select: all; background: rgba(0,240,255,0.1); padding: 10px; border-radius: 8px; border: 1px dashed var(--c-cyan); margin-bottom: 12px;">---</h2>
-            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button id="btn-copy-code" class="btn-menu btn-secondary" style="font-size: 0.8em; padding: 6px 12px;">📋 Copiar Código</button>
-              <button id="btn-copy-link" class="btn-menu btn-primary" style="font-size: 0.8em; padding: 6px 12px;">🔗 Copiar Enlace</button>
+          <!-- Crear Sala -->
+          <div class="mp-local-card p1-card" style="width: 100%; max-width: 320px;">
+            <h3>CREAR SALA</h3>
+            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Inicia una nueva sala y comparte el código o enlace con tu rival.</p>
+            <button id="btn-create-room" class="btn-menu btn-primary" style="width: 100%;">CREAR PARTIDA</button>
+          </div>
+
+          <!-- Unirse a Sala -->
+          <div class="mp-local-card p2-card" style="width: 100%; max-width: 320px;">
+            <h3>UNIRSE A SALA</h3>
+            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Ingresa el código de 6 letras que te compartió tu amigo.</p>
+            
+            <div class="input-group" style="margin-bottom: 15px; width: 100%;">
+              <input type="text" id="join-room-code" class="name-input" placeholder="CÓDIGO (ej. A1B2C3)" maxlength="6" style="text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; font-size: 1.1em; width: 100%;" />
             </div>
-            <p style="font-size: 0.85em; color: #ffd700; margin-top: 14px; animation: pulse 1.5s infinite;">⏳ Esperando que tu rival se una...</p>
+            <button id="btn-join-room" class="btn-menu btn-secondary" style="width: 100%;">UNIRSE A LA SALA</button>
+            <p id="join-status-msg" style="font-size: 0.8em; color: #00f0ff; margin-top: 10px; min-height: 1.2em;"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA 2: SALA DE ESPERA ACTIVA (LOBBY MULTIJUGADOR) -->
+      <div id="mp-online-room-view" class="hidden" style="margin-top: 20px; width: 100%; max-width: 720px; margin-left: auto; margin-right: auto;">
+        
+        <!-- Barra de Sala y Enlace -->
+        <div class="online-room-header-card">
+          <div class="room-code-badge-group">
+            <span class="room-label">SALA:</span>
+            <span id="room-code-badge" class="room-code-highlight">------</span>
+          </div>
+          <div class="room-actions-group">
+            <button id="btn-copy-code" class="btn-action-sm">📋 Copiar Código</button>
+            <button id="btn-copy-link" class="btn-action-sm btn-action-accent">🔗 Copiar Enlace</button>
+            <button id="btn-leave-room" class="btn-action-sm btn-action-danger">🚪 Salir</button>
           </div>
         </div>
 
-        <!-- Unirse a Sala -->
-        <div class="mp-local-card p2-card" style="width: 100%; max-width: 300px;">
-          <h3>UNIRSE A SALA</h3>
-          <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Ingresa el código que te compartió tu amigo.</p>
-          
-          <div class="input-group">
-            <input type="text" id="join-room-code" class="name-input" placeholder="CÓDIGO (ej. A1B2C3)" maxlength="6" style="text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; font-size: 1.1em;" />
+        <!-- Selector / Estado de Nivel -->
+        <div class="online-level-box">
+          <div id="online-level-host-wrap">
+            <label for="mp-select-level-online" style="font-weight: 600; color: var(--c-cyan); display: block; margin-bottom: 6px;">🏁 Nivel a competir (Configura el Host):</label>
+            <select id="mp-select-level-online" class="mp-select" style="max-width: 420px; margin: 0 auto; display: block;">
+              <!-- Poblado dinámicamente con los 20 niveles -->
+            </select>
           </div>
-          <button id="btn-join-room" class="btn-menu btn-secondary" style="margin-top: 15px;">UNIRSE A LA SALA</button>
-          <p id="join-status-msg" style="font-size: 0.8em; color: #00f0ff; margin-top: 10px; min-height: 1.2em;"></p>
+          <div id="online-level-guest-wrap" class="hidden">
+            <span style="font-size: 0.85rem; color: var(--c-muted); font-weight: 600;">🏁 Nivel a competir:</span>
+            <div id="online-level-guest-text" style="color: #ffd700; font-weight: 700; font-size: 1.1rem; margin-top: 4px;">Nivel 1</div>
+          </div>
         </div>
-      </div>
-      
-      <!-- Selector de Nivel (solo configurable por el Host) -->
-      <div class="mp-level-selector" id="online-level-selector" style="margin-top: 35px;">
-        <label for="mp-select-level-online" style="font-weight: 600; color: var(--c-cyan);">🏁 Nivel a competir (Elige el Host):</label>
-        <select id="mp-select-level-online" class="mp-select" style="max-width: 360px; margin: 8px auto; display: block;">
-          <!-- Poblado dinámicamente con los 20 niveles -->
-        </select>
+
+        <!-- Tarjetas VS de los Jugadores -->
+        <div class="online-versus-container">
+          <!-- Jugador 1 (Host) -->
+          <div class="online-player-card p1-online-card" id="card-p1-online">
+            <div class="player-avatar avatar-p1">P1</div>
+            <div class="online-player-name" id="online-p1-name">Host</div>
+            <div class="online-player-role">HOST</div>
+            <div class="lobby-status-pill status-waiting" id="lobby-p1-status">
+              <span class="status-icon">⏳</span> <span class="status-txt">NO LISTO</span>
+            </div>
+          </div>
+
+          <div class="online-vs-badge">VS</div>
+
+          <!-- Jugador 2 (Rival) -->
+          <div class="online-player-card p2-online-card" id="card-p2-online">
+            <div class="player-avatar avatar-p2">P2</div>
+            <div class="online-player-name" id="online-p2-name">Esperando rival...</div>
+            <div class="online-player-role">RIVAL</div>
+            <div class="lobby-status-pill status-disconnected" id="lobby-p2-status">
+              <span class="status-icon">⌛</span> <span class="status-txt">ESPERANDO...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Preparado / Listo -->
+        <div class="online-ready-action-box">
+          <button id="btn-toggle-ready" class="btn-ready-toggle" disabled>
+            <span id="btn-ready-icon">⏳</span>
+            <span id="btn-ready-text">ESPERANDO RIVAL...</span>
+          </button>
+          <div id="lobby-ready-hint" class="lobby-hint-text">
+            Comparte el enlace o código para que tu amigo se una a la sala.
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -2396,7 +2715,7 @@ const ScoreManager = (() => {
     getSettings,
     saveSettings,
     clearAll,
-    getPlayerName: () => 'Jugador 1'
+    getPlayerName: () => (data.settings && data.settings.name) ? data.settings.name : 'Jugador'
   };
 })();
 
@@ -4805,9 +5124,9 @@ const Game = (() => {
     rafId = requestAnimationFrame(gameLoop);
   }
 
-  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42) {
-    const p1Name = isRoomHost ? 'Host (P1)' : 'Client (P2)';
-    const p2Name = isRoomHost ? 'Client (P2)' : 'Host (P1)';
+  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName) {
+    const p1Name = p1CustomName || (isRoomHost ? 'Host (P1)' : 'Rival (P2)');
+    const p2Name = p2CustomName || (isRoomHost ? 'Rival (P2)' : 'Host (P1)');
     startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed);
   }
 
@@ -5818,8 +6137,225 @@ const UI = (() => {
       if (!select || select.children.length > 0) return;
       const allLevels = LevelConfig.getAllLevels ? LevelConfig.getAllLevels() : [];
       select.innerHTML = allLevels.map(lvl => 
-        `<option value="${lvl.number}">${lvl.name} — [${lvl.difficulty}]</option>`
+        `<option value="${lvl.number}">Nivel ${lvl.number}: ${lvl.name} — [${lvl.difficulty}]</option>`
       ).join('');
+    }
+
+    // ── Estado de la Sala Online ────────────────────────────────────────────
+    const onlineState = {
+      inRoom: false,
+      isHost: false,
+      roomId: null,
+      seed: 42,
+      level: 1,
+      myReady: false,
+      opponentReady: false,
+      opponentConnected: false,
+      p1Name: 'Host',
+      p2Name: 'Rival'
+    };
+
+    function _showOnlineLobbyView(inRoom) {
+      onlineState.inRoom = inRoom;
+      const initialView = document.getElementById('mp-online-initial-view');
+      const roomView    = document.getElementById('mp-online-room-view');
+
+      if (inRoom) {
+        initialView?.classList.add('hidden');
+        roomView?.classList.remove('hidden');
+      } else {
+        initialView?.classList.remove('hidden');
+        roomView?.classList.add('hidden');
+        const statusEl = document.getElementById('join-status-msg');
+        if (statusEl) statusEl.textContent = '';
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+        onlineState.opponentConnected = false;
+        onlineState.roomId = null;
+      }
+    }
+
+    function _updateOnlineLobbyUI() {
+      if (!onlineState.inRoom) return;
+
+      // Código de sala
+      const badge = document.getElementById('room-code-badge');
+      if (badge) badge.textContent = onlineState.roomId || '------';
+
+      // Nivel
+      const hostWrap = document.getElementById('online-level-host-wrap');
+      const guestWrap = document.getElementById('online-level-guest-wrap');
+      const guestText = document.getElementById('online-level-guest-text');
+      const selectLevel = document.getElementById('mp-select-level-online');
+
+      const lvlData = LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null;
+      const lvlLabel = lvlData ? `Nivel ${onlineState.level}: ${lvlData.name}` : `Nivel ${onlineState.level}`;
+
+      if (onlineState.isHost) {
+        hostWrap?.classList.remove('hidden');
+        guestWrap?.classList.add('hidden');
+        if (selectLevel && parseInt(selectLevel.value, 10) !== onlineState.level) {
+          selectLevel.value = String(onlineState.level);
+        }
+      } else {
+        hostWrap?.classList.add('hidden');
+        guestWrap?.classList.remove('hidden');
+        if (guestText) guestText.textContent = `${lvlLabel} (Elegido por el Host)`;
+      }
+
+      // Tarjeta P1 (Host)
+      const p1NameEl = document.getElementById('online-p1-name');
+      const p1StatusEl = document.getElementById('lobby-p1-status');
+      if (p1NameEl) p1NameEl.textContent = onlineState.p1Name;
+
+      const p1IsReady = onlineState.isHost ? onlineState.myReady : onlineState.opponentReady;
+      if (p1StatusEl) {
+        if (p1IsReady) {
+          p1StatusEl.className = 'lobby-status-pill status-ready';
+          p1StatusEl.innerHTML = '<span class="status-icon">✅</span> <span class="status-txt">¡LISTO!</span>';
+        } else {
+          p1StatusEl.className = 'lobby-status-pill status-waiting';
+          p1StatusEl.innerHTML = '<span class="status-icon">⏳</span> <span class="status-txt">NO LISTO</span>';
+        }
+      }
+
+      // Tarjeta P2 (Rival)
+      const p2NameEl = document.getElementById('online-p2-name');
+      const p2StatusEl = document.getElementById('lobby-p2-status');
+
+      if (!onlineState.opponentConnected && onlineState.isHost) {
+        if (p2NameEl) p2NameEl.textContent = 'Esperando rival...';
+        if (p2StatusEl) {
+          p2StatusEl.className = 'lobby-status-pill status-disconnected';
+          p2StatusEl.innerHTML = '<span class="status-icon">⌛</span> <span class="status-txt">ESPERANDO...</span>';
+        }
+      } else {
+        if (p2NameEl) p2NameEl.textContent = onlineState.p2Name;
+        const p2IsReady = onlineState.isHost ? onlineState.opponentReady : onlineState.myReady;
+        if (p2StatusEl) {
+          if (p2IsReady) {
+            p2StatusEl.className = 'lobby-status-pill status-ready';
+            p2StatusEl.innerHTML = '<span class="status-icon">✅</span> <span class="status-txt">¡LISTO!</span>';
+          } else {
+            p2StatusEl.className = 'lobby-status-pill status-waiting';
+            p2StatusEl.innerHTML = '<span class="status-icon">⏳</span> <span class="status-txt">NO LISTO</span>';
+          }
+        }
+      }
+
+      // Botón de Preparado / Listo
+      const btnReady = document.getElementById('btn-toggle-ready');
+      const btnIcon = document.getElementById('btn-ready-icon');
+      const btnText = document.getElementById('btn-ready-text');
+      const hintEl = document.getElementById('lobby-ready-hint');
+
+      const opponentName = onlineState.isHost ? onlineState.p2Name : onlineState.p1Name;
+
+      if (!onlineState.opponentConnected && onlineState.isHost) {
+        if (btnReady) {
+          btnReady.disabled = true;
+          btnReady.className = 'btn-ready-toggle';
+        }
+        if (btnIcon) btnIcon.textContent = '⏳';
+        if (btnText) btnText.textContent = 'ESPERANDO A TU RIVAL...';
+        if (hintEl) hintEl.textContent = 'Comparte el enlace o código para que tu amigo se una a la sala.';
+      } else {
+        if (btnReady) btnReady.disabled = false;
+
+        if (onlineState.myReady) {
+          if (btnReady) btnReady.className = 'btn-ready-toggle is-ready';
+          if (btnIcon) btnIcon.textContent = '🟡';
+          if (btnText) btnText.textContent = 'CANCELAR (NO LISTO)';
+          if (hintEl) {
+            hintEl.textContent = onlineState.opponentReady 
+              ? '🚀 ¡Ambos listos! Iniciando partida...' 
+              : `Esperando a que ${opponentName} pulse '¡Estoy Listo!'...`;
+          }
+        } else {
+          if (btnReady) btnReady.className = 'btn-ready-toggle';
+          if (btnIcon) btnIcon.textContent = '🟢';
+          if (btnText) btnText.textContent = '¡ESTOY LISTO!';
+          if (hintEl) {
+            hintEl.textContent = onlineState.opponentReady 
+              ? `🔥 ¡${opponentName} ya está listo! Pulsa '¡ESTOY LISTO!' para arrancar.` 
+              : 'Presiona el botón cuando estés listo para comenzar.';
+          }
+        }
+      }
+    }
+
+    function _setupNetworkListeners() {
+      Network.onPlayerJoined = (data) => {
+        onlineState.opponentConnected = true;
+        onlineState.p2Name = data.opponentName || 'Rival';
+        onlineState.seed = data.seed;
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+        _updateOnlineLobbyUI();
+        if (AudioManager.playPowerup) AudioManager.playPowerup();
+        showToast(`⚡ ¡${onlineState.p2Name} se unió a la sala!`, 'success');
+      };
+
+      Network.onRoomReadyStatus = (data) => {
+        if (onlineState.isHost) {
+          onlineState.myReady = data.p1Ready;
+          onlineState.opponentReady = data.p2Ready;
+          onlineState.p1Name = data.p1Name;
+          onlineState.p2Name = data.p2Name;
+        } else {
+          onlineState.myReady = data.p2Ready;
+          onlineState.opponentReady = data.p1Ready;
+          onlineState.p1Name = data.p1Name;
+          onlineState.p2Name = data.p2Name;
+        }
+        _updateOnlineLobbyUI();
+      };
+
+      Network.onMatchStartCountdown = (data) => {
+        const btnReady = document.getElementById('btn-toggle-ready');
+        if (btnReady) {
+          btnReady.disabled = true;
+          btnReady.className = 'btn-ready-toggle both-ready';
+        }
+        const btnIcon = document.getElementById('btn-ready-icon');
+        const btnText = document.getElementById('btn-ready-text');
+        if (btnIcon) btnIcon.textContent = '🚀';
+        if (btnText) btnText.textContent = '¡AMBOS LISTOS! INICIANDO...';
+        showToast('🚀 ¡Ambos jugadores listos! La carrera comienza...', 'success');
+
+        const matchLevel = data.level || onlineState.level;
+        const matchSeed  = data.seed || onlineState.seed;
+
+        setTimeout(() => {
+          startCountdown(() => {
+            Game.startLevelOnline(
+              matchLevel,
+              true,
+              onlineState.isHost,
+              matchSeed,
+              onlineState.isHost ? onlineState.p1Name : onlineState.p2Name,
+              onlineState.isHost ? onlineState.p2Name : onlineState.p1Name
+            );
+          });
+        }, 500);
+      };
+
+      Network.onLevelUpdated = (data) => {
+        onlineState.level = data.level;
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+        _updateOnlineLobbyUI();
+        showToast(`El Host cambió la carrera al Nivel ${data.level}. Confirmen con ¡Listo!`, 'info');
+      };
+
+      Network.onOpponentLeftLobby = (data) => {
+        onlineState.opponentConnected = false;
+        onlineState.opponentReady = false;
+        onlineState.myReady = false;
+        onlineState.p2Name = 'Esperando rival...';
+        _updateOnlineLobbyUI();
+        showToast('⚠️ Tu rival salió de la sala.', 'warning');
+      };
     }
 
     // ── Lobby Online ────────────────────────────────────────────────────────
@@ -5827,66 +6363,56 @@ const UI = (() => {
       AudioManager.init();
       showScreen('lobby');
       Network.init();
+      _setupNetworkListeners();
       _populateOnlineLevels();
-      document.getElementById('room-code-display')?.classList.add('hidden');
+      _showOnlineLobbyView(false);
     });
     
     document.getElementById('btn-back-lobby')?.addEventListener('click', () => {
+      if (onlineState.inRoom) {
+        Network.leaveRoom();
+        _showOnlineLobbyView(false);
+      }
       showScreen('menu');
     });
 
+    document.getElementById('btn-leave-room')?.addEventListener('click', () => {
+      Network.leaveRoom();
+      _showOnlineLobbyView(false);
+      showToast('Has salido de la sala', 'info');
+    });
+
+    // Crear Sala
     document.getElementById('btn-create-room')?.addEventListener('click', () => {
       _populateOnlineLevels();
-      Network.createRoom((res) => {
-        if (res.success) {
-          document.getElementById('room-code-display')?.classList.remove('hidden');
-          const codeEl = document.getElementById('room-code-text');
-          if (codeEl) codeEl.textContent = res.roomId;
-          showToast(`¡Sala ${res.roomId} creada! Comparte el código o el enlace`, 'success');
-          
-          Network.onPlayerJoined = (data) => {
-            showToast('⚡ ¡Rival conectado! La carrera comenzará en breve...', 'success');
-            const selectedLevel = parseInt(document.getElementById('mp-select-level-online')?.value || '1', 10);
-            
-            // Notificar al cliente para sincronizar inicio
-            Network.sendLevelStart({ level: selectedLevel, seed: data.seed });
-            
-            setTimeout(() => {
-              startCountdown(() => {
-                Game.startLevelOnline(selectedLevel, true, true, data.seed);
-              });
-            }, 1000);
-          };
+      Network.init();
+      _setupNetworkListeners();
+
+      const pName = ScoreManager.getPlayerName() || 'Host';
+      const selLevel = parseInt(document.getElementById('mp-select-level-online')?.value || '1', 10);
+
+      Network.createRoom({ name: pName, level: selLevel }, (res) => {
+        if (res && res.success) {
+          onlineState.isHost = true;
+          onlineState.roomId = res.roomId;
+          onlineState.seed = res.seed;
+          onlineState.level = res.level || selLevel;
+          onlineState.p1Name = pName;
+          onlineState.p2Name = 'Esperando rival...';
+          onlineState.opponentConnected = false;
+          onlineState.myReady = false;
+          onlineState.opponentReady = false;
+
+          _showOnlineLobbyView(true);
+          _updateOnlineLobbyUI();
+          showToast(`¡Sala ${res.roomId} creada! Comparte el código o enlace con tu rival`, 'success');
         } else {
-          showToast('Error al crear sala: ' + (res.message || 'Sin conexión'), 'danger');
+          showToast('Error al crear sala: ' + (res?.message || 'Sin conexión'), 'danger');
         }
       });
     });
 
-    // Botones para copiar Código y Enlace de Invitación
-    document.getElementById('btn-copy-code')?.addEventListener('click', () => {
-      const code = document.getElementById('room-code-text')?.textContent;
-      if (code && code !== '---') {
-        navigator.clipboard.writeText(code).then(() => {
-          showToast('📋 ¡Código ' + code + ' copiado al portapapeles!', 'info');
-        }).catch(() => {
-          showToast('Código: ' + code, 'info');
-        });
-      }
-    });
-
-    document.getElementById('btn-copy-link')?.addEventListener('click', () => {
-      const code = document.getElementById('room-code-text')?.textContent;
-      if (code && code !== '---') {
-        const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${code}`;
-        navigator.clipboard.writeText(inviteUrl).then(() => {
-          showToast('🔗 ¡Enlace de invitación copiado! Envíalo a tu amigo', 'success');
-        }).catch(() => {
-          prompt('Copia este enlace de invitación:', inviteUrl);
-        });
-      }
-    });
-
+    // Unirse a Sala
     document.getElementById('btn-join-room')?.addEventListener('click', () => {
       const codeInput = document.getElementById('join-room-code');
       const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
@@ -5898,21 +6424,80 @@ const UI = (() => {
       const statusEl = document.getElementById('join-status-msg');
       if (statusEl) statusEl.textContent = 'Conectando con la sala ' + code + '...';
 
-      Network.joinRoom(code, (res) => {
-        if (res.success) {
-          if (statusEl) statusEl.textContent = '✅ Conectado. Esperando que el Host inicie la partida...';
-          showToast('¡Conectado a la sala! Esperando al Host...', 'success');
-          
-          Network.onOpponentStart = (data) => {
-            startCountdown(() => {
-              Game.startLevelOnline(data.level, true, false, data.seed);
-            });
-          };
+      Network.init();
+      _setupNetworkListeners();
+
+      const pName = ScoreManager.getPlayerName() || 'Rival';
+
+      Network.joinRoom({ roomId: code, name: pName }, (res) => {
+        if (res && res.success) {
+          onlineState.isHost = false;
+          onlineState.roomId = res.roomId;
+          onlineState.seed = res.seed;
+          onlineState.level = res.level || 1;
+          onlineState.p1Name = res.hostName || 'Host';
+          onlineState.p2Name = pName;
+          onlineState.opponentConnected = true;
+          onlineState.myReady = false;
+          onlineState.opponentReady = !!res.p1Ready;
+
+          _showOnlineLobbyView(true);
+          _updateOnlineLobbyUI();
+          if (AudioManager.playPowerup) AudioManager.playPowerup();
+          showToast(`¡Conectado a la sala ${code}! Pulsa ¡ESTOY LISTO!`, 'success');
         } else {
-          if (statusEl) statusEl.textContent = '❌ ' + (res.message || 'Error al unirse');
-          showToast(res.message || 'Error al unirse a la sala', 'danger');
+          if (statusEl) statusEl.textContent = '❌ ' + (res?.message || 'Error al unirse');
+          showToast(res?.message || 'Error al unirse a la sala', 'danger');
         }
       });
+    });
+
+    // Botón para Alternar Estado LISTO (Ready)
+    document.getElementById('btn-toggle-ready')?.addEventListener('click', () => {
+      if (!onlineState.opponentConnected && onlineState.isHost) return;
+
+      onlineState.myReady = !onlineState.myReady;
+      if (AudioManager.playJump) AudioManager.playJump();
+
+      const myName = onlineState.isHost ? onlineState.p1Name : onlineState.p2Name;
+      Network.sendReady(onlineState.myReady, myName);
+      _updateOnlineLobbyUI();
+    });
+
+    // Selector de Nivel (solo el Host)
+    document.getElementById('mp-select-level-online')?.addEventListener('change', (e) => {
+      if (!onlineState.isHost) return;
+      const newLevel = parseInt(e.target.value, 10) || 1;
+      onlineState.level = newLevel;
+      onlineState.myReady = false;
+      onlineState.opponentReady = false;
+      Network.changeLevel(newLevel);
+      _updateOnlineLobbyUI();
+      showToast(`Nivel cambiado al Nivel ${newLevel}. Ambos deben confirmar con ¡Listo!`, 'info');
+    });
+
+    // Botones para copiar Código y Enlace de Invitación
+    document.getElementById('btn-copy-code')?.addEventListener('click', () => {
+      const code = onlineState.roomId;
+      if (code && code !== '------') {
+        navigator.clipboard.writeText(code).then(() => {
+          showToast('📋 ¡Código ' + code + ' copiado al portapapeles!', 'info');
+        }).catch(() => {
+          showToast('Código: ' + code, 'info');
+        });
+      }
+    });
+
+    document.getElementById('btn-copy-link')?.addEventListener('click', () => {
+      const code = onlineState.roomId;
+      if (code && code !== '------') {
+        const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${code}`;
+        navigator.clipboard.writeText(inviteUrl).then(() => {
+          showToast('🔗 ¡Enlace de invitación copiado! Envíalo a tu amigo', 'success');
+        }).catch(() => {
+          prompt('Copia este enlace de invitación:', inviteUrl);
+        });
+      }
     });
 
     // Detección automática de parámetro ?room=XYZ en la URL
@@ -5922,10 +6507,12 @@ const UI = (() => {
       if (roomParam && roomParam.length === 6) {
         showScreen('lobby');
         Network.init();
+        _setupNetworkListeners();
         _populateOnlineLevels();
+        _showOnlineLobbyView(false);
         const input = document.getElementById('join-room-code');
         if (input) input.value = roomParam;
-        showToast(`🎮 ¡Invitación detectada para la sala ${roomParam}! Haz clic en UNIRSE`, 'info');
+        showToast(`🎮 ¡Invitación detectada para la sala ${roomParam}! Haz clic en UNIRSE A LA SALA`, 'info');
       }
     }, 400);
 

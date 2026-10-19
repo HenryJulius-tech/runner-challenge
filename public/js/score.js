@@ -111,6 +111,6 @@ const ScoreManager = (() => {
     getSettings,
     saveSettings,
     clearAll,
-    getPlayerName: () => 'Jugador 1'
+    getPlayerName: () => (data.settings && data.settings.name) ? data.settings.name : 'Jugador'
   };
 })();

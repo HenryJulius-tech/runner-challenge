@@ -189,44 +189,97 @@
         <span class="mp-mode-text">CONÉCTATE CON UN AMIGO VÍA RED</span>
       </div>
 
-      <div class="mp-local-columns" style="display:flex; justify-content: center; gap: 40px; margin-top: 30px;">
-        
-        <!-- Crear Sala -->
-        <div class="mp-local-card p1-card" style="width: 100%; max-width: 300px;">
-          <h3>CREAR SALA</h3>
-          <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Inicia una partida y comparte el código.</p>
-          <button id="btn-create-room" class="btn-menu btn-primary">CREAR PARTIDA</button>
+      <!-- VISTA 1: CREAR O UNIRSE A SALA -->
+      <div id="mp-online-initial-view">
+        <div class="mp-local-columns" style="display:flex; justify-content: center; gap: 30px; margin-top: 25px; flex-wrap: wrap;">
           
-          <div id="room-code-display" class="hidden" style="margin-top: 20px;">
-            <p style="font-size: 0.85em; color: var(--c-muted); margin-bottom: 6px;">Tu código de sala:</p>
-            <h2 id="room-code-text" style="color: var(--c-cyan); letter-spacing: 3px; user-select: all; background: rgba(0,240,255,0.1); padding: 10px; border-radius: 8px; border: 1px dashed var(--c-cyan); margin-bottom: 12px;">---</h2>
-            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button id="btn-copy-code" class="btn-menu btn-secondary" style="font-size: 0.8em; padding: 6px 12px;">📋 Copiar Código</button>
-              <button id="btn-copy-link" class="btn-menu btn-primary" style="font-size: 0.8em; padding: 6px 12px;">🔗 Copiar Enlace</button>
+          <!-- Crear Sala -->
+          <div class="mp-local-card p1-card" style="width: 100%; max-width: 320px;">
+            <h3>CREAR SALA</h3>
+            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Inicia una nueva sala y comparte el código o enlace con tu rival.</p>
+            <button id="btn-create-room" class="btn-menu btn-primary" style="width: 100%;">CREAR PARTIDA</button>
+          </div>
+
+          <!-- Unirse a Sala -->
+          <div class="mp-local-card p2-card" style="width: 100%; max-width: 320px;">
+            <h3>UNIRSE A SALA</h3>
+            <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Ingresa el código de 6 letras que te compartió tu amigo.</p>
+            
+            <div class="input-group" style="margin-bottom: 15px; width: 100%;">
+              <input type="text" id="join-room-code" class="name-input" placeholder="CÓDIGO (ej. A1B2C3)" maxlength="6" style="text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; font-size: 1.1em; width: 100%;" />
             </div>
-            <p style="font-size: 0.85em; color: #ffd700; margin-top: 14px; animation: pulse 1.5s infinite;">⏳ Esperando que tu rival se una...</p>
+            <button id="btn-join-room" class="btn-menu btn-secondary" style="width: 100%;">UNIRSE A LA SALA</button>
+            <p id="join-status-msg" style="font-size: 0.8em; color: #00f0ff; margin-top: 10px; min-height: 1.2em;"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA 2: SALA DE ESPERA ACTIVA (LOBBY MULTIJUGADOR) -->
+      <div id="mp-online-room-view" class="hidden" style="margin-top: 20px; width: 100%; max-width: 720px; margin-left: auto; margin-right: auto;">
+        
+        <!-- Barra de Sala y Enlace -->
+        <div class="online-room-header-card">
+          <div class="room-code-badge-group">
+            <span class="room-label">SALA:</span>
+            <span id="room-code-badge" class="room-code-highlight">------</span>
+          </div>
+          <div class="room-actions-group">
+            <button id="btn-copy-code" class="btn-action-sm">📋 Copiar Código</button>
+            <button id="btn-copy-link" class="btn-action-sm btn-action-accent">🔗 Copiar Enlace</button>
+            <button id="btn-leave-room" class="btn-action-sm btn-action-danger">🚪 Salir</button>
           </div>
         </div>
 
-        <!-- Unirse a Sala -->
-        <div class="mp-local-card p2-card" style="width: 100%; max-width: 300px;">
-          <h3>UNIRSE A SALA</h3>
-          <p style="font-size: 0.9em; margin-bottom: 20px; color: #aaa;">Ingresa el código que te compartió tu amigo.</p>
-          
-          <div class="input-group">
-            <input type="text" id="join-room-code" class="name-input" placeholder="CÓDIGO (ej. A1B2C3)" maxlength="6" style="text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; font-size: 1.1em;" />
+        <!-- Selector / Estado de Nivel -->
+        <div class="online-level-box">
+          <div id="online-level-host-wrap">
+            <label for="mp-select-level-online" style="font-weight: 600; color: var(--c-cyan); display: block; margin-bottom: 6px;">🏁 Nivel a competir (Configura el Host):</label>
+            <select id="mp-select-level-online" class="mp-select" style="max-width: 420px; margin: 0 auto; display: block;">
+              <!-- Poblado dinámicamente con los 20 niveles -->
+            </select>
           </div>
-          <button id="btn-join-room" class="btn-menu btn-secondary" style="margin-top: 15px;">UNIRSE A LA SALA</button>
-          <p id="join-status-msg" style="font-size: 0.8em; color: #00f0ff; margin-top: 10px; min-height: 1.2em;"></p>
+          <div id="online-level-guest-wrap" class="hidden">
+            <span style="font-size: 0.85rem; color: var(--c-muted); font-weight: 600;">🏁 Nivel a competir:</span>
+            <div id="online-level-guest-text" style="color: #ffd700; font-weight: 700; font-size: 1.1rem; margin-top: 4px;">Nivel 1</div>
+          </div>
         </div>
-      </div>
-      
-      <!-- Selector de Nivel (solo configurable por el Host) -->
-      <div class="mp-level-selector" id="online-level-selector" style="margin-top: 35px;">
-        <label for="mp-select-level-online" style="font-weight: 600; color: var(--c-cyan);">🏁 Nivel a competir (Elige el Host):</label>
-        <select id="mp-select-level-online" class="mp-select" style="max-width: 360px; margin: 8px auto; display: block;">
-          <!-- Poblado dinámicamente con los 20 niveles -->
-        </select>
+
+        <!-- Tarjetas VS de los Jugadores -->
+        <div class="online-versus-container">
+          <!-- Jugador 1 (Host) -->
+          <div class="online-player-card p1-online-card" id="card-p1-online">
+            <div class="player-avatar avatar-p1">P1</div>
+            <div class="online-player-name" id="online-p1-name">Host</div>
+            <div class="online-player-role">HOST</div>
+            <div class="lobby-status-pill status-waiting" id="lobby-p1-status">
+              <span class="status-icon">⏳</span> <span class="status-txt">NO LISTO</span>
+            </div>
+          </div>
+
+          <div class="online-vs-badge">VS</div>
+
+          <!-- Jugador 2 (Rival) -->
+          <div class="online-player-card p2-online-card" id="card-p2-online">
+            <div class="player-avatar avatar-p2">P2</div>
+            <div class="online-player-name" id="online-p2-name">Esperando rival...</div>
+            <div class="online-player-role">RIVAL</div>
+            <div class="lobby-status-pill status-disconnected" id="lobby-p2-status">
+              <span class="status-icon">⌛</span> <span class="status-txt">ESPERANDO...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Preparado / Listo -->
+        <div class="online-ready-action-box">
+          <button id="btn-toggle-ready" class="btn-ready-toggle" disabled>
+            <span id="btn-ready-icon">⏳</span>
+            <span id="btn-ready-text">ESPERANDO RIVAL...</span>
+          </button>
+          <div id="lobby-ready-hint" class="lobby-hint-text">
+            Comparte el enlace o código para que tu amigo se una a la sala.
+          </div>
+        </div>
+
       </div>
 
     </div>
