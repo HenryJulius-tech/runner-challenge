@@ -421,7 +421,11 @@ const UI = (() => {
       p1Name: 'Host',
       p2Name: 'Rival',
       p1Color: '#00F0FF',
-      p2Color: '#FF007F'
+      p2Color: '#FF007F',
+      p1Wins: 0,
+      p1Losses: 0,
+      p2Wins: 0,
+      p2Losses: 0
     };
 
     function _showOnlineLobbyView(inRoom) {
@@ -441,7 +445,103 @@ const UI = (() => {
         onlineState.opponentReady = false;
         onlineState.opponentConnected = false;
         onlineState.roomId = null;
+        onlineState.p1Wins = 0;
+        onlineState.p1Losses = 0;
+        onlineState.p2Wins = 0;
+        onlineState.p2Losses = 0;
       }
+    }
+
+    function _updateOnlineScoreboard() {
+      const tbody = document.getElementById('online-scoreboard-body');
+      if (!tbody) return;
+
+      const players = [
+        {
+          slot: 0,
+          name: onlineState.p1Name || 'Host',
+          color: onlineState.p1Color || '#00F0FF',
+          wins: Math.max(0, Number(onlineState.p1Wins) || 0),
+          losses: Math.max(0, Number(onlineState.p1Losses) || 0)
+        },
+        {
+          slot: 1,
+          name: onlineState.opponentConnected ? (onlineState.p2Name || 'Rival') : 'Esperando rival...',
+          color: onlineState.p2Color || '#FF007F',
+          wins: Math.max(0, Number(onlineState.p2Wins) || 0),
+          losses: Math.max(0, Number(onlineState.p2Losses) || 0)
+        }
+      ];
+
+      players.sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (a.losses !== b.losses) return a.losses - b.losses;
+        return a.slot - b.slot;
+      });
+
+      const recordsDiffer = players[0].wins !== players[1].wins || players[0].losses !== players[1].losses;
+      tbody.innerHTML = '';
+
+      players.forEach((player, index) => {
+        const played = player.wins + player.losses;
+        const tr = document.createElement('tr');
+        if (recordsDiffer && index === 0) tr.classList.add('is-leader');
+        if (recordsDiffer && index === 1) tr.classList.add('is-trailing');
+
+        const posCell = document.createElement('td');
+        posCell.className = 'col-pos';
+        const posBadge = document.createElement('span');
+        posBadge.className = 'scoreboard-position';
+        posBadge.textContent = String(index + 1);
+        posCell.appendChild(posBadge);
+
+        const playerCell = document.createElement('td');
+        playerCell.className = 'col-player';
+        const playerWrap = document.createElement('div');
+        playerWrap.className = 'scoreboard-player';
+        const dot = document.createElement('span');
+        dot.className = 'scoreboard-player-dot';
+        dot.style.backgroundColor = player.color;
+        dot.style.color = player.color;
+        const name = document.createElement('span');
+        name.className = 'scoreboard-player-name';
+        name.textContent = player.name;
+        playerWrap.appendChild(dot);
+        playerWrap.appendChild(name);
+        playerCell.appendChild(playerWrap);
+
+        const winsCell = document.createElement('td');
+        winsCell.className = 'col-stat scoreboard-stat-win';
+        winsCell.textContent = String(player.wins);
+
+        const lossesCell = document.createElement('td');
+        lossesCell.className = 'col-stat scoreboard-stat-loss';
+        lossesCell.textContent = String(player.losses);
+
+        const stateCell = document.createElement('td');
+        stateCell.className = 'col-state';
+        const stateBadge = document.createElement('span');
+        stateBadge.className = 'scoreboard-state neutral';
+        if (played === 0) {
+          stateBadge.textContent = 'SIN PARTIDAS';
+        } else if (player.wins > player.losses) {
+          stateBadge.className = 'scoreboard-state winning';
+          stateBadge.textContent = 'GANANDO';
+        } else if (player.wins < player.losses) {
+          stateBadge.className = 'scoreboard-state losing';
+          stateBadge.textContent = 'PERDIENDO';
+        } else {
+          stateBadge.textContent = 'EMPATE';
+        }
+        stateCell.appendChild(stateBadge);
+
+        tr.appendChild(posCell);
+        tr.appendChild(playerCell);
+        tr.appendChild(winsCell);
+        tr.appendChild(lossesCell);
+        tr.appendChild(stateCell);
+        tbody.appendChild(tr);
+      });
     }
 
     function _updateOnlineLobbyUI() {
@@ -630,6 +730,8 @@ const UI = (() => {
           }
         }
       }
+
+      _updateOnlineScoreboard();
     }
 
     function _setupNetworkListeners() {
@@ -721,6 +823,10 @@ const UI = (() => {
           onlineState.p1Color = data.p1Color || onlineState.p1Color;
           onlineState.p2Color = data.p2Color || onlineState.p2Color;
         }
+        onlineState.p1Wins = Number(data.p1Wins) || 0;
+        onlineState.p1Losses = Number(data.p1Losses) || 0;
+        onlineState.p2Wins = Number(data.p2Wins) || 0;
+        onlineState.p2Losses = Number(data.p2Losses) || 0;
         _updateOnlineLobbyUI();
       };
 
@@ -874,6 +980,10 @@ const UI = (() => {
           onlineState.opponentConnected = false;
           onlineState.myReady = false;
           onlineState.opponentReady = false;
+          onlineState.p1Wins = 0;
+          onlineState.p1Losses = 0;
+          onlineState.p2Wins = 0;
+          onlineState.p2Losses = 0;
 
           _showOnlineLobbyView(true);
           _updateOnlineLobbyUI();
@@ -915,6 +1025,10 @@ const UI = (() => {
           onlineState.opponentConnected = true;
           onlineState.myReady = false;
           onlineState.opponentReady = !!res.p1Ready;
+          onlineState.p1Wins = 0;
+          onlineState.p1Losses = 0;
+          onlineState.p2Wins = 0;
+          onlineState.p2Losses = 0;
 
           _showOnlineLobbyView(true);
           _updateOnlineLobbyUI();

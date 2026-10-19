@@ -1719,6 +1719,178 @@ kbd {
   padding: 10px;
 }
 
+/* ── Tabla de puntuación de la sala online ─────────────────────────────── */
+.online-scoreboard {
+  width: 100%;
+  margin: 22px auto 18px;
+  background: rgba(8, 12, 28, 0.82);
+  border: 1px solid rgba(0, 240, 255, 0.22);
+  border-radius: 14px;
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.08), inset 0 0 20px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.online-scoreboard-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.12), rgba(255, 0, 127, 0.12));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #eafcff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.8px;
+}
+
+.online-scoreboard-sub {
+  color: var(--c-muted, #94a3b8);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.online-scoreboard-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.online-scoreboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+}
+
+.online-scoreboard-table th {
+  padding: 9px 10px;
+  color: #8ea3b8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.online-scoreboard-table td {
+  padding: 11px 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.online-scoreboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.online-scoreboard-table .col-pos { width: 42px; }
+.online-scoreboard-table .col-player { text-align: left; }
+.online-scoreboard-table .col-stat { width: 84px; }
+.online-scoreboard-table .col-state { width: 116px; }
+
+.online-scoreboard-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.online-scoreboard-table tbody tr.is-leader {
+  background: rgba(0, 240, 255, 0.07);
+}
+
+.online-scoreboard-table tbody tr.is-trailing {
+  opacity: 0.78;
+}
+
+.scoreboard-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scoreboard-player-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.scoreboard-player-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.scoreboard-position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #b8c6d6;
+  font-weight: 800;
+  font-size: 0.78rem;
+}
+
+.online-scoreboard-table tbody tr.is-leader .scoreboard-position {
+  background: rgba(0, 240, 255, 0.18);
+  color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+}
+
+.scoreboard-stat-win {
+  color: #00ff88;
+  font-weight: 800;
+}
+
+.scoreboard-stat-loss {
+  color: #ff4d7d;
+  font-weight: 700;
+}
+
+.scoreboard-state {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.scoreboard-state.winning {
+  background: rgba(0, 255, 136, 0.12);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  color: #00ff88;
+}
+
+.scoreboard-state.losing {
+  background: rgba(255, 77, 125, 0.1);
+  border: 1px solid rgba(255, 77, 125, 0.3);
+  color: #ff6a93;
+}
+
+.scoreboard-state.neutral {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+@media (max-width: 540px) {
+  .online-scoreboard-table { font-size: 0.8rem; }
+  .online-scoreboard-table .col-stat { width: 62px; }
+  .online-scoreboard-table .col-state { width: 90px; }
+  .online-scoreboard-table th,
+  .online-scoreboard-table td { padding: 9px 6px; }
+  .online-scoreboard-sub { display: none; }
+}
+
 .online-ready-action-box {
   display: flex;
   flex-direction: column;

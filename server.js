@@ -104,6 +104,10 @@ function roomReadyPayload(room) {
     p2Color: p2.color || '#FF007F',
     p1Connected: !!p1.connected,
     p2Connected: !!p2.connected,
+    p1Wins: safeNumber(p1.wins),
+    p1Losses: safeNumber(p1.losses),
+    p2Wins: safeNumber(p2.wins),
+    p2Losses: safeNumber(p2.losses),
     bothReady: room.players.length === 2 && !!p1.ready && !!p2.ready
   };
 }
@@ -330,6 +334,17 @@ function finalizeRace(room, reason, forcedWinnerId = null) {
     if (s && player.playerId === race.winnerId) s.hasFinished = true;
   }
 
+  // Marcador de la sala: se conserva entre carreras mientras la sala siga viva.
+  if (winner) {
+    for (const player of room.players) {
+      if (player.playerId === race.winnerId) {
+        player.wins = safeNumber(player.wins) + 1;
+      } else {
+        player.losses = safeNumber(player.losses) + 1;
+      }
+    }
+  }
+
   // Último snapshot + evento final para ambos clientes.
   broadcastRaceState(room);
   stopRaceTick(room);
@@ -541,6 +556,8 @@ io.on('connection', (socket) => {
         color: playerColor,
         ready: false,
         connected: true,
+        wins: 0,
+        losses: 0,
         disconnectTimer: null
       }],
       seed: Math.floor(Math.random() * 10000),
@@ -671,6 +688,8 @@ io.on('connection', (socket) => {
         color: playerColor,
         ready: false,
         connected: true,
+        wins: 0,
+        losses: 0,
         disconnectTimer: null
       });
       socket.join(roomId);
@@ -708,6 +727,7 @@ io.on('connection', (socket) => {
         p1Ready: !!hostPlayer.ready,
         p2Ready: false
       });
+      emitReadyStatus(room);
       console.log(`${socket.id} (${playerName}, ${playerColor}) se unió a la sala ${roomId}`);
     } else {
       if (typeof callback === 'function') {
@@ -833,6 +853,7 @@ io.on('connection', (socket) => {
       p2Color: p2.color || '#FF007F',
       reason: data?.reason || 'next_level'
     });
+    emitReadyStatus(room);
   });
 
   socket.on('leave_room', () => {

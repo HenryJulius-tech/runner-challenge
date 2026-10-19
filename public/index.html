@@ -328,6 +328,43 @@
           </div>
         </div>
 
+        <!-- Tabla de puntuación de la sala (victorias/derrotas entre carreras) -->
+        <div class="online-scoreboard" id="online-scoreboard">
+          <div class="online-scoreboard-title">
+            <span>🏆 MARCADOR DE LA SALA</span>
+            <span class="online-scoreboard-sub">Se actualiza al terminar cada carrera</span>
+          </div>
+          <div class="online-scoreboard-table-wrap">
+            <table class="online-scoreboard-table">
+              <thead>
+                <tr>
+                  <th class="col-pos">#</th>
+                  <th class="col-player">Jugador</th>
+                  <th class="col-stat">Ganadas</th>
+                  <th class="col-stat">Perdidas</th>
+                  <th class="col-state">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="online-scoreboard-body">
+                <tr>
+                  <td class="col-pos">1</td>
+                  <td class="col-player">Host</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-state"><span class="scoreboard-state neutral">SIN PARTIDAS</span></td>
+                </tr>
+                <tr>
+                  <td class="col-pos">2</td>
+                  <td class="col-player">Esperando rival...</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-state"><span class="scoreboard-state neutral">SIN PARTIDAS</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Botón de Preparado / Listo -->
         <div class="online-ready-action-box">
           <button id="btn-toggle-ready" class="btn-ready-toggle" disabled>
