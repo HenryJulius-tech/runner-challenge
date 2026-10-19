@@ -38,6 +38,20 @@ const Game = (() => {
   let networkSeed    = null;
   let networkOpponentState = null;
 
+  // ── Sincronización autoritativa online ─────────────────────────────────────
+  let currentRaceId       = null; // Identificador de la carrera oficial (servidor)
+  let localPlayerId       = null; // Identificador estable de ESTE jugador en la sala
+  let officialRaceState   = null; // Último snapshot oficial recibido
+  let officialLocalX      = 0;    // Progreso oficial del jugador local
+  let officialRemoteX     = 0;    // Progreso oficial del rival
+  let officialGoalWorldX  = null; // Meta oficial de la carrera
+  let raceResult          = null; // Resultado final dictado por el servidor
+  let raceResultApplied   = false;
+  let remoteTargetX       = 0;    // Objetivo de interpolación visual del rival
+  let remoteTargetSpeed   = 5;
+  let remoteTargetAt      = 0;    // serverTime del snapshot del rival
+  let remoteTargetFinished = false;
+
   // Componentes Viewport 1 (Player 1)
   let canvas1        = null;
   let renderer1      = null;
@@ -203,7 +217,7 @@ const Game = (() => {
    * @param {string} p1Name
    * @param {string} p2Name
    */
-  function startLevel(levelNum = 1, multiplayer = false, p1Name = 'Player 1', p2Name = 'Player 2', online = false, seed = null, p1Color = '#00F0FF', p2Color = '#FF007F', isRoomHost = false) {
+  function startLevel(levelNum = 1, multiplayer = false, p1Name = 'Player 1', p2Name = 'Player 2', online = false, seed = null, p1Color = '#00F0FF', p2Color = '#FF007F', isRoomHost = false, raceId = null) {
     currentLevel  = levelNum;
     isMultiplayer = multiplayer;
     isOnline      = online;
@@ -212,61 +226,57 @@ const Game = (() => {
     raceFinished  = false;
     winnerChosen  = false;
     networkOpponentState = null; // Limpiar cualquier paquete residual de niveles previos
+    currentRaceId        = raceId;
+    localPlayerId        = (typeof Network !== 'undefined' && Network.playerId) ? Network.playerId : null;
+    officialRaceState    = null;
+    officialLocalX       = 0;
+    officialRemoteX      = 0;
+    officialGoalWorldX   = null;
+    raceResult           = null;
+    raceResultApplied    = false;
+    remoteTargetX        = 0;
+    remoteTargetSpeed    = levelData?.scrollSpeed ?? 5;
+    remoteTargetAt       = 0;
+    remoteTargetFinished = false;
     for (const k in keys) delete keys[k]; // Resetear buffer de teclas
     
     if (isOnline && typeof Network !== 'undefined') {
-      Network.onOpponentState = (state) => {
-        // Descartar paquetes de red que pertenezcan a un nivel distinto al actual
-        if (!state || (state.level !== undefined && state.level !== currentLevel)) {
-          return;
-        }
-        networkOpponentState = state;
+      // El estado del rival ya no se acepta "en crudo": se usa el snapshot oficial
+      // del servidor para que ambos clientes compartan el mismo orden de carrera.
+      Network.onOpponentState = null;
+
+      Network.onRaceState = (snapshot) => {
+        if (!snapshot || snapshot.raceId !== currentRaceId) return;
+        if (officialRaceState && snapshot.tick <= officialRaceState.tick) return;
+        _applyRaceSnapshot(snapshot);
       };
 
       Network.onPlayerGoalReached = (data) => {
-        winnerChosen = true;
-        const isLocalPlayer = (isRoomHost && data.isHost) || (!isRoomHost && !data.isHost);
-
-        if (isLocalPlayer) {
-          if (players[0]) {
-            players[0].isWinner = data.isWinner;
-            players[0].hasFinished = true;
-          }
-          p1Stats.isWinner = data.isWinner;
-          p1Stats.score = data.score;
-        } else {
-          if (players[1]) {
-            players[1].isWinner = data.isWinner;
-            players[1].hasFinished = true;
-          }
-          p2Stats.isWinner = data.isWinner;
-          p2Stats.score = data.score;
+        if (!data || (data.raceId !== undefined && data.raceId !== currentRaceId)) return;
+        const isLocal = _isLocalSnapshotPlayer(data);
+        if (isLocal) {
+          if (players[0]) players[0].hasFinished = true;
+        } else if (players[1]) {
+          players[1].hasFinished = true;
         }
+        const runnerName = isLocal ? players[0]?.name : players[1]?.name;
+        UI.showToast(`🏁 ${runnerName || 'Un corredor'} cruzó la meta`, 'info');
+      };
 
-        if (data.isWinner) {
-          AudioManager.play('goal');
-          const winnerName = isLocalPlayer ? players[0]?.name : players[1]?.name;
-          UI.showToast(`🏁 ¡${winnerName} cruzó la meta en 1º LUGAR! 🏆`, 'success');
-        }
+      Network.onRaceFinished = (data) => {
+        if (!data || data.raceId !== currentRaceId) return;
+        _handleRaceFinished(data);
       };
 
       Network.onOpponentDisconnected = () => {
         if (state === STATE.PLAYING && !raceFinished) {
-          UI.showToast('⚠️ Tu rival se ha desconectado. ¡Victoria por abandono!', 'warning');
-          winnerChosen = true;
-          if (players[0]) {
-            players[0].isWinner = true;
-            p1Stats.isWinner = true;
-            p1Stats.score += 500;
-          }
-          if (players[1]) {
-            players[1].isAlive = false;
-            p2Stats.isAlive = false;
-          }
-          raceFinished = true;
-          setTimeout(() => {
-            _onRaceComplete();
-          }, 1200);
+          UI.showToast('⚠️ Tu rival se desconectó. Esperando su reconexión...', 'warning');
+        }
+      };
+
+      Network.onOpponentReconnected = () => {
+        if (state === STATE.PLAYING && !raceFinished) {
+          UI.showToast('✅ Tu rival se reconectó. La carrera continúa.', 'success');
         }
       };
     }
@@ -402,12 +412,12 @@ const Game = (() => {
     rafId = requestAnimationFrame(gameLoop);
   }
 
-  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName, p1CustomColor, p2CustomColor) {
+  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName, p1CustomColor, p2CustomColor, raceId = null) {
     const p1Name = p1CustomName || (isRoomHost ? 'Host' : 'Rival');
     const p2Name = p2CustomName || (isRoomHost ? 'Rival' : 'Host');
     const p1Color = p1CustomColor || (isRoomHost ? '#00F0FF' : '#FF007F');
     const p2Color = p2CustomColor || (isRoomHost ? '#FF007F' : '#00F0FF');
-    startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed, p1Color, p2Color, isRoomHost);
+    startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed, p1Color, p2Color, isRoomHost, raceId);
   }
 
   /**
@@ -438,6 +448,11 @@ const Game = (() => {
     }
     state = STATE.IDLE;
     networkOpponentState = null;
+    officialRaceState = null;
+    currentRaceId = null;
+    localPlayerId = null;
+    raceResult = null;
+    raceResultApplied = false;
     for (const k in keys) delete keys[k];
     AudioManager.stopMusic();
   }
@@ -473,35 +488,32 @@ const Game = (() => {
     // ── 2. Procesar Inputs P2 (Flechas Direccionales o Red) ─────────────────
     if (isMultiplayer && p2) {
       if (isOnline) {
-        if (networkOpponentState) {
-          // Descartar si el paquete es de otro nivel
-          if (networkOpponentState.level !== undefined && networkOpponentState.level !== currentLevel) {
-            networkOpponentState = null;
+        // El rival se representa con el último estado oficial + extrapolación corta
+        // para compensar la latencia. El orden/resultado NO depende de esta interpolación.
+        if (officialRaceState && !remoteTargetFinished) {
+          const ageFrames = (typeof Network !== 'undefined' && Network.getSnapshotAgeMs)
+            ? Network.getSnapshotAgeMs(remoteTargetAt) / (1000 / 60)
+            : 0;
+          const predictedX = remoteTargetX + remoteTargetSpeed * Math.min(15, Math.max(0, ageFrames));
+          const maxX = officialGoalWorldX || goalWorldX;
+          const targetX = Math.max(0, Math.min(maxX, predictedX));
+          const blend = 1 - Math.exp(-14 * (delta / 1000)); // suave e independiente de FPS
+
+          const dx = targetX - p2.worldX;
+          if (Math.abs(dx) > 350) {
+            // Resincronización tras una pausa/reconexión: evitar quedarse atrás para siempre.
+            p2.worldX = targetX;
           } else {
-            // Interpolación suave de coordenadas
-            p2.worldX += (networkOpponentState.worldX - p2.worldX) * 0.35;
-            p2.y += (networkOpponentState.y - p2.y) * 0.35;
-            
-            p2.vy = networkOpponentState.vy;
-            p2.isDucking = networkOpponentState.isDucking;
-            p2.hasFinished = networkOpponentState.hasFinished;
-            
-            // Sincronización de telemetría, vidas y estado
-            if (networkOpponentState.lives !== undefined) p2.lives = networkOpponentState.lives;
-            if (networkOpponentState.isAlive !== undefined) p2.isAlive = networkOpponentState.isAlive;
-            if (networkOpponentState.score !== undefined) p2Stats.score = networkOpponentState.score;
-            if (networkOpponentState.coins !== undefined) p2Stats.coins = networkOpponentState.coins;
-            if (networkOpponentState.isWinner && !winnerChosen) {
-              winnerChosen = true;
-              p2.isWinner = true;
-              p2Stats.isWinner = true;
-            }
-            
-            // Power-ups y sprint sincronizados visualmente
-            p2.turboTimer = networkOpponentState.turboTimer || 0;
-            p2.dashTimer  = networkOpponentState.dashTimer || 0;
-            p2.shield     = networkOpponentState.shield || false;
+            p2.worldX += dx * blend;
           }
+
+          if (p2._networkY !== undefined) {
+            const dy = p2._networkY - p2.y;
+            if (Math.abs(dy) > 250) p2.y = p2._networkY;
+            else p2.y += dy * blend;
+          }
+          if (p2._networkVy !== undefined) p2.vy = p2._networkVy;
+          if (p2._networkDucking !== undefined) p2.isDucking = p2._networkDucking;
         }
       } else if (p2.isAlive) {
         const p2JumpPressed = Boolean(keys['ArrowUp']);
@@ -543,10 +555,12 @@ const Game = (() => {
     // ── Enviar estado de red P1 ──────────────────────────────────────────────
     if (isOnline && p1 && typeof Network !== 'undefined') {
       Network.sendState({
+        raceId: currentRaceId,
         level: currentLevel,
         worldX: p1.worldX,
         y: p1.y,
         vy: p1.vy,
+        speed: p1.currentSpeed,
         isDucking: p1.isDucking,
         hasFinished: p1.hasFinished,
         turboTimer: p1.turboTimer,
@@ -556,7 +570,7 @@ const Game = (() => {
         coins: p1Stats.coins,
         lives: p1.lives,
         isAlive: p1.isAlive,
-        isWinner: p1Stats.isWinner
+        elapsedMs: Math.max(0, performance.now() - startTime)
       });
     }
 
@@ -572,7 +586,7 @@ const Game = (() => {
     if (p1.isAlive && !p1.hasFinished) {
       p1Stats.score += Math.floor(scrollSpeed * 0.1);
     }
-    if (isMultiplayer && p2?.isAlive && !p2?.hasFinished) {
+    if (isMultiplayer && !isOnline && p2?.isAlive && !p2?.hasFinished) {
       p2Stats.score += Math.floor(scrollSpeed * 0.1);
     }
 
@@ -792,8 +806,12 @@ const Game = (() => {
       p1Stats.time   = elapsedSecs;
 
       if (isOnline && typeof Network !== 'undefined') {
+        // El cliente sólo informa su cruce; el ganador lo decide el servidor.
         Network.sendPlayerFinished({
+          raceId: currentRaceId,
+          elapsedMs: Math.max(0, performance.now() - startTime),
           time: elapsedSecs,
+          worldX: p1.worldX,
           score: p1Stats.score,
           coins: p1Stats.coins
         });
@@ -831,10 +849,191 @@ const Game = (() => {
   }
 
   /**
+   * ¿Esta entrada del snapshot/resultado corresponde al jugador local?
+   * Se usa playerId estable; nunca el orden de la lista ni "quién es host".
+   */
+  function _playerEntryIsLocal(entry) {
+    if (!entry) return false;
+    if (localPlayerId && entry.playerId) return entry.playerId === localPlayerId;
+    if (typeof Network !== 'undefined' && Network.playerSlot !== null && Network.playerSlot !== undefined) {
+      return entry.slot === Network.playerSlot;
+    }
+    return false;
+  }
+
+  function _isLocalSnapshotPlayer(data) {
+    if (!data) return false;
+    if (localPlayerId && data.playerId) return data.playerId === localPlayerId;
+    if (typeof Network !== 'undefined' && Network.playerSlot !== null && Network.playerSlot !== undefined) {
+      return data.slot === Network.playerSlot;
+    }
+    return false;
+  }
+
+  function _safeNum(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  /**
+   * Aplica un snapshot oficial del servidor. El estado oficial manda sobre
+   * el orden de posiciones, la meta y la condición de ganador.
+   */
+  function _applyRaceSnapshot(snapshot) {
+    officialRaceState = snapshot;
+    if (snapshot.goalWorldX !== undefined) {
+      officialGoalWorldX = _safeNum(snapshot.goalWorldX, goalWorldX);
+    }
+
+    const list = Array.isArray(snapshot.players) ? snapshot.players : [];
+    const localEntry = list.find(_playerEntryIsLocal) || null;
+    const remoteEntry = list.find(entry => entry !== localEntry) || null;
+
+    const p1 = players[0];
+    const p2 = players[1];
+
+    if (localEntry) {
+      officialLocalX = _safeNum(localEntry.worldX);
+      if (p1) {
+        // Reconciliación sólo si el servidor está MUY por delante (p. ej. tras reconectar).
+        // Nunca se retrocede al jugador local por un snapshot antiguo.
+        if (!p1.hasFinished && officialLocalX > p1.worldX + 150) {
+          p1.worldX = officialLocalX;
+        }
+        if (localEntry.isAlive === false) {
+          p1.isAlive = false;
+          p1Stats.isAlive = false;
+          p1.lives = 0;
+        }
+      }
+    } else {
+      officialLocalX = p1 ? p1.worldX : 0;
+    }
+
+    if (remoteEntry) {
+      officialRemoteX = _safeNum(remoteEntry.worldX);
+      remoteTargetX = officialRemoteX;
+      remoteTargetSpeed = _safeNum(remoteEntry.speed, levelData?.scrollSpeed ?? 5);
+      remoteTargetAt = _safeNum(snapshot.serverTime);
+      remoteTargetFinished = !!remoteEntry.hasFinished;
+
+      if (p2) {
+        p2._networkY = _safeNum(remoteEntry.y, p2.y);
+        p2._networkVy = _safeNum(remoteEntry.vy);
+        p2._networkDucking = !!remoteEntry.isDucking;
+        p2.hasFinished = !!remoteEntry.hasFinished;
+        p2.lives = _safeNum(remoteEntry.lives, p2.lives);
+        p2.isAlive = remoteEntry.isAlive !== false;
+        p2.turboTimer = _safeNum(remoteEntry.turboTimer);
+        p2.dashTimer = _safeNum(remoteEntry.dashTimer);
+        p2.shield = !!remoteEntry.shield;
+        p2.isWinner = !!remoteEntry.isWinner;
+        if (remoteEntry.finishTimeMs !== null && remoteEntry.finishTimeMs !== undefined) {
+          p2.finishTime = Math.round(_safeNum(remoteEntry.finishTimeMs) / 1000);
+        }
+      }
+      p2Stats.score = _safeNum(remoteEntry.score);
+      p2Stats.coins = _safeNum(remoteEntry.coins);
+      p2Stats.isAlive = remoteEntry.isAlive !== false;
+      p2Stats.isWinner = !!remoteEntry.isWinner;
+      if (remoteEntry.finishTimeMs !== null && remoteEntry.finishTimeMs !== undefined) {
+        p2Stats.time = Math.round(_safeNum(remoteEntry.finishTimeMs) / 1000);
+      }
+    } else {
+      officialRemoteX = p2 ? p2.worldX : 0;
+    }
+  }
+
+  /**
+   * Aplica el resultado oficial (mismo ganador y mismas puntuaciones en ambos clientes).
+   */
+  function _applyRaceResult(data) {
+    if (!data || raceResultApplied) return;
+    const results = Array.isArray(data.results) ? data.results : [];
+    const localEntry = results.find(_playerEntryIsLocal) || null;
+    const remoteEntry = results.find(entry => entry !== localEntry) || null;
+
+    if (localEntry) {
+      p1Stats.isWinner = !!localEntry.isWinner;
+      p1Stats.score = _safeNum(localEntry.score, p1Stats.score);
+      p1Stats.coins = _safeNum(localEntry.coins, p1Stats.coins);
+      p1Stats.isAlive = localEntry.isAlive !== false;
+      if (localEntry.time !== null && localEntry.time !== undefined) {
+        p1Stats.time = _safeNum(localEntry.time, p1Stats.time);
+      }
+      if (players[0]) {
+        players[0].isWinner = !!localEntry.isWinner;
+        players[0].hasFinished = !!localEntry.hasFinished;
+        players[0].isAlive = localEntry.isAlive !== false;
+        players[0].finishTime = p1Stats.time;
+      }
+    }
+
+    if (remoteEntry) {
+      p2Stats.isWinner = !!remoteEntry.isWinner;
+      p2Stats.score = _safeNum(remoteEntry.score, p2Stats.score);
+      p2Stats.coins = _safeNum(remoteEntry.coins, p2Stats.coins);
+      p2Stats.isAlive = remoteEntry.isAlive !== false;
+      if (remoteEntry.time !== null && remoteEntry.time !== undefined) {
+        p2Stats.time = _safeNum(remoteEntry.time, p2Stats.time);
+      }
+      if (players[1]) {
+        players[1].isWinner = !!remoteEntry.isWinner;
+        players[1].hasFinished = !!remoteEntry.hasFinished;
+        players[1].isAlive = remoteEntry.isAlive !== false;
+        players[1].finishTime = p2Stats.time;
+      }
+    }
+
+    raceResultApplied = true;
+  }
+
+  /**
+   * Final único de carrera dictado por el servidor.
+   */
+  function _handleRaceFinished(data) {
+    if (!data || (raceResult && raceResult.raceId === data.raceId)) return;
+    if (state !== STATE.PLAYING && state !== STATE.PAUSED) return;
+
+    raceResult = data;
+    raceResultApplied = false;
+    _applyRaceResult(data);
+
+    const localSlot = (typeof Network !== 'undefined') ? Network.playerSlot : null;
+    const localWon = !!data.winnerId && (
+      (localPlayerId && data.winnerId === localPlayerId) ||
+      (!localPlayerId && localSlot !== null && data.winnerSlot === localSlot)
+    );
+
+    raceFinished = true;
+    winnerChosen = true;
+    state = data.winnerId ? STATE.LEVEL_COMPLETE : STATE.GAMEOVER;
+    AudioManager.stopMusic();
+
+    if (data.winnerId) {
+      if (localWon) AudioManager.play('goal');
+      const winnerName = data.winnerName || (localWon ? players[0]?.name : players[1]?.name) || 'Ganador';
+      UI.showToast(`🏆 ${winnerName} gana la carrera`, localWon ? 'success' : 'info');
+    }
+
+    setTimeout(() => {
+      if (raceFinished && state === STATE.LEVEL_COMPLETE) {
+        _onRaceComplete();
+      } else if (raceFinished && state === STATE.GAMEOVER) {
+        _onGameOver();
+      }
+    }, 1000);
+  }
+
+  /**
    * Comprobar fin de partida
    */
   function _checkEndConditions() {
     if (raceFinished) return;
+
+    // En online el final lo dicta el servidor mediante 'race_finished'.
+    // Evita que un cliente cierre la carrera antes que el otro.
+    if (isOnline) return;
 
     const allFinishedOrDead = players.every(p => !p.isAlive || p.hasFinished);
     const anyFinished       = players.some(p => p.hasFinished);
@@ -858,6 +1057,7 @@ const Game = (() => {
    * Finalización de carrera con resultados
    */
   function _onRaceComplete() {
+    if (isOnline && raceResult) _applyRaceResult(raceResult);
     const elapsed = Math.floor((performance.now() - startTime) / 1000);
 
     // Guardar récord de P1
@@ -944,13 +1144,19 @@ const Game = (() => {
     const p1 = players[0];
     const p2 = players[1];
 
+    // En online, la telemetría usa el estado OFICIAL (idéntico en ambos clientes),
+    // no la posición local predicha ni el rival interpolado.
+    const hudGoal = (isOnline && officialGoalWorldX) ? officialGoalWorldX : goalWorldX;
+    const hudP1X = (isOnline && officialRaceState) ? officialLocalX : (p1?.worldX || 0);
+    const hudP2X = (isOnline && officialRaceState) ? officialRemoteX : (p2?.worldX || 0);
+
     // HUD Viewport 1 (P1)
     if (p1) {
       document.getElementById('vp-p1-score').textContent = p1Stats.score;
       document.getElementById('vp-p1-coins').textContent = p1Stats.coins;
       document.getElementById('vp-p1-lives').textContent = '❤️'.repeat(Math.max(0, p1.lives));
 
-      const p1Progress = Math.min(100, Math.max(0, (p1.worldX / goalWorldX) * 100));
+      const p1Progress = Math.min(100, Math.max(0, (hudP1X / hudGoal) * 100));
       const p1Fill = document.getElementById('progress-bar-fill-p1');
       const p1Icon = document.getElementById('progress-icon-p1');
       if (p1Fill) p1Fill.style.width = p1Progress + '%';
@@ -966,7 +1172,7 @@ const Game = (() => {
       document.getElementById('vp-p2-coins').textContent = p2Stats.coins;
       document.getElementById('vp-p2-lives').textContent = '❤️'.repeat(Math.max(0, p2.lives));
 
-      const p2Progress = Math.min(100, Math.max(0, (p2.worldX / goalWorldX) * 100));
+      const p2Progress = Math.min(100, Math.max(0, (hudP2X / hudGoal) * 100));
       const p2Fill = document.getElementById('progress-bar-fill-p2');
       const p2Icon = document.getElementById('progress-icon-p2');
       if (p2Fill) p2Fill.style.width = p2Progress + '%';
@@ -980,7 +1186,7 @@ const Game = (() => {
       const rankP2 = document.getElementById('vp-p2-rank');
       const statusBadge = document.getElementById('split-status-badge');
 
-      const distDiffPx = p1.worldX - p2.worldX;
+      const distDiffPx = hudP1X - hudP2X;
       const distDiffMeters = Math.round(Math.abs(distDiffPx) / 10);
 
       if (distDiffPx > 30) {

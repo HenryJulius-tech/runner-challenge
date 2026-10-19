@@ -656,6 +656,55 @@ const UI = (() => {
         _updateOnlineLobbyUI();
       };
 
+      Network.onOpponentDisconnected = (data) => {
+        onlineState.opponentConnected = false;
+        _updateOnlineLobbyUI();
+        if (data && data.reconnectWindowMs) {
+          showToast('⚠️ Rival desconectado. Esperando reconexión...', 'warning');
+        }
+      };
+
+      Network.onOpponentReconnected = (data) => {
+        onlineState.opponentConnected = true;
+        if (data && data.name) {
+          if (Number(data.slot) === 0) onlineState.p1Name = data.name;
+          else onlineState.p2Name = data.name;
+        }
+        if (data && data.color) {
+          if (Number(data.slot) === 0) onlineState.p1Color = data.color;
+          else onlineState.p2Color = data.color;
+        }
+        _updateOnlineLobbyUI();
+        showToast('✅ Rival reconectado. La sala continúa.', 'success');
+      };
+
+      Network.onReconnected = (res) => {
+        if (!res || !res.success) {
+          if (res && res.success === false) showToast('La sala anterior ya no existe.', 'warning');
+          return;
+        }
+        onlineState.inRoom = true;
+        onlineState.roomId = res.roomId || onlineState.roomId;
+        onlineState.isHost = Number(res.slot) === 0;
+        onlineState.seed = res.seed || onlineState.seed;
+        onlineState.level = res.level || onlineState.level;
+        onlineState.opponentConnected = res.opponentConnected !== false;
+        onlineState.p1Name = res.hostName || onlineState.p1Name;
+        onlineState.p1Color = res.hostColor || onlineState.p1Color;
+        onlineState.p2Name = res.guestName || onlineState.p2Name;
+        onlineState.p2Color = res.guestColor || onlineState.p2Color;
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+
+        if (typeof Game !== 'undefined' && Game.state === 'playing') {
+          showToast('🔄 Conexión restablecida. La carrera continúa.', 'success');
+          return;
+        }
+        _showOnlineLobbyView(true);
+        _updateOnlineLobbyUI();
+        showToast('🔄 Reconectado a la sala.', 'success');
+      };
+
       Network.onRoomReadyStatus = (data) => {
         if (onlineState.isHost) {
           onlineState.myReady = data.p1Ready;
@@ -704,7 +753,8 @@ const UI = (() => {
               onlineState.isHost ? p1Name : p2Name,
               onlineState.isHost ? p2Name : p1Name,
               onlineState.isHost ? p1Color : p2Color,
-              onlineState.isHost ? p2Color : p1Color
+              onlineState.isHost ? p2Color : p1Color,
+              data.raceId || null
             );
           });
         }, 500);
@@ -781,8 +831,8 @@ const UI = (() => {
     document.getElementById('btn-online')?.addEventListener('click', () => {
       AudioManager.init();
       showScreen('lobby');
-      Network.init();
       _setupNetworkListeners();
+      Network.init();
       _populateOnlineLevels();
       _showOnlineLobbyView(false);
     });
@@ -804,8 +854,8 @@ const UI = (() => {
     // Crear Sala
     document.getElementById('btn-create-room')?.addEventListener('click', () => {
       _populateOnlineLevels();
-      Network.init();
       _setupNetworkListeners();
+      Network.init();
 
       const pName = ScoreManager.getPlayerName() || 'Host';
       const selLevel = parseInt(document.getElementById('mp-select-level-online')?.value || '1', 10);
@@ -846,8 +896,8 @@ const UI = (() => {
       const statusEl = document.getElementById('join-status-msg');
       if (statusEl) statusEl.textContent = 'Conectando con la sala ' + code + '...';
 
-      Network.init();
       _setupNetworkListeners();
+      Network.init();
 
       const pName = ScoreManager.getPlayerName() || 'Rival';
       const pColor = onlineState.p2Color || '#FF007F';
@@ -886,7 +936,8 @@ const UI = (() => {
 
       const myName = onlineState.isHost ? onlineState.p1Name : onlineState.p2Name;
       const myColor = onlineState.isHost ? onlineState.p1Color : onlineState.p2Color;
-      Network.sendReady(onlineState.myReady, myName, myColor);
+      const levelInfo = LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null;
+      Network.sendReady(onlineState.myReady, myName, myColor, levelInfo?.levelLength);
       _updateOnlineLobbyUI();
     });
 
@@ -897,7 +948,8 @@ const UI = (() => {
       onlineState.level = newLevel;
       onlineState.myReady = false;
       onlineState.opponentReady = false;
-      Network.changeLevel(newLevel);
+      const levelInfo = LevelConfig.getLevelData ? LevelConfig.getLevelData(newLevel) : null;
+      Network.changeLevel(newLevel, levelInfo?.levelLength);
       _updateOnlineLobbyUI();
       showToast(`Nivel cambiado al Nivel ${newLevel}. Ambos deben confirmar con ¡Listo!`, 'info');
     });
@@ -932,8 +984,8 @@ const UI = (() => {
       const roomParam = (params.get('room') || window.location.hash.replace('#room=', '')).trim().toUpperCase();
       if (roomParam && roomParam.length === 6) {
         showScreen('lobby');
-        Network.init();
         _setupNetworkListeners();
+        Network.init();
         _populateOnlineLevels();
         _showOnlineLobbyView(false);
         const input = document.getElementById('join-room-code');
