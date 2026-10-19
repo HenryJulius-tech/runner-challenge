@@ -211,9 +211,15 @@ const Game = (() => {
     levelData     = LevelConfig.getLevelData(levelNum);
     raceFinished  = false;
     winnerChosen  = false;
+    networkOpponentState = null; // Limpiar cualquier paquete residual de niveles previos
+    for (const k in keys) delete keys[k]; // Resetear buffer de teclas
     
     if (isOnline && typeof Network !== 'undefined') {
       Network.onOpponentState = (state) => {
+        // Descartar paquetes de red que pertenezcan a un nivel distinto al actual
+        if (!state || (state.level !== undefined && state.level !== currentLevel)) {
+          return;
+        }
         networkOpponentState = state;
       };
 
@@ -431,6 +437,8 @@ const Game = (() => {
       rafId = null;
     }
     state = STATE.IDLE;
+    networkOpponentState = null;
+    for (const k in keys) delete keys[k];
     AudioManager.stopMusic();
   }
 
@@ -446,56 +454,69 @@ const Game = (() => {
 
     // ── 1. Procesar Inputs P1 (W, S, D, ShiftLeft, Espacio) ─────────────────
     if (p1 && p1.isAlive) {
-      const p1JumpPressed = keys['KeyW'] || keys['Space'];
+      const p1JumpPressed = Boolean(keys['KeyW'] || keys['Space']);
       if (p1JumpPressed && !p1._jumpKeyHeld) {
         p1.jump();
       }
       p1._jumpKeyHeld = p1JumpPressed;
 
       p1.setDucking(Boolean(keys['KeyS']));
-      if (keys['KeyD'] || keys['ShiftLeft']) {
+
+      // Sprint / Dash activado al presionar la tecla (disparo único con cooldown)
+      const p1DashPressed = Boolean(keys['KeyD'] || keys['ShiftLeft']);
+      if (p1DashPressed && !p1._dashKeyHeld) {
         p1.dash();
       }
+      p1._dashKeyHeld = p1DashPressed;
     }
 
     // ── 2. Procesar Inputs P2 (Flechas Direccionales o Red) ─────────────────
     if (isMultiplayer && p2) {
       if (isOnline) {
         if (networkOpponentState) {
-          // Interpolación suave de coordenadas
-          p2.worldX += (networkOpponentState.worldX - p2.worldX) * 0.35;
-          p2.y += (networkOpponentState.y - p2.y) * 0.35;
-          
-          p2.vy = networkOpponentState.vy;
-          p2.isDucking = networkOpponentState.isDucking;
-          p2.hasFinished = networkOpponentState.hasFinished;
-          
-          // Sincronización de telemetría, vidas y estado
-          if (networkOpponentState.lives !== undefined) p2.lives = networkOpponentState.lives;
-          if (networkOpponentState.isAlive !== undefined) p2.isAlive = networkOpponentState.isAlive;
-          if (networkOpponentState.score !== undefined) p2Stats.score = networkOpponentState.score;
-          if (networkOpponentState.coins !== undefined) p2Stats.coins = networkOpponentState.coins;
-          if (networkOpponentState.isWinner && !winnerChosen) {
-            winnerChosen = true;
-            p2.isWinner = true;
-            p2Stats.isWinner = true;
+          // Descartar si el paquete es de otro nivel
+          if (networkOpponentState.level !== undefined && networkOpponentState.level !== currentLevel) {
+            networkOpponentState = null;
+          } else {
+            // Interpolación suave de coordenadas
+            p2.worldX += (networkOpponentState.worldX - p2.worldX) * 0.35;
+            p2.y += (networkOpponentState.y - p2.y) * 0.35;
+            
+            p2.vy = networkOpponentState.vy;
+            p2.isDucking = networkOpponentState.isDucking;
+            p2.hasFinished = networkOpponentState.hasFinished;
+            
+            // Sincronización de telemetría, vidas y estado
+            if (networkOpponentState.lives !== undefined) p2.lives = networkOpponentState.lives;
+            if (networkOpponentState.isAlive !== undefined) p2.isAlive = networkOpponentState.isAlive;
+            if (networkOpponentState.score !== undefined) p2Stats.score = networkOpponentState.score;
+            if (networkOpponentState.coins !== undefined) p2Stats.coins = networkOpponentState.coins;
+            if (networkOpponentState.isWinner && !winnerChosen) {
+              winnerChosen = true;
+              p2.isWinner = true;
+              p2Stats.isWinner = true;
+            }
+            
+            // Power-ups y sprint sincronizados visualmente
+            p2.turboTimer = networkOpponentState.turboTimer || 0;
+            p2.dashTimer  = networkOpponentState.dashTimer || 0;
+            p2.shield     = networkOpponentState.shield || false;
           }
-          
-          // Power-ups sincronizados visualmente
-          p2.turboTimer = networkOpponentState.turboTimer || 0;
-          p2.shield = networkOpponentState.shield || false;
         }
       } else if (p2.isAlive) {
-        const p2JumpPressed = keys['ArrowUp'];
+        const p2JumpPressed = Boolean(keys['ArrowUp']);
         if (p2JumpPressed && !p2._jumpKeyHeld) {
           p2.jump();
         }
         p2._jumpKeyHeld = p2JumpPressed;
 
         p2.setDucking(Boolean(keys['ArrowDown']));
-        if (keys['ArrowRight'] || keys['ShiftRight']) {
+
+        const p2DashPressed = Boolean(keys['ArrowRight'] || keys['ShiftRight']);
+        if (p2DashPressed && !p2._dashKeyHeld) {
           p2.dash();
         }
+        p2._dashKeyHeld = p2DashPressed;
       }
     }
 
@@ -522,12 +543,14 @@ const Game = (() => {
     // ── Enviar estado de red P1 ──────────────────────────────────────────────
     if (isOnline && p1 && typeof Network !== 'undefined') {
       Network.sendState({
+        level: currentLevel,
         worldX: p1.worldX,
         y: p1.y,
         vy: p1.vy,
         isDucking: p1.isDucking,
         hasFinished: p1.hasFinished,
         turboTimer: p1.turboTimer,
+        dashTimer: p1.dashTimer,
         shield: p1.shield,
         score: p1Stats.score,
         coins: p1Stats.coins,
@@ -1016,6 +1039,13 @@ const Game = (() => {
    * Gestión de Inputs de Teclado
    */
   function onKeyDown(e) {
+    const target = e.target;
+    const tag = target?.tagName?.toLowerCase();
+    const isInput = tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable;
+    
+    // Si el usuario está escribiendo en campos de texto (ej. nombres del lobby), no bloquear teclas
+    if (isInput) return;
+
     keys[e.code] = true;
     AudioManager.init();
     AudioManager.resume();
@@ -1025,12 +1055,18 @@ const Game = (() => {
       else if (state === STATE.PAUSED) resume();
     }
 
-    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowRight', 'KeyW', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
+    // Prevenir scroll o acciones del navegador ÚNICAMENTE durante la partida activa
+    if (state === STATE.PLAYING && ['Space', 'ArrowUp', 'ArrowDown', 'ArrowRight', 'KeyW', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight'].includes(e.code)) {
       e.preventDefault();
     }
   }
 
   function onKeyUp(e) {
+    const target = e.target;
+    const tag = target?.tagName?.toLowerCase();
+    const isInput = tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable;
+    if (isInput) return;
+
     keys[e.code] = false;
   }
 

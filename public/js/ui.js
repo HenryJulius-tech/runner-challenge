@@ -761,18 +761,20 @@ const UI = (() => {
     // Escuchar cambios de nombre en tiempo real
     document.getElementById('lobby-input-p1')?.addEventListener('input', (e) => {
       if (!onlineState.isHost) return;
-      const val = e.target.value.trim().slice(0, 14) || 'Host';
-      onlineState.p1Name = val;
-      ScoreManager.saveSettings({ name: val });
-      Network.updateProfile(val, onlineState.p1Color);
+      const rawVal = e.target.value.slice(0, 14);
+      onlineState.p1Name = rawVal;
+      const cleanVal = rawVal.trim() || 'Host';
+      ScoreManager.saveSettings({ name: cleanVal });
+      Network.updateProfile(cleanVal, onlineState.p1Color);
     });
 
     document.getElementById('lobby-input-p2')?.addEventListener('input', (e) => {
       if (onlineState.isHost) return;
-      const val = e.target.value.trim().slice(0, 14) || 'Rival';
-      onlineState.p2Name = val;
-      ScoreManager.saveSettings({ name: val });
-      Network.updateProfile(val, onlineState.p2Color);
+      const rawVal = e.target.value.slice(0, 14);
+      onlineState.p2Name = rawVal;
+      const cleanVal = rawVal.trim() || 'Rival';
+      ScoreManager.saveSettings({ name: cleanVal });
+      Network.updateProfile(cleanVal, onlineState.p2Color);
     });
 
     // ── Lobby Online ────────────────────────────────────────────────────────

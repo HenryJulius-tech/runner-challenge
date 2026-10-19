@@ -63,6 +63,10 @@ class Player {
     // ── Estela Neón / Ghost Trail ──
     this.trail = [];
     this.trailCounter = 0;
+
+    // ── Sprint / Dash con Cooldown y Duración ──
+    this.dashTimer    = 0; // Duración activa del sprint (frames)
+    this.dashCooldown = 0; // Tiempo de enfriamiento para volver a usar sprint (frames)
   }
 
   /**
@@ -86,12 +90,14 @@ class Player {
     this.invulnerable = false;
     this.invulnTimer  = 0;
 
-    // Resetear power-ups
+    // Resetear power-ups y sprint
     this.shield          = false;
     this.magnetTimer     = 0;
     this.turboTimer      = 0;
     this.doubleJumpTimer = 0;
     this.canDoubleJump   = false;
+    this.dashTimer       = 0;
+    this.dashCooldown    = 0;
     this.trail           = [];
   }
 
@@ -174,14 +180,25 @@ class Player {
   }
 
   /**
-   * Impulso rápido opcional (Dash)
+   * Impulso rápido / Sprint controlado con duración breve y tiempo de recarga (cooldown)
    */
   dash() {
-    if (!this.isAlive || this.hasFinished) return;
-    this.worldX += 25;
-    if (window.GlobalParticles) {
-      window.GlobalParticles.spawnSparks(this.worldX, this.y + this.h / 2, this.color, 6, 1.5);
+    if (!this.isAlive || this.hasFinished) return false;
+    // Evitar spam: no permitir sprint si ya está activo o en tiempo de recarga
+    if (this.dashCooldown > 0 || this.dashTimer > 0) return false;
+
+    this.dashTimer = 16;      // Sprint corto de ~0.26s (16 frames a 60 FPS)
+    this.dashCooldown = 90;   // Cooldown de 1.5s (90 frames) para evitar spam
+
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.play('whoosh');
     }
+
+    if (window.GlobalParticles) {
+      window.GlobalParticles.spawnShockwave(this.worldX + this.w / 2, this.y + this.h / 2, this.color, 32);
+      window.GlobalParticles.spawnSparks(this.worldX, this.y + this.h / 2, this.color, 8, 1.6);
+    }
+    return true;
   }
 
   /**
@@ -249,14 +266,24 @@ class Player {
     }
     if (!this.isAlive) return;
 
-    // 1. Temporizadores de Power-Ups
+    // 1. Temporizadores de Power-Ups y Dash/Sprint
     if (this.magnetTimer > 0)     this.magnetTimer--;
     if (this.turboTimer > 0)      this.turboTimer--;
     if (this.doubleJumpTimer > 0) this.doubleJumpTimer--;
+    if (this.dashCooldown > 0)    this.dashCooldown--;
 
-    // 2. Velocidad con Turbo (+55% boost)
+    // 2. Velocidad con Turbo (+55% boost) o Sprint (+50% temporal durante dashTimer)
     const isTurbo = this.turboTimer > 0;
-    this.currentSpeed = isTurbo ? scrollSpeed * 1.55 : scrollSpeed;
+    const isDashing = this.dashTimer > 0;
+    if (isDashing) this.dashTimer--;
+
+    let speed = scrollSpeed;
+    if (isTurbo) {
+      speed *= 1.55;
+    } else if (isDashing) {
+      speed *= 1.50; // Impulso dinámico y controlado
+    }
+    this.currentSpeed = speed;
     this.worldX += this.currentSpeed;
 
     // 3. Físicas de caída / salto
@@ -297,7 +324,7 @@ class Player {
 
     // 6. Registro de Estela Neón (Ghost Trail)
     this.trailCounter++;
-    const shouldAddTrail = isTurbo || this.isFastFalling || (!this.onGround && this.trailCounter % 2 === 0) || (this.trailCounter % 3 === 0);
+    const shouldAddTrail = isTurbo || isDashing || this.isFastFalling || (!this.onGround && this.trailCounter % 2 === 0) || (this.trailCounter % 3 === 0);
 
     if (shouldAddTrail) {
       let trailColor = this.color;
