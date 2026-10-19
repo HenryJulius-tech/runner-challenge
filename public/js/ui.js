@@ -373,6 +373,41 @@ const UI = (() => {
       ).join('');
     }
 
+    // ── Paleta Neón para Corredores ────────────────────────────────────────
+    const NEON_COLORS = [
+      { name: 'Cyan Neón', hex: '#00F0FF' },
+      { name: 'Magenta Neón', hex: '#FF007F' },
+      { name: 'Verde Cyber', hex: '#00FF88' },
+      { name: 'Amarillo Turbo', hex: '#FFD700' },
+      { name: 'Naranja Fuego', hex: '#FF7700' },
+      { name: 'Violeta Cósmico', hex: '#9900FF' },
+      { name: 'Rojo Carmesí', hex: '#FF3366' }
+    ];
+
+    function _getColorName(hex) {
+      const found = NEON_COLORS.find(c => c.hex.toLowerCase() === (hex || '').toLowerCase());
+      return found ? found.name : 'Personalizado';
+    }
+
+    function _renderSwatches(containerId, activeColor, onSelect) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      NEON_COLORS.forEach(c => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `color-swatch ${c.hex.toLowerCase() === (activeColor || '').toLowerCase() ? 'active' : ''}`;
+        btn.style.backgroundColor = c.hex;
+        btn.style.color = c.hex;
+        btn.title = c.name;
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          onSelect(c.hex);
+        });
+        container.appendChild(btn);
+      });
+    }
+
     // ── Estado de la Sala Online ────────────────────────────────────────────
     const onlineState = {
       inRoom: false,
@@ -384,7 +419,9 @@ const UI = (() => {
       opponentReady: false,
       opponentConnected: false,
       p1Name: 'Host',
-      p2Name: 'Rival'
+      p2Name: 'Rival',
+      p1Color: '#00F0FF',
+      p2Color: '#FF007F'
     };
 
     function _showOnlineLobbyView(inRoom) {
@@ -435,11 +472,95 @@ const UI = (() => {
         if (guestText) guestText.textContent = `${lvlLabel} (Elegido por el Host)`;
       }
 
-      // Tarjeta P1 (Host)
-      const p1NameEl = document.getElementById('online-p1-name');
-      const p1StatusEl = document.getElementById('lobby-p1-status');
-      if (p1NameEl) p1NameEl.textContent = onlineState.p1Name;
+      // Configuración de tarjetas P1 y P2 según seas Host o Rival
+      const p1NameDisplayWrap = document.getElementById('p1-name-display-wrap');
+      const p1NameEditWrap    = document.getElementById('p1-name-edit-wrap');
+      const p1Input           = document.getElementById('lobby-input-p1');
+      const p1NameEl          = document.getElementById('online-p1-name');
+      const p1SwatchesWrap    = document.getElementById('p1-swatches-wrap');
+      const p1PreviewWrap     = document.getElementById('p1-color-preview-wrap');
+      const p1Dot             = document.getElementById('dot-p1');
+      const p1ColorLabel      = document.getElementById('label-color-p1');
+      const p1Avatar          = document.getElementById('avatar-p1-lobby');
+      const p1Card            = document.getElementById('card-p1-online');
+      const p1StatusEl        = document.getElementById('lobby-p1-status');
 
+      const p2NameDisplayWrap = document.getElementById('p2-name-display-wrap');
+      const p2NameEditWrap    = document.getElementById('p2-name-edit-wrap');
+      const p2Input           = document.getElementById('lobby-input-p2');
+      const p2NameEl          = document.getElementById('online-p2-name');
+      const p2SwatchesWrap    = document.getElementById('p2-swatches-wrap');
+      const p2PreviewWrap     = document.getElementById('p2-color-preview-wrap');
+      const p2Dot             = document.getElementById('dot-p2');
+      const p2ColorLabel      = document.getElementById('label-color-p2');
+      const p2Avatar          = document.getElementById('avatar-p2-lobby');
+      const p2Card            = document.getElementById('card-p2-online');
+      const p2StatusEl        = document.getElementById('lobby-p2-status');
+
+      if (onlineState.isHost) {
+        // TÚ eres P1 (Host)
+        p1NameDisplayWrap?.classList.add('hidden');
+        p1NameEditWrap?.classList.remove('hidden');
+        if (p1Input && document.activeElement !== p1Input) p1Input.value = onlineState.p1Name;
+
+        p1SwatchesWrap?.classList.remove('hidden');
+        p1PreviewWrap?.classList.add('hidden');
+        _renderSwatches('swatches-p1', onlineState.p1Color, (chosenHex) => {
+          onlineState.p1Color = chosenHex;
+          Network.updateProfile(onlineState.p1Name, chosenHex);
+          _updateOnlineLobbyUI();
+        });
+
+        // P2 es el Rival
+        p2NameEditWrap?.classList.add('hidden');
+        p2NameDisplayWrap?.classList.remove('hidden');
+        if (p2NameEl) p2NameEl.textContent = onlineState.opponentConnected ? onlineState.p2Name : 'Esperando rival...';
+
+        p2SwatchesWrap?.classList.add('hidden');
+        p2PreviewWrap?.classList.remove('hidden');
+        if (p2Dot) p2Dot.style.background = onlineState.p2Color;
+        if (p2ColorLabel) p2ColorLabel.textContent = _getColorName(onlineState.p2Color);
+      } else {
+        // TÚ eres P2 (Rival)
+        p1NameEditWrap?.classList.add('hidden');
+        p1NameDisplayWrap?.classList.remove('hidden');
+        if (p1NameEl) p1NameEl.textContent = onlineState.p1Name;
+
+        p1SwatchesWrap?.classList.add('hidden');
+        p1PreviewWrap?.classList.remove('hidden');
+        if (p1Dot) p1Dot.style.background = onlineState.p1Color;
+        if (p1ColorLabel) p1ColorLabel.textContent = _getColorName(onlineState.p1Color);
+
+        // P2 eres tú (editable)
+        p2NameDisplayWrap?.classList.add('hidden');
+        p2NameEditWrap?.classList.remove('hidden');
+        if (p2Input && document.activeElement !== p2Input) p2Input.value = onlineState.p2Name;
+
+        p2SwatchesWrap?.classList.remove('hidden');
+        p2PreviewWrap?.classList.add('hidden');
+        _renderSwatches('swatches-p2', onlineState.p2Color, (chosenHex) => {
+          onlineState.p2Color = chosenHex;
+          Network.updateProfile(onlineState.p2Name, chosenHex);
+          _updateOnlineLobbyUI();
+        });
+      }
+
+      // Estilos visuales neón de Avatares y Tarjetas
+      if (p1Avatar) {
+        p1Avatar.style.background = `linear-gradient(135deg, ${onlineState.p1Color}, #000)`;
+        p1Avatar.style.border = `2px solid ${onlineState.p1Color}`;
+        p1Avatar.style.boxShadow = `0 0 16px ${onlineState.p1Color}`;
+      }
+      if (p1Card) p1Card.style.borderColor = `${onlineState.p1Color}77`;
+
+      if (p2Avatar) {
+        p2Avatar.style.background = `linear-gradient(135deg, ${onlineState.p2Color}, #000)`;
+        p2Avatar.style.border = `2px solid ${onlineState.p2Color}`;
+        p2Avatar.style.boxShadow = `0 0 16px ${onlineState.p2Color}`;
+      }
+      if (p2Card) p2Card.style.borderColor = `${onlineState.p2Color}77`;
+
+      // Estados de Listo P1
       const p1IsReady = onlineState.isHost ? onlineState.myReady : onlineState.opponentReady;
       if (p1StatusEl) {
         if (p1IsReady) {
@@ -451,18 +572,13 @@ const UI = (() => {
         }
       }
 
-      // Tarjeta P2 (Rival)
-      const p2NameEl = document.getElementById('online-p2-name');
-      const p2StatusEl = document.getElementById('lobby-p2-status');
-
+      // Estados de Listo P2
       if (!onlineState.opponentConnected && onlineState.isHost) {
-        if (p2NameEl) p2NameEl.textContent = 'Esperando rival...';
         if (p2StatusEl) {
           p2StatusEl.className = 'lobby-status-pill status-disconnected';
           p2StatusEl.innerHTML = '<span class="status-icon">⌛</span> <span class="status-txt">ESPERANDO...</span>';
         }
       } else {
-        if (p2NameEl) p2NameEl.textContent = onlineState.p2Name;
         const p2IsReady = onlineState.isHost ? onlineState.opponentReady : onlineState.myReady;
         if (p2StatusEl) {
           if (p2IsReady) {
@@ -510,7 +626,7 @@ const UI = (() => {
           if (hintEl) {
             hintEl.textContent = onlineState.opponentReady 
               ? `🔥 ¡${opponentName} ya está listo! Pulsa '¡ESTOY LISTO!' para arrancar.` 
-              : 'Presiona el botón cuando estés listo para comenzar.';
+              : 'Elige tu color y presiona el botón cuando estés listo.';
           }
         }
       }
@@ -520,6 +636,7 @@ const UI = (() => {
       Network.onPlayerJoined = (data) => {
         onlineState.opponentConnected = true;
         onlineState.p2Name = data.opponentName || 'Rival';
+        onlineState.p2Color = data.opponentColor || '#FF007F';
         onlineState.seed = data.seed;
         onlineState.myReady = false;
         onlineState.opponentReady = false;
@@ -528,17 +645,32 @@ const UI = (() => {
         showToast(`⚡ ¡${onlineState.p2Name} se unió a la sala!`, 'success');
       };
 
+      Network.onPlayerProfileUpdated = (data) => {
+        if (data.isHost) {
+          onlineState.p1Name = data.name || onlineState.p1Name;
+          onlineState.p1Color = data.color || onlineState.p1Color;
+        } else {
+          onlineState.p2Name = data.name || onlineState.p2Name;
+          onlineState.p2Color = data.color || onlineState.p2Color;
+        }
+        _updateOnlineLobbyUI();
+      };
+
       Network.onRoomReadyStatus = (data) => {
         if (onlineState.isHost) {
           onlineState.myReady = data.p1Ready;
           onlineState.opponentReady = data.p2Ready;
-          onlineState.p1Name = data.p1Name;
-          onlineState.p2Name = data.p2Name;
+          onlineState.p1Name = data.p1Name || onlineState.p1Name;
+          onlineState.p2Name = data.p2Name || onlineState.p2Name;
+          onlineState.p1Color = data.p1Color || onlineState.p1Color;
+          onlineState.p2Color = data.p2Color || onlineState.p2Color;
         } else {
           onlineState.myReady = data.p2Ready;
           onlineState.opponentReady = data.p1Ready;
-          onlineState.p1Name = data.p1Name;
-          onlineState.p2Name = data.p2Name;
+          onlineState.p1Name = data.p1Name || onlineState.p1Name;
+          onlineState.p2Name = data.p2Name || onlineState.p2Name;
+          onlineState.p1Color = data.p1Color || onlineState.p1Color;
+          onlineState.p2Color = data.p2Color || onlineState.p2Color;
         }
         _updateOnlineLobbyUI();
       };
@@ -557,6 +689,10 @@ const UI = (() => {
 
         const matchLevel = data.level || onlineState.level;
         const matchSeed  = data.seed || onlineState.seed;
+        const p1Name     = data.p1Name || onlineState.p1Name;
+        const p2Name     = data.p2Name || onlineState.p2Name;
+        const p1Color    = data.p1Color || onlineState.p1Color;
+        const p2Color    = data.p2Color || onlineState.p2Color;
 
         setTimeout(() => {
           startCountdown(() => {
@@ -565,8 +701,10 @@ const UI = (() => {
               true,
               onlineState.isHost,
               matchSeed,
-              onlineState.isHost ? onlineState.p1Name : onlineState.p2Name,
-              onlineState.isHost ? onlineState.p2Name : onlineState.p1Name
+              onlineState.isHost ? p1Name : p2Name,
+              onlineState.isHost ? p2Name : p1Name,
+              onlineState.isHost ? p1Color : p2Color,
+              onlineState.isHost ? p2Color : p1Color
             );
           });
         }, 500);
@@ -604,13 +742,10 @@ const UI = (() => {
         onlineState.opponentReady = false;
         onlineState.opponentConnected = true;
 
-        if (onlineState.isHost) {
-          onlineState.p1Name = data.p1Name || onlineState.p1Name;
-          onlineState.p2Name = data.p2Name || onlineState.p2Name;
-        } else {
-          onlineState.p1Name = data.p1Name || onlineState.p1Name;
-          onlineState.p2Name = data.p2Name || onlineState.p2Name;
-        }
+        onlineState.p1Name  = data.p1Name || onlineState.p1Name;
+        onlineState.p2Name  = data.p2Name || onlineState.p2Name;
+        onlineState.p1Color = data.p1Color || onlineState.p1Color;
+        onlineState.p2Color = data.p2Color || onlineState.p2Color;
 
         showScreen('lobby');
         _showOnlineLobbyView(true);
@@ -622,6 +757,23 @@ const UI = (() => {
         showToast(msg, 'info');
       };
     }
+
+    // Escuchar cambios de nombre en tiempo real
+    document.getElementById('lobby-input-p1')?.addEventListener('input', (e) => {
+      if (!onlineState.isHost) return;
+      const val = e.target.value.trim().slice(0, 14) || 'Host';
+      onlineState.p1Name = val;
+      ScoreManager.saveSettings({ name: val });
+      Network.updateProfile(val, onlineState.p1Color);
+    });
+
+    document.getElementById('lobby-input-p2')?.addEventListener('input', (e) => {
+      if (onlineState.isHost) return;
+      const val = e.target.value.trim().slice(0, 14) || 'Rival';
+      onlineState.p2Name = val;
+      ScoreManager.saveSettings({ name: val });
+      Network.updateProfile(val, onlineState.p2Color);
+    });
 
     // ── Lobby Online ────────────────────────────────────────────────────────
     document.getElementById('btn-online')?.addEventListener('click', () => {
@@ -655,15 +807,18 @@ const UI = (() => {
 
       const pName = ScoreManager.getPlayerName() || 'Host';
       const selLevel = parseInt(document.getElementById('mp-select-level-online')?.value || '1', 10);
+      const pColor = onlineState.p1Color || '#00F0FF';
 
-      Network.createRoom({ name: pName, level: selLevel }, (res) => {
+      Network.createRoom({ name: pName, level: selLevel, color: pColor }, (res) => {
         if (res && res.success) {
           onlineState.isHost = true;
           onlineState.roomId = res.roomId;
           onlineState.seed = res.seed;
           onlineState.level = res.level || selLevel;
           onlineState.p1Name = pName;
+          onlineState.p1Color = res.hostColor || pColor;
           onlineState.p2Name = 'Esperando rival...';
+          onlineState.p2Color = '#FF007F';
           onlineState.opponentConnected = false;
           onlineState.myReady = false;
           onlineState.opponentReady = false;
@@ -693,15 +848,18 @@ const UI = (() => {
       _setupNetworkListeners();
 
       const pName = ScoreManager.getPlayerName() || 'Rival';
+      const pColor = onlineState.p2Color || '#FF007F';
 
-      Network.joinRoom({ roomId: code, name: pName }, (res) => {
+      Network.joinRoom({ roomId: code, name: pName, color: pColor }, (res) => {
         if (res && res.success) {
           onlineState.isHost = false;
           onlineState.roomId = res.roomId;
           onlineState.seed = res.seed;
           onlineState.level = res.level || 1;
           onlineState.p1Name = res.hostName || 'Host';
+          onlineState.p1Color = res.hostColor || '#00F0FF';
           onlineState.p2Name = pName;
+          onlineState.p2Color = res.guestColor || pColor;
           onlineState.opponentConnected = true;
           onlineState.myReady = false;
           onlineState.opponentReady = !!res.p1Ready;
@@ -725,7 +883,8 @@ const UI = (() => {
       if (AudioManager.playJump) AudioManager.playJump();
 
       const myName = onlineState.isHost ? onlineState.p1Name : onlineState.p2Name;
-      Network.sendReady(onlineState.myReady, myName);
+      const myColor = onlineState.isHost ? onlineState.p1Color : onlineState.p2Color;
+      Network.sendReady(onlineState.myReady, myName, myColor);
       _updateOnlineLobbyUI();
     });
 

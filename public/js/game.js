@@ -203,7 +203,7 @@ const Game = (() => {
    * @param {string} p1Name
    * @param {string} p2Name
    */
-  function startLevel(levelNum = 1, multiplayer = false, p1Name = 'Player 1', p2Name = 'Player 2', online = false, seed = null) {
+  function startLevel(levelNum = 1, multiplayer = false, p1Name = 'Player 1', p2Name = 'Player 2', online = false, seed = null, p1Color = '#00F0FF', p2Color = '#FF007F', isRoomHost = false) {
     currentLevel  = levelNum;
     isMultiplayer = multiplayer;
     isOnline      = online;
@@ -216,6 +216,34 @@ const Game = (() => {
       Network.onOpponentState = (state) => {
         networkOpponentState = state;
       };
+
+      Network.onPlayerGoalReached = (data) => {
+        winnerChosen = true;
+        const isLocalPlayer = (isRoomHost && data.isHost) || (!isRoomHost && !data.isHost);
+
+        if (isLocalPlayer) {
+          if (players[0]) {
+            players[0].isWinner = data.isWinner;
+            players[0].hasFinished = true;
+          }
+          p1Stats.isWinner = data.isWinner;
+          p1Stats.score = data.score;
+        } else {
+          if (players[1]) {
+            players[1].isWinner = data.isWinner;
+            players[1].hasFinished = true;
+          }
+          p2Stats.isWinner = data.isWinner;
+          p2Stats.score = data.score;
+        }
+
+        if (data.isWinner) {
+          AudioManager.play('goal');
+          const winnerName = isLocalPlayer ? players[0]?.name : players[1]?.name;
+          UI.showToast(`🏁 ¡${winnerName} cruzó la meta en 1º LUGAR! 🏆`, 'success');
+        }
+      };
+
       Network.onOpponentDisconnected = () => {
         if (state === STATE.PLAYING && !raceFinished) {
           UI.showToast('⚠️ Tu rival se ha desconectado. ¡Victoria por abandono!', 'warning');
@@ -317,23 +345,23 @@ const Game = (() => {
     // Instanciar Corredores
     players = [];
 
-    // Player 1 (Cyan)
+    // Player 1
     const p1 = new Player({
       worldX: 0,
       groundY: renderer1.groundY,
-      color: '#00F0FF',
+      color: p1Color || '#00F0FF',
       name: p1Name || 'Player 1',
       levelData,
       playerIndex: 0
     });
     players.push(p1);
 
-    // Player 2 (Magenta) — Sólo en modo Multijugador
+    // Player 2 — Sólo en modo Multijugador
     if (multiplayer) {
       const p2 = new Player({
         worldX: 0,
         groundY: renderer2.groundY,
-        color: '#FF007F',
+        color: p2Color || '#FF007F',
         name: p2Name || 'Player 2',
         levelData,
         playerIndex: 1
@@ -368,10 +396,12 @@ const Game = (() => {
     rafId = requestAnimationFrame(gameLoop);
   }
 
-  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName) {
-    const p1Name = p1CustomName || (isRoomHost ? 'Host (P1)' : 'Rival (P2)');
-    const p2Name = p2CustomName || (isRoomHost ? 'Rival (P2)' : 'Host (P1)');
-    startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed);
+  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName, p1CustomColor, p2CustomColor) {
+    const p1Name = p1CustomName || (isRoomHost ? 'Host' : 'Rival');
+    const p2Name = p2CustomName || (isRoomHost ? 'Rival' : 'Host');
+    const p1Color = p1CustomColor || (isRoomHost ? '#00F0FF' : '#FF007F');
+    const p2Color = p2CustomColor || (isRoomHost ? '#FF007F' : '#00F0FF');
+    startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed, p1Color, p2Color, isRoomHost);
   }
 
   /**
@@ -732,24 +762,46 @@ const Game = (() => {
   function _checkGoalArrival() {
     const elapsedSecs = Math.floor((performance.now() - startTime) / 1000);
 
-    for (let i = 0; i < players.length; i++) {
-      const player = players[i];
-      if (player.isAlive && !player.hasFinished && player.worldX >= goalWorldX) {
-        player.hasFinished = true;
-        player.finishTime  = elapsedSecs;
+    const p1 = players[0];
+    if (p1 && p1.isAlive && !p1.hasFinished && p1.worldX >= goalWorldX) {
+      p1.hasFinished = true;
+      p1.finishTime  = elapsedSecs;
+      p1Stats.time   = elapsedSecs;
 
-        const stats = i === 0 ? p1Stats : p2Stats;
-        stats.time  = elapsedSecs;
-
-        // El primer jugador en llegar es el GANADOR
+      if (isOnline && typeof Network !== 'undefined') {
+        Network.sendPlayerFinished({
+          time: elapsedSecs,
+          score: p1Stats.score,
+          coins: p1Stats.coins
+        });
+      } else {
         if (!winnerChosen) {
           winnerChosen    = true;
-          player.isWinner = true;
-          stats.isWinner  = true;
-          stats.score    += 500; // Bonus victoria
+          p1.isWinner     = true;
+          p1Stats.isWinner= true;
+          p1Stats.score  += 500;
           AudioManager.play('goal');
         } else {
-          stats.score += 250; // Bonus completar carrera
+          p1Stats.score += 250;
+        }
+      }
+    }
+
+    if (isMultiplayer && !isOnline) {
+      const p2 = players[1];
+      if (p2 && p2.isAlive && !p2.hasFinished && p2.worldX >= goalWorldX) {
+        p2.hasFinished = true;
+        p2.finishTime  = elapsedSecs;
+        p2Stats.time   = elapsedSecs;
+
+        if (!winnerChosen) {
+          winnerChosen    = true;
+          p2.isWinner     = true;
+          p2Stats.isWinner= true;
+          p2Stats.score  += 500;
+          AudioManager.play('goal');
+        } else {
+          p2Stats.score += 250;
         }
       }
     }

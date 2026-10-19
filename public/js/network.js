@@ -17,6 +17,8 @@ const Network = (() => {
   let onLevelUpdatedCallback = null;
   let onOpponentLeftLobbyCallback = null;
   let onRoomReturnedToLobbyCallback = null;
+  let onPlayerGoalReachedCallback = null;
+  let onPlayerProfileUpdatedCallback = null;
 
   function init() {
     if (typeof io !== 'undefined' && !socket) {
@@ -61,6 +63,14 @@ const Network = (() => {
       socket.on('room_returned_to_lobby', (data) => {
         if (onRoomReturnedToLobbyCallback) onRoomReturnedToLobbyCallback(data);
       });
+
+      socket.on('player_goal_reached', (data) => {
+        if (onPlayerGoalReachedCallback) onPlayerGoalReachedCallback(data);
+      });
+
+      socket.on('player_profile_updated', (data) => {
+        if (onPlayerProfileUpdatedCallback) onPlayerProfileUpdatedCallback(data);
+      });
     }
   }
 
@@ -96,9 +106,21 @@ const Network = (() => {
     });
   }
 
-  function sendReady(ready, name) {
+  function sendReady(ready, name, color) {
     if (socket && roomId) {
-      socket.emit('player_ready', { ready: !!ready, name });
+      socket.emit('player_ready', { ready: !!ready, name, color });
+    }
+  }
+
+  function updateProfile(name, color) {
+    if (socket && roomId) {
+      socket.emit('update_profile', { name, color });
+    }
+  }
+
+  function sendPlayerFinished(finishData) {
+    if (socket && roomId) {
+      socket.emit('player_finished', finishData);
     }
   }
 
@@ -145,6 +167,8 @@ const Network = (() => {
     createRoom,
     joinRoom,
     sendReady,
+    updateProfile,
+    sendPlayerFinished,
     changeLevel,
     returnToLobby,
     leaveRoom,
@@ -164,6 +188,8 @@ const Network = (() => {
     set onMatchStartCountdown(cb) { onMatchStartCountdownCallback = cb; },
     set onLevelUpdated(cb) { onLevelUpdatedCallback = cb; },
     set onOpponentLeftLobby(cb) { onOpponentLeftLobbyCallback = cb; },
-    set onRoomReturnedToLobby(cb) { onRoomReturnedToLobbyCallback = cb; }
+    set onRoomReturnedToLobby(cb) { onRoomReturnedToLobbyCallback = cb; },
+    set onPlayerGoalReached(cb) { onPlayerGoalReachedCallback = cb; },
+    set onPlayerProfileUpdated(cb) { onPlayerProfileUpdatedCallback = cb; }
   };
 })();

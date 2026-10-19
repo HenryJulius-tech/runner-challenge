@@ -244,13 +244,30 @@
           </div>
         </div>
 
-        <!-- Tarjetas VS de los Jugadores -->
+        <!-- Tarjetas VS de los Jugadores con Nombre y Selector de Colores -->
         <div class="online-versus-container">
           <!-- Jugador 1 (Host) -->
           <div class="online-player-card p1-online-card" id="card-p1-online">
-            <div class="player-avatar avatar-p1">P1</div>
-            <div class="online-player-name" id="online-p1-name">Host</div>
+            <div class="player-avatar avatar-p1" id="avatar-p1-lobby">P1</div>
+
+            <div id="p1-name-display-wrap">
+              <div class="online-player-name" id="online-p1-name">Host</div>
+            </div>
+            <div id="p1-name-edit-wrap" class="hidden" style="width: 100%;">
+              <input type="text" id="lobby-input-p1" class="lobby-name-input" maxlength="14" placeholder="Tu Nombre" value="Host" />
+            </div>
+
             <div class="online-player-role">HOST</div>
+
+            <!-- Selector de Color P1 -->
+            <div id="p1-swatches-wrap" class="hidden lobby-swatches-box">
+              <span class="color-label">Elige tu color:</span>
+              <div class="color-swatches" id="swatches-p1"></div>
+            </div>
+            <div id="p1-color-preview-wrap" class="rival-color-badge">
+              <span class="color-dot" id="dot-p1" style="background: #00F0FF;"></span> <span id="label-color-p1">Cyan Neón</span>
+            </div>
+
             <div class="lobby-status-pill status-waiting" id="lobby-p1-status">
               <span class="status-icon">⏳</span> <span class="status-txt">NO LISTO</span>
             </div>
@@ -260,9 +277,26 @@
 
           <!-- Jugador 2 (Rival) -->
           <div class="online-player-card p2-online-card" id="card-p2-online">
-            <div class="player-avatar avatar-p2">P2</div>
-            <div class="online-player-name" id="online-p2-name">Esperando rival...</div>
+            <div class="player-avatar avatar-p2" id="avatar-p2-lobby">P2</div>
+
+            <div id="p2-name-display-wrap">
+              <div class="online-player-name" id="online-p2-name">Esperando rival...</div>
+            </div>
+            <div id="p2-name-edit-wrap" class="hidden" style="width: 100%;">
+              <input type="text" id="lobby-input-p2" class="lobby-name-input" maxlength="14" placeholder="Tu Nombre" value="Rival" />
+            </div>
+
             <div class="online-player-role">RIVAL</div>
+
+            <!-- Selector de Color P2 -->
+            <div id="p2-swatches-wrap" class="hidden lobby-swatches-box">
+              <span class="color-label">Elige tu color:</span>
+              <div class="color-swatches" id="swatches-p2"></div>
+            </div>
+            <div id="p2-color-preview-wrap" class="rival-color-badge">
+              <span class="color-dot" id="dot-p2" style="background: #FF007F;"></span> <span id="label-color-p2">Magenta Neón</span>
+            </div>
+
             <div class="lobby-status-pill status-disconnected" id="lobby-p2-status">
               <span class="status-icon">⌛</span> <span class="status-txt">ESPERANDO...</span>
             </div>
