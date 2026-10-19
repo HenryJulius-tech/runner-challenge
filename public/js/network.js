@@ -16,6 +16,7 @@ const Network = (() => {
   let onMatchStartCountdownCallback = null;
   let onLevelUpdatedCallback = null;
   let onOpponentLeftLobbyCallback = null;
+  let onRoomReturnedToLobbyCallback = null;
 
   function init() {
     if (typeof io !== 'undefined' && !socket) {
@@ -55,6 +56,10 @@ const Network = (() => {
 
       socket.on('opponent_left_lobby', (data) => {
         if (onOpponentLeftLobbyCallback) onOpponentLeftLobbyCallback(data);
+      });
+
+      socket.on('room_returned_to_lobby', (data) => {
+        if (onRoomReturnedToLobbyCallback) onRoomReturnedToLobbyCallback(data);
       });
     }
   }
@@ -103,6 +108,12 @@ const Network = (() => {
     }
   }
 
+  function returnToLobby(data) {
+    if (socket && roomId) {
+      socket.emit('return_to_lobby', data || {});
+    }
+  }
+
   function leaveRoom() {
     if (socket && roomId) {
       socket.emit('leave_room');
@@ -135,6 +146,7 @@ const Network = (() => {
     joinRoom,
     sendReady,
     changeLevel,
+    returnToLobby,
     leaveRoom,
     sendState,
     sendEvent,
@@ -151,6 +163,7 @@ const Network = (() => {
     set onRoomReadyStatus(cb) { onRoomReadyStatusCallback = cb; },
     set onMatchStartCountdown(cb) { onMatchStartCountdownCallback = cb; },
     set onLevelUpdated(cb) { onLevelUpdatedCallback = cb; },
-    set onOpponentLeftLobby(cb) { onOpponentLeftLobbyCallback = cb; }
+    set onOpponentLeftLobby(cb) { onOpponentLeftLobbyCallback = cb; },
+    set onRoomReturnedToLobby(cb) { onRoomReturnedToLobbyCallback = cb; }
   };
 })();

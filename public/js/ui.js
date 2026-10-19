@@ -588,6 +588,39 @@ const UI = (() => {
         _updateOnlineLobbyUI();
         showToast('⚠️ Tu rival salió de la sala.', 'warning');
       };
+
+      Network.onRoomReturnedToLobby = (data) => {
+        if (typeof Game !== 'undefined') Game.stopLoop();
+
+        hideScreen('game');
+        hideScreen('results');
+        hideScreen('gameover');
+        hidePause();
+
+        onlineState.inRoom = true;
+        onlineState.level = data.level || onlineState.level;
+        onlineState.seed = data.seed || Math.floor(Math.random() * 10000);
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+        onlineState.opponentConnected = true;
+
+        if (onlineState.isHost) {
+          onlineState.p1Name = data.p1Name || onlineState.p1Name;
+          onlineState.p2Name = data.p2Name || onlineState.p2Name;
+        } else {
+          onlineState.p1Name = data.p1Name || onlineState.p1Name;
+          onlineState.p2Name = data.p2Name || onlineState.p2Name;
+        }
+
+        showScreen('lobby');
+        _showOnlineLobbyView(true);
+        _updateOnlineLobbyUI();
+
+        const msg = data.reason === 'restart'
+          ? `↺ Revancha en el Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`
+          : `🏁 Pasando al Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`;
+        showToast(msg, 'info');
+      };
     }
 
     // ── Lobby Online ────────────────────────────────────────────────────────

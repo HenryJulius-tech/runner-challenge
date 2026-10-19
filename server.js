@@ -155,6 +155,36 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Regreso conjunto a la Sala de Espera (para Siguiente Nivel o Revancha/Reiniciar)
+  socket.on('return_to_lobby', (data) => {
+    const roomId = socket.roomId;
+    const room = rooms[roomId];
+    if (!room) return;
+
+    if (data && data.level) {
+      room.level = parseInt(data.level, 10);
+    } else if (data && data.nextLevel) {
+      room.level = Math.min((room.level || 1) + 1, 20);
+    }
+    room.seed = Math.floor(Math.random() * 10000);
+
+    // Resetear estados listos de los jugadores para la nueva carrera
+    room.players.forEach(p => p.ready = false);
+
+    const p1 = room.players[0] || { ready: false, name: 'Host' };
+    const p2 = room.players[1] || { ready: false, name: 'Rival' };
+
+    console.log(`Sala ${roomId} regresando al lobby. Nivel objetivo: ${room.level}, Motivo: ${data?.reason || 'siguiente'}`);
+
+    io.to(roomId).emit('room_returned_to_lobby', {
+      level: room.level,
+      seed: room.seed,
+      p1Name: p1.name,
+      p2Name: p2.name,
+      reason: data?.reason || 'next_level'
+    });
+  });
+
   socket.on('leave_room', () => {
     if (socket.roomId) {
       const roomId = socket.roomId;

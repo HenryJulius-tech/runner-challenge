@@ -4869,10 +4869,20 @@ const Game = (() => {
     document.getElementById('btn-pause')?.addEventListener('click', pause);
     document.getElementById('btn-resume')?.addEventListener('click', resume);
     document.getElementById('btn-restart')?.addEventListener('click', () => {
-      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        stopLoop();
+        UI.hidePause();
+        Network.returnToLobby({ level: currentLevel, reason: 'restart' });
+      } else {
+        startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      }
     });
     document.getElementById('btn-exit-game')?.addEventListener('click', () => {
       stopLoop();
+      UI.hidePause();
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
@@ -4882,10 +4892,19 @@ const Game = (() => {
     // Game Over
     document.getElementById('btn-go-retry')?.addEventListener('click', () => {
       UI.hideScreen('gameover');
-      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        stopLoop();
+        Network.returnToLobby({ level: currentLevel, reason: 'restart' });
+      } else {
+        startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      }
     });
     document.getElementById('btn-go-menu')?.addEventListener('click', () => {
       stopLoop();
+      UI.hideScreen('gameover');
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
@@ -4893,16 +4912,29 @@ const Game = (() => {
     document.getElementById('btn-res-next')?.addEventListener('click', onNextLevel);
     document.getElementById('btn-res-retry')?.addEventListener('click', () => {
       UI.hideScreen('results');
-      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        stopLoop();
+        Network.returnToLobby({ level: currentLevel, reason: 'restart' });
+      } else {
+        startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      }
     });
     document.getElementById('btn-res-menu')?.addEventListener('click', () => {
       stopLoop();
+      UI.hideScreen('results');
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
     // Victoria
     document.getElementById('btn-vic-menu')?.addEventListener('click', () => {
       stopLoop();
+      UI.hideScreen('victory');
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
@@ -5601,6 +5633,12 @@ const Game = (() => {
   function onNextLevel() {
     UI.hideScreen('results');
     const next = currentLevel + 1;
+    if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+      stopLoop();
+      const targetLevel = next <= LevelConfig.TOTAL_LEVELS ? next : 1;
+      Network.returnToLobby({ level: targetLevel, nextLevel: true, reason: 'next_level' });
+      return;
+    }
     if (next <= LevelConfig.TOTAL_LEVELS && ScoreManager.isLevelUnlocked(next)) {
       startLevel(next, isMultiplayer, players[0]?.name, players[1]?.name);
     } else {
@@ -5760,6 +5798,7 @@ const Game = (() => {
     toggleSplitMode,
     get state()         { return state; },
     get isMultiplayer() { return isMultiplayer; },
+    get isOnline()      { return isOnline; },
     get splitMode()     { return splitMode; }
   };
 })();
@@ -6355,6 +6394,39 @@ const UI = (() => {
         onlineState.p2Name = 'Esperando rival...';
         _updateOnlineLobbyUI();
         showToast('⚠️ Tu rival salió de la sala.', 'warning');
+      };
+
+      Network.onRoomReturnedToLobby = (data) => {
+        if (typeof Game !== 'undefined') Game.stopLoop();
+
+        hideScreen('game');
+        hideScreen('results');
+        hideScreen('gameover');
+        hidePause();
+
+        onlineState.inRoom = true;
+        onlineState.level = data.level || onlineState.level;
+        onlineState.seed = data.seed || Math.floor(Math.random() * 10000);
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+        onlineState.opponentConnected = true;
+
+        if (onlineState.isHost) {
+          onlineState.p1Name = data.p1Name || onlineState.p1Name;
+          onlineState.p2Name = data.p2Name || onlineState.p2Name;
+        } else {
+          onlineState.p1Name = data.p1Name || onlineState.p1Name;
+          onlineState.p2Name = data.p2Name || onlineState.p2Name;
+        }
+
+        showScreen('lobby');
+        _showOnlineLobbyView(true);
+        _updateOnlineLobbyUI();
+
+        const msg = data.reason === 'restart'
+          ? `↺ Revancha en el Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`
+          : `🏁 Pasando al Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`;
+        showToast(msg, 'info');
       };
     }
 

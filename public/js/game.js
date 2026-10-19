@@ -81,10 +81,20 @@ const Game = (() => {
     document.getElementById('btn-pause')?.addEventListener('click', pause);
     document.getElementById('btn-resume')?.addEventListener('click', resume);
     document.getElementById('btn-restart')?.addEventListener('click', () => {
-      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        stopLoop();
+        UI.hidePause();
+        Network.returnToLobby({ level: currentLevel, reason: 'restart' });
+      } else {
+        startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      }
     });
     document.getElementById('btn-exit-game')?.addEventListener('click', () => {
       stopLoop();
+      UI.hidePause();
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
@@ -94,10 +104,19 @@ const Game = (() => {
     // Game Over
     document.getElementById('btn-go-retry')?.addEventListener('click', () => {
       UI.hideScreen('gameover');
-      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        stopLoop();
+        Network.returnToLobby({ level: currentLevel, reason: 'restart' });
+      } else {
+        startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      }
     });
     document.getElementById('btn-go-menu')?.addEventListener('click', () => {
       stopLoop();
+      UI.hideScreen('gameover');
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
@@ -105,16 +124,29 @@ const Game = (() => {
     document.getElementById('btn-res-next')?.addEventListener('click', onNextLevel);
     document.getElementById('btn-res-retry')?.addEventListener('click', () => {
       UI.hideScreen('results');
-      startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        stopLoop();
+        Network.returnToLobby({ level: currentLevel, reason: 'restart' });
+      } else {
+        startLevel(currentLevel, isMultiplayer, players[0]?.name, players[1]?.name);
+      }
     });
     document.getElementById('btn-res-menu')?.addEventListener('click', () => {
       stopLoop();
+      UI.hideScreen('results');
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
     // Victoria
     document.getElementById('btn-vic-menu')?.addEventListener('click', () => {
       stopLoop();
+      UI.hideScreen('victory');
+      if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       UI.showScreen('menu');
     });
 
@@ -813,6 +845,12 @@ const Game = (() => {
   function onNextLevel() {
     UI.hideScreen('results');
     const next = currentLevel + 1;
+    if (isOnline && typeof Network !== 'undefined' && Network.roomId) {
+      stopLoop();
+      const targetLevel = next <= LevelConfig.TOTAL_LEVELS ? next : 1;
+      Network.returnToLobby({ level: targetLevel, nextLevel: true, reason: 'next_level' });
+      return;
+    }
     if (next <= LevelConfig.TOTAL_LEVELS && ScoreManager.isLevelUnlocked(next)) {
       startLevel(next, isMultiplayer, players[0]?.name, players[1]?.name);
     } else {
@@ -972,6 +1010,7 @@ const Game = (() => {
     toggleSplitMode,
     get state()         { return state; },
     get isMultiplayer() { return isMultiplayer; },
+    get isOnline()      { return isOnline; },
     get splitMode()     { return splitMode; }
   };
 })();
