@@ -12,8 +12,8 @@
 const UI = (() => {
 
   const SCREENS = [
-    'menu', 'levels', 'multiplayer', 'lobby',
-    'countdown', 'game', 'pause', 'gameover',
+    'menu', 'levels', 'levels-3d', 'multiplayer', 'lobby',
+    'countdown', 'game', 'game-3d', 'pause', 'gameover',
     'results', 'victory', 'records', 'settings'
   ];
 
@@ -34,6 +34,7 @@ const UI = (() => {
     currentScreen = screenName;
 
     if (screenName === 'levels') _renderLevelsGrid();
+    if (screenName === 'levels-3d' && typeof Neon3DUI !== 'undefined') Neon3DUI.renderLevels3DGrid();
     if (screenName === 'multiplayer') _populateMpLevels();
     if (screenName === 'lobby') _populateMpOnlineLevels();
     if (screenName === 'records') _renderRecords();
@@ -339,6 +340,11 @@ const UI = (() => {
    */
   function setupEvents() {
     // ── Menú Principal ──────────────────────────────────────────────────────
+    document.getElementById('btn-play-neon-3d')?.addEventListener('click', () => {
+      AudioManager.init();
+      showScreen('levels-3d');
+    });
+
     document.getElementById('btn-play-solo')?.addEventListener('click', () => {
       AudioManager.init();
       startCountdown(() => {

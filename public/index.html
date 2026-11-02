@@ -37,8 +37,12 @@
         <p class="logo-subtitle">Prototipo de Videojuego 2D — Avance 1</p>
       </div>
       <nav class="main-menu">
-        <button id="btn-play-solo" class="btn-menu btn-primary">
-          <span class="btn-icon">▶</span> JUGAR SOLO
+        <button id="btn-play-neon-3d" class="btn-menu btn-primary"
+          style="background: linear-gradient(135deg, rgba(255,43,214,0.35), rgba(47,243,255,0.35)); border-color: #2ff3ff; box-shadow: 0 0 22px rgba(47,243,255,0.4);">
+          <span class="btn-icon">🕶️</span> JUGAR NEON RUN 3D
+        </button>
+        <button id="btn-play-solo" class="btn-menu btn-secondary">
+          <span class="btn-icon">▶</span> JUGAR SOLO (2D)
         </button>
         <button id="btn-multiplayer" class="btn-menu btn-secondary">
           <span class="btn-icon">👥</span> MULTIPLAYER LOCAL (2 JUGADORES)
@@ -644,6 +648,103 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA: SELECCIÓN DE NIVELES 3D (20 NIVELES)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-levels-3d" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-levels-3d">← Volver</button>
+      <h2 class="screen-title" style="text-shadow: 0 0 15px #2ff3ff, 0 0 30px #ff2bd6;">🕶️ SELECCIÓN DE NIVELES 3D</h2>
+    </div>
+    <div class="levels-grid" id="levels-3d-grid">
+      <!-- Generado dinámicamente por neon3d_ui.js -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PANTALLA: NEON RUN 3D (MOTOR THREE.JS + BLOOM)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div id="screen-game-3d" class="screen">
+    <canvas id="canvas-neon3d"></canvas>
+
+    <!-- HUD 3D -->
+    <div id="hud-3d">
+      <div class="hud-3d-row">
+        <span class="hud-3d-pill" id="hud-3d-lives">♥♥♥</span>
+        <div class="hud-3d-bar"><i id="hud-3d-progress-bar"></i></div>
+        <span class="hud-3d-pill" id="hud-3d-time">0.0 s</span>
+        <span class="hud-3d-pill" id="hud-3d-disc" style="border-color: #2ff3ff; text-shadow: 0 0 8px #2ff3ff;">DISCO [F]</span>
+        <button id="btn-pause-3d" class="btn-pause" style="pointer-events: auto; width: 34px; height: 34px; border-color: #2ff3ff;" title="Pausar juego">⏸</button>
+      </div>
+      <div id="hud-3d-shield-wrap">
+        <div class="hud-3d-bar"><i id="hud-3d-shield-bar" style="width: 100%; background: #2ff3ff; box-shadow: 0 0 14px #2ff3ff;"></i></div>
+      </div>
+    </div>
+
+    <!-- Notificación Toast Neón -->
+    <div id="toast-3d"></div>
+
+    <!-- Controles Táctiles (Móviles / Tablets) -->
+    <div id="touch-3d">
+      <div class="touch-3d-group">
+        <button class="touch-3d-btn" id="btn-touch-3d-left" title="Mover Izquierda">◀</button>
+        <button class="touch-3d-btn" id="btn-touch-3d-right" title="Mover Derecha">▶</button>
+        <button class="touch-3d-btn btn-touch-duck" id="btn-touch-3d-duck" title="Agacharse / Deslizarse">SLIDE</button>
+      </div>
+      <div class="touch-3d-group">
+        <button class="touch-3d-btn btn-touch-dash" id="btn-touch-3d-dash" title="Impulso Turbo Dash">DASH</button>
+        <button class="touch-3d-btn btn-touch-disc" id="btn-touch-3d-disc" title="Lanzar Disco Tron">DISCO</button>
+        <button class="touch-3d-btn btn-touch-jump" id="btn-touch-3d-jump" title="Saltar / Doble Salto">SALTAR</button>
+      </div>
+    </div>
+
+    <!-- Modal Pausa 3D -->
+    <div id="screen-pause-3d" class="overlay-3d">
+      <div class="modal-box-3d">
+        <h2 class="modal-title-3d">PAUSA 3D</h2>
+        <p class="modal-desc-3d">Partida detenida. ¿Qué deseas hacer?</p>
+        <div class="modal-actions-3d">
+          <button id="btn-resume-3d" class="btn-menu btn-primary">▶ CONTINUAR</button>
+          <button id="btn-restart-3d" class="btn-menu btn-secondary">🔄 REINICIAR</button>
+          <button id="btn-levels-from-pause-3d" class="btn-menu btn-secondary">📋 SELECCIÓN DE NIVELES</button>
+          <button id="btn-exit-3d" class="btn-menu btn-outline">🚪 SALIR AL MENÚ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Fin de Partida / Derrota 3D -->
+    <div id="screen-gameover-3d" class="overlay-3d">
+      <div class="modal-box-3d">
+        <h2 class="modal-title-3d" style="text-shadow: 0 0 20px #ff2bd6;">SIN ENERGÍA</h2>
+        <p class="modal-desc-3d">Te quedaste sin vidas en el Nivel <span id="gameover-3d-level">1</span>.<br/>Tiempo: <strong id="gameover-3d-time" style="color: #ff2bd6;">0.0 s</strong></p>
+        <div class="modal-actions-3d">
+          <button id="btn-retry-gameover-3d" class="btn-menu btn-primary">🔄 REINTENTAR</button>
+          <button id="btn-levels-from-gameover-3d" class="btn-menu btn-secondary">📋 SELECCIÓN DE NIVELES</button>
+          <button id="btn-exit-gameover-3d" class="btn-menu btn-outline">🚪 MENÚ PRINCIPAL</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Victoria 3D -->
+    <div id="screen-victory-3d" class="overlay-3d">
+      <div class="modal-box-3d">
+        <h2 class="modal-title-3d" style="text-shadow: 0 0 25px #2ff3ff;">¡META CRUZADA! 🏆</h2>
+        <p class="modal-desc-3d" id="victory-3d-msg">¡Cruzaste la meta cibernética del Nivel 1 con éxito!</p>
+        <div style="display: flex; justify-content: space-around; margin: 16px 0; font-family: var(--font-game);">
+          <div><div style="font-size: 0.8rem; color: #94a3b8;">TIEMPO</div><div id="victory-3d-time" style="font-size: 1.4rem; color: #2ff3ff; font-weight: 900;">0.0 s</div></div>
+          <div><div style="font-size: 0.8rem; color: #94a3b8;">VIDAS</div><div id="victory-3d-lives" style="font-size: 1.4rem; color: #ff2bd6; font-weight: 900;">3 / 3</div></div>
+          <div><div style="font-size: 0.8rem; color: #94a3b8;">PUNTOS</div><div id="victory-3d-score" style="font-size: 1.4rem; color: #ffd700; font-weight: 900;">7600</div></div>
+        </div>
+        <div class="modal-actions-3d">
+          <button id="btn-next-level-3d" class="btn-menu btn-primary">⏩ SIGUIENTE NIVEL</button>
+          <button id="btn-retry-victory-3d" class="btn-menu btn-secondary">🔄 REPETIR NIVEL</button>
+          <button id="btn-levels-from-victory-3d" class="btn-menu btn-secondary">📋 SELECCIÓN DE NIVELES</button>
+          <button id="btn-exit-victory-3d" class="btn-menu btn-outline">🚪 MENÚ PRINCIPAL</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
        NOTIFICACIONES TOAST
   ═══════════════════════════════════════════════════════════════ -->
   <div id="toast-container"></div>
@@ -673,6 +774,23 @@
   <script src="js/player.js"></script>
   <script src="js/renderer.js"></script>
   <script src="js/game.js"></script>
+
+  <!-- Librerías Three.js y Post-processing Bloom (Locales Offline) -->
+  <script src="js/libs/three/three.min.js"></script>
+  <script src="js/libs/three/CopyShader.js"></script>
+  <script src="js/libs/three/LuminosityHighPassShader.js"></script>
+  <script src="js/libs/three/EffectComposer.js"></script>
+  <script src="js/libs/three/RenderPass.js"></script>
+  <script src="js/libs/three/ShaderPass.js"></script>
+  <script src="js/libs/three/UnrealBloomPass.js"></script>
+
+  <!-- Módulos de Neon Run 3D -->
+  <script src="js/neon3d/neon3d_levels.js"></script>
+  <script src="js/neon3d/neon3d_world.js"></script>
+  <script src="js/neon3d/neon3d_player.js"></script>
+  <script src="js/neon3d/neon3d_engine.js"></script>
+  <script src="js/neon3d/neon3d_ui.js"></script>
+
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
 </body>

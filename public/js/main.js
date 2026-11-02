@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── 3. Conectar eventos de UI ─────────────────────────────────────────────
   UI.setupEvents();
+  if (typeof Neon3DUI !== 'undefined') {
+    Neon3DUI.init();
+  }
 
   // ── 4. Mostrar menú principal ─────────────────────────────────────────────
   UI.showScreen('menu');

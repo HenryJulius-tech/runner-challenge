@@ -4,12 +4,21 @@ $out = 'c:\Users\Henry Camargo\Desktop\GameRunnig\runner_challenge_PORTABLE.html
 $html = [System.IO.File]::ReadAllText((Join-Path $pub 'index.html'), [System.Text.Encoding]::UTF8)
 $css  = [System.IO.File]::ReadAllText((Join-Path $pub 'css\styles.css'), [System.Text.Encoding]::UTF8)
 
-$jsFiles = @('audio.js','score.js','levels.js','collision.js','particles.js','camera.js','coins.js','obstacles.js','powerups.js','player.js','renderer.js','game.js','ui.js','main.js')
+$jsFiles = @(
+    'audio.js','score.js','levels.js','collision.js','particles.js','camera.js','coins.js',
+    'obstacles.js','powerups.js','player.js','renderer.js','game.js',
+    'libs\three\three.min.js','libs\three\CopyShader.js','libs\three\LuminosityHighPassShader.js',
+    'libs\three\EffectComposer.js','libs\three\RenderPass.js','libs\three\ShaderPass.js','libs\three\UnrealBloomPass.js',
+    'neon3d\neon3d_levels.js','neon3d\neon3d_world.js','neon3d\neon3d_player.js','neon3d\neon3d_engine.js','neon3d\neon3d_ui.js',
+    'ui.js','main.js'
+)
 $allJs = ''
 foreach ($f in $jsFiles) {
     $fPath = Join-Path $pub "js\$f"
-    $content = [System.IO.File]::ReadAllText($fPath, [System.Text.Encoding]::UTF8)
-    $allJs += "`n// === $f ===`n" + $content + "`n"
+    if (Test-Path $fPath) {
+        $content = [System.IO.File]::ReadAllText($fPath, [System.Text.Encoding]::UTF8)
+        $allJs += "`n// === $f ===`n" + $content + "`n"
+    }
 }
 
 $googleFontImport = "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Orbitron:wght@700;900&display=swap');"

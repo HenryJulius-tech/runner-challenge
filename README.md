@@ -57,40 +57,70 @@ El multijugador local en 1 solo equipo ahora cuenta con **Pantalla Dividida (Spl
 
 ---
 
+## 🕶️ Modo Neon Run 3D (Three.js WebGL + UnrealBloomPass)
+
+El proyecto ahora integra el modo **Neon Run 3D** completamente modularizado a partir de `neon_run.html`:
+- **Gráficos 3D con Resplandor Neón (Bloom):** Desarrollado con Three.js r128, `EffectComposer` y `UnrealBloomPass` para una iluminación volumétrica retro-futurista de alta gama.
+- **Corredor Cibernético Articulado:** Rig 3D procedural con extremidades animadas, zancada rítmica, saltos dinámicos y visor neón.
+- **Mecánica de Disco Destructor:** Presiona `F` o `E` (o el botón táctil `DISCO`) para lanzar tu disco de neón hacia adelante y pulverizar obstáculos en una explosión de chispas.
+- **Escudo de Energía:** Recoge los orbes cian flotantes para desplegar un escudo icosaédrico protector de 6 segundos que absorbe impactos.
+- **Controles 3D:**
+  - `A` / `D` o `←` / `→`: Moverse lateralmente por la autopista.
+  - `W` / `↑`: Acelerar / Boost.
+  - `S` / `↓`: Frenar.
+  - `Espacio`: Saltar obstáculos.
+  - `F` / `E`: Lanzar disco de ataque.
+  - `P` / `Esc`: Menú de Pausa 3D.
+  - Soporte táctil completo para móviles (controles en pantalla con feedback de neón).
+
+---
+
 ## 📁 Estructura Limpia del Proyecto
 
-Se depuraron dependencias innecesarias (como Socket.IO) y scripts obsoletos (`multiplayer.js`), dejando una arquitectura modular, pura y ligera:
+Arquitectura modular, pura y desacoplada con soporte 2D y 3D:
 
 ```
 GameRunnig/
-├── server.js                        ← Servidor local estático Express (sin librerías innecesarias)
+├── server.js                        ← Servidor local estático Express
 ├── package.json                     ← Dependencias mínimas y limpias (express)
-├── runner_challenge_PORTABLE.html   ← Versión empaquetada monolítica 100% offline
+├── runner_challenge_PORTABLE.html   ← Versión empaquetada monolítica 100% offline (incluye Three.js y 3D)
 ├── empaquetar.ps1                   ← Script PowerShell para generar el HTML portable
 ├── PRESENTACION.md                  ← Memoria técnica del proyecto para evaluación académica
 ├── README.md                        ← Documentación del proyecto
 │
 └── public/                          ← Frontend modular del juego
-    ├── index.html                   ← Estructura HTML5 semántica y contenedor de Viewports
+    ├── index.html                   ← Estructura HTML5 semántica y contenedores de pantallas
     │
     ├── css/
-    │   └── styles.css               ← Sistema de diseño Synthwave/Cyberpunk, Split-Screen y HUDs
+    │   └── styles.css               ← Sistema de diseño Synthwave/Cyberpunk, Split-Screen y HUD 3D
     │
     └── js/
         ├── main.js                  ← Punto de entrada e inicialización de módulos
-        ├── game.js                  ← Motor principal, bucle 60FPS, gestión dual de viewports
-        ├── player.js                ← Física del corredor, gravedad, saltos y renderizado
-        ├── camera.js                ← Controlador de cámara suave (Lerp) y Screen Shake aislado
-        ├── obstacles.js             ← Sistema determinista de obstáculos (Pinchos, Drones, Cajas)
+        ├── game.js                  ← Motor principal 2D, bucle 60FPS, gestión dual de viewports
+        ├── player.js                ← Física del corredor 2D, gravedad, saltos y renderizado
+        ├── camera.js                ← Controlador de cámara suave 2D (Lerp) y Screen Shake
+        ├── obstacles.js             ← Sistema determinista de obstáculos 2D (Pinchos, Drones, Cajas)
         ├── powerups.js              ← Sistema de Power-Ups (Escudo, Imán, Turbo, Doble Salto)
-        ├── coins.js                 ← Sistema determinista de monedas holográficas y atracción magnética
-        ├── collision.js             ← Detección de colisiones por cajas AABB y tolerancia elástica
-        ├── renderer.js              ← Fondo Parallax Synthwave, suelo de velocidad, speed lines y Meta
+        ├── coins.js                 ← Sistema determinista de monedas holográficas
+        ├── collision.js             ← Detección de colisiones por cajas AABB
+        ├── renderer.js              ← Fondo Parallax Synthwave 2D y suelo de velocidad
         ├── levels.js                ← Parámetros de 20 niveles balanceados con progresión
-        ├── particles.js             ← Sistema de chispas, polvo, ondas de choque (shockwaves) y textos flotantes
-        ├── score.js                 ← Persistencia local de récords y configuración (localStorage)
-        ├── ui.js                    ← Gestión de pantallas, selector de pantalla dividida y resultados
-        └── audio.js                 ← Sonido procedural sin archivos externos (Web Audio API)
+        ├── particles.js             ← Sistema de chispas y ondas de choque
+        ├── score.js                 ← Persistencia local de récords (localStorage)
+        ├── ui.js                    ← Gestión de navegación entre pantallas del juego
+        ├── audio.js                 ← Sonido procedural sin archivos externos (Web Audio API)
+        │
+        ├── libs/three/              ← Librerías Three.js y Shaders locales para modo offline
+        │   ├── three.min.js         ← Motor Three.js r128
+        │   ├── EffectComposer.js    ← Compositor de post-procesamiento
+        │   ├── UnrealBloomPass.js   ← Pase de resplandor neón (Bloom)
+        │   └── [Shaders de apoyo]   ← CopyShader, LuminosityHighPassShader, RenderPass, ShaderPass
+        │
+        └── neon3d/                  ← Módulos estructurados de Neon Run 3D
+            ├── neon3d_world.js      ← Generación del mundo, ciudad, pista, sol retro y meta
+            ├── neon3d_player.js     ← Rig del personaje 3D, animaciones, escudo y proyectiles
+            ├── neon3d_engine.js     ← Motor 3D, físicas, cámara cinética, colisiones y partículas
+            └── neon3d_ui.js         ← HUD 3D, controles táctiles y pantallas modales de pausa/fin
 ```
 
 ---
