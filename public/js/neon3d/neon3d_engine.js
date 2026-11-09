@@ -201,21 +201,23 @@ const Neon3DEngine = (() => {
 
   function resize() {
     if (!renderer || !canvas) return;
-    const w = canvas.clientWidth || canvas.parentElement?.clientWidth || window.innerWidth;
-    const h = canvas.clientHeight || canvas.parentElement?.clientHeight || window.innerHeight;
+    // Siempre usar las dimensiones reales de la ventana para el canvas de juego
+    // (canvas.clientWidth puede ser 0 si la pantalla está oculta con opacity:0)
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     if (w === 0 || h === 0) return;
 
     renderer.setSize(w, h, false);
 
     if (isSplitScreen) {
-      // Split: cada mitad tiene su propio aspect
+      // Split: cada mitad tiene su propio aspect ratio
       const halfH = Math.floor(h / 2);
       const aspect = w / halfH;
       camera.aspect = aspect;
       camera.updateProjectionMatrix();
       cameraRival.aspect = aspect;
       cameraRival.updateProjectionMatrix();
-      // En split-screen no usamos el composer (scissor test incompatible)
+      // En split-screen no usamos el composer (scissor test incompatible con bloom)
     } else {
       if (composer) composer.setSize(w, h);
       camera.aspect = w / h;
@@ -658,7 +660,9 @@ const Neon3DEngine = (() => {
       remoteTargetPx = Number(remoteEntry.px) || 0;
       remoteTargetPy = Number(remoteEntry.y) || 0;
       remoteTargetSpeed = Number(remoteEntry.speed) || speed;
-      remoteTargetAt = Number(snapshot.serverTime) || Date.now();
+      // Usar Date.now() local como referencia del "cuándo llegó el paquete"
+      // para que el dead reckoning sea relativo al reloj local (sin drift de servidor)
+      remoteTargetAt = Date.now();
       rivalLives = Number(remoteEntry.lives) || 0;
       rivalScore = Number(remoteEntry.score) || 0;
       rivalCoins = Number(remoteEntry.coins) || 0;
@@ -1008,7 +1012,8 @@ const Neon3DEngine = (() => {
           coins: coinsCount,
           lives: Math.max(0, lives),
           isAlive: (lives > 0),
-          elapsedMs: Math.max(0, time * 1000)
+          elapsedMs: Math.max(0, time * 1000),
+          clientTs: Date.now()     // timestamp local para dead reckoning preciso en el receptor
         });
       }
 
@@ -1290,19 +1295,22 @@ const Neon3DEngine = (() => {
     // ── Actualizar e interpolar corredor Rival en la pista 3D ────────────────
     if (isOnline && rivalRig) {
       if (officialRaceState) {
-        const ageFrames = (typeof Network !== 'undefined' && Network.getSnapshotAgeMs)
-          ? Network.getSnapshotAgeMs(remoteTargetAt) / (1000 / 60)
-          : 0;
-        const predictedDist = remoteTargetDist + remoteTargetSpeed * Math.min(15, Math.max(0, ageFrames * (dt / 0.016)));
+        // Dead reckoning correcto: cuántos segundos pasaron desde el último paquete
+        // (máx 300 ms para evitar que el rival "salte" demasiado lejos si hay desconexión breve)
+        const elapsedSec = Math.min(0.3, (Date.now() - remoteTargetAt) / 1000);
+        const predictedDist = remoteTargetDist + remoteTargetSpeed * elapsedSec;
         const targetDist = Math.max(0, Math.min(finishDistance, predictedDist));
-        const blend = 1 - Math.exp(-14 * dt);
 
+        // Blend suave — más rápido cuando hay brecha grande, más lento al estar cerca
         const dDist = targetDist - rivalDist;
-        if (Math.abs(dDist) > 120) rivalDist = targetDist;
-        else rivalDist += dDist * blend;
+        const blendDist = Math.abs(dDist) > 80
+          ? 1.0                                      // Teletransporte inmediato si hay desfase grave (>80 m)
+          : 1 - Math.exp(-8 * dt);                  // Suavizado exponencial normal
+        rivalDist += dDist * blendDist;
 
-        rivalPx += (remoteTargetPx - rivalPx) * blend;
-        rivalPy += (remoteTargetPy - rivalPy) * blend;
+        const blendPos = 1 - Math.exp(-10 * dt);
+        rivalPx += (remoteTargetPx - rivalPx) * blendPos;
+        rivalPy += (remoteTargetPy - rivalPy) * blendPos;
         rivalGrounded = rivalPy <= 0.08;
         if (rivalGrounded) rivalPy = 0;
         rivalPhase += dt * (8 + remoteTargetSpeed * 0.2);

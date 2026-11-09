@@ -266,8 +266,11 @@ const Neon3DUI = (() => {
 
     _closeAllOverlays();
 
-    Neon3DEngine.resize();
-    Neon3DEngine.start(activeLevel);
+    // Dar un frame para que la pantalla sea visible antes de resize
+    requestAnimationFrame(() => {
+      Neon3DEngine.resize();
+      Neon3DEngine.start(activeLevel);
+    });
   }
 
   /**
@@ -285,15 +288,18 @@ const Neon3DUI = (() => {
 
     _closeAllOverlays();
 
-    Neon3DEngine.resize();
-    Neon3DEngine.start(activeLevel, {
-      isOnline: true,
-      raceId: options.raceId,
-      seed: options.seed,
-      myColor: options.myColor,
-      rivalName: options.rivalName,
-      rivalColor: options.rivalColor,
-      isHost: options.isHost
+    // Dar un frame para que la pantalla sea visible antes de resize
+    requestAnimationFrame(() => {
+      Neon3DEngine.resize();
+      Neon3DEngine.start(activeLevel, {
+        isOnline: true,
+        raceId: options.raceId,
+        seed: options.seed,
+        myColor: options.myColor,
+        rivalName: options.rivalName,
+        rivalColor: options.rivalColor,
+        isHost: options.isHost
+      });
     });
   }
 
