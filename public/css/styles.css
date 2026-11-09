@@ -2338,63 +2338,73 @@ kbd {
   cursor: default;
 }
 
-/* ─── Lobby Online: scroll propio para que el botón "LISTO" nunca quede oculto ── */
+/* ─── Lobby Online: layout compacto y centrado sin necesidad de zoom ── */
 #screen-lobby {
-  justify-content: flex-start;  /* No centrar: el contenido empieza desde arriba */
-  overflow-y: auto;             /* Scroll vertical cuando no cabe todo */
+  justify-content: flex-start;  /* Iniciar desde arriba para scroll natural si se necesita */
+  overflow-y: auto;             /* Scroll vertical suave si la pantalla es muy pequeña */
   overflow-x: hidden;
-  padding-bottom: 24px;         /* Espacio extra al fondo */
+  padding-top: 65px;
+  padding-bottom: 24px;
 }
 
 #screen-lobby .mp-local-container {
-  margin-top: 80px;             /* Dejar espacio para el .screen-header (≈60px) */
+  margin: 0 auto;
   padding-bottom: 20px;
-  gap: 14px;                    /* Reducir gaps internos */
+  gap: 10px;                    /* Gaps compactos */
+  max-width: 680px;
 }
 
 /* Compactar las tarjetas de jugadores del lobby */
 #screen-lobby .online-player-card {
-  padding: 14px 14px;
-  gap: 7px;
+  padding: 12px 14px;
+  gap: 6px;
 }
 #screen-lobby .player-avatar {
-  width: 44px;
-  height: 44px;
-  font-size: 1.1rem;
+  width: 42px;
+  height: 42px;
+  font-size: 1rem;
 }
 #screen-lobby .online-scoreboard {
-  margin: 10px auto 10px;
+  margin: 14px auto 10px;
 }
 #screen-lobby .online-versus-container {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  gap: 14px;
 }
 #screen-lobby .online-mode-box,
 #screen-lobby .online-level-box {
-  padding: 10px 14px;
-  margin: 6px auto;
+  padding: 8px 12px;
+  margin: 4px auto;
 }
 #screen-lobby .online-ready-action-box {
-  margin-top: 10px;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+#screen-lobby .btn-ready-toggle {
+  padding: 13px 32px;
+  font-size: 1.05rem;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.45);
 }
 
-/* ── Fix canvas 3D: ocupa EXACTAMENTE todo el contenedor, sin huecos ── */
+/* ── Fix canvas 3D: ocupa EXACTAMENTE todo el contenedor, sin huecos ni distorsión ── */
 #screen-game-3d {
   position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   background: #05031a;
-  display: block;               /* Evitar flex-gaps que crean área negra */
+  display: block;
 }
 
 #canvas-neon3d {
   position: absolute;
-  inset: 0;
-  width: 100% !important;       /* Forzar llenado completo */
+  top: 0;
+  left: 0;
+  width: 100% !important;
   height: 100% !important;
   display: block;
-  object-fit: cover;
+  /* IMPORTANTE: NUNCA usar object-fit: cover en el canvas porque provoca pixelación y blur al reescalar */
 }
 .hud-3d-bar {
   position: relative;

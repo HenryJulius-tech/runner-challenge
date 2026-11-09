@@ -2351,63 +2351,73 @@ kbd {
   cursor: default;
 }
 
-/* ─── Lobby Online: scroll propio para que el botón "LISTO" nunca quede oculto ── */
+/* ─── Lobby Online: layout compacto y centrado sin necesidad de zoom ── */
 #screen-lobby {
-  justify-content: flex-start;  /* No centrar: el contenido empieza desde arriba */
-  overflow-y: auto;             /* Scroll vertical cuando no cabe todo */
+  justify-content: flex-start;  /* Iniciar desde arriba para scroll natural si se necesita */
+  overflow-y: auto;             /* Scroll vertical suave si la pantalla es muy pequeña */
   overflow-x: hidden;
-  padding-bottom: 24px;         /* Espacio extra al fondo */
+  padding-top: 65px;
+  padding-bottom: 24px;
 }
 
 #screen-lobby .mp-local-container {
-  margin-top: 80px;             /* Dejar espacio para el .screen-header (≈60px) */
+  margin: 0 auto;
   padding-bottom: 20px;
-  gap: 14px;                    /* Reducir gaps internos */
+  gap: 10px;                    /* Gaps compactos */
+  max-width: 680px;
 }
 
 /* Compactar las tarjetas de jugadores del lobby */
 #screen-lobby .online-player-card {
-  padding: 14px 14px;
-  gap: 7px;
+  padding: 12px 14px;
+  gap: 6px;
 }
 #screen-lobby .player-avatar {
-  width: 44px;
-  height: 44px;
-  font-size: 1.1rem;
+  width: 42px;
+  height: 42px;
+  font-size: 1rem;
 }
 #screen-lobby .online-scoreboard {
-  margin: 10px auto 10px;
+  margin: 14px auto 10px;
 }
 #screen-lobby .online-versus-container {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  gap: 14px;
 }
 #screen-lobby .online-mode-box,
 #screen-lobby .online-level-box {
-  padding: 10px 14px;
-  margin: 6px auto;
+  padding: 8px 12px;
+  margin: 4px auto;
 }
 #screen-lobby .online-ready-action-box {
-  margin-top: 10px;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+#screen-lobby .btn-ready-toggle {
+  padding: 13px 32px;
+  font-size: 1.05rem;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.45);
 }
 
-/* ── Fix canvas 3D: ocupa EXACTAMENTE todo el contenedor, sin huecos ── */
+/* ── Fix canvas 3D: ocupa EXACTAMENTE todo el contenedor, sin huecos ni distorsión ── */
 #screen-game-3d {
   position: fixed;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   background: #05031a;
-  display: block;               /* Evitar flex-gaps que crean área negra */
+  display: block;
 }
 
 #canvas-neon3d {
   position: absolute;
-  inset: 0;
-  width: 100% !important;       /* Forzar llenado completo */
+  top: 0;
+  left: 0;
+  width: 100% !important;
   height: 100% !important;
   display: block;
-  object-fit: cover;
+  /* IMPORTANTE: NUNCA usar object-fit: cover en el canvas porque provoca pixelación y blur al reescalar */
 }
 .hud-3d-bar {
   position: relative;
@@ -2778,6 +2788,17 @@ kbd {
           </div>
         </div>
 
+        <!-- Botón de Preparado / Listo (Ubicado prominentemente bajo los jugadores) -->
+        <div class="online-ready-action-box">
+          <button id="btn-toggle-ready" class="btn-ready-toggle" disabled>
+            <span id="btn-ready-icon">⏳</span>
+            <span id="btn-ready-text">ESPERANDO RIVAL...</span>
+          </button>
+          <div id="lobby-ready-hint" class="lobby-hint-text">
+            Comparte el enlace o código para que tu amigo se una a la sala.
+          </div>
+        </div>
+
         <!-- Tabla de puntuación de la sala (victorias/derrotas entre carreras) -->
         <div class="online-scoreboard" id="online-scoreboard">
           <div class="online-scoreboard-title">
@@ -2812,17 +2833,6 @@ kbd {
                 </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-
-        <!-- Botón de Preparado / Listo -->
-        <div class="online-ready-action-box">
-          <button id="btn-toggle-ready" class="btn-ready-toggle" disabled>
-            <span id="btn-ready-icon">⏳</span>
-            <span id="btn-ready-text">ESPERANDO RIVAL...</span>
-          </button>
-          <div id="lobby-ready-hint" class="lobby-hint-text">
-            Comparte el enlace o código para que tu amigo se una a la sala.
           </div>
         </div>
 
@@ -9342,10 +9352,11 @@ const Neon3DEngine = (() => {
     const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
     renderer = new THREE.WebGLRenderer({
       canvas: canvas,
-      antialias: !isTouch,
+      antialias: true,
       powerPreference: 'high-performance'
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(dpr);
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(65, 1, 0.1, 500);
@@ -9355,13 +9366,12 @@ const Neon3DEngine = (() => {
     // Solo inicializamos bloom si hay shaders disponibles; en split-screen se desactiva.
     if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
       composer = new THREE.EffectComposer(renderer);
+      composer.setPixelRatio(dpr);
       composer.addPass(new THREE.RenderPass(scene, camera));
-      composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(256, 256), isTouch ? 0.85 : 1.1, 0.55, 0.12));
+      composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), isTouch ? 0.85 : 1.1, 0.55, 0.12));
     }
 
     // Crear elementos DOM del divisor split-screen (ocultos por defecto)
-    _createSplitDivider();
-
     _createSplitDivider();
 
     _loadLevelWorld(currentLevelNum);
@@ -9369,30 +9379,40 @@ const Neon3DEngine = (() => {
 
     resize();
     window.addEventListener('resize', resize);
+    if (window.matchMedia) {
+      try {
+        const mediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+        mediaQuery.addEventListener?.('change', () => resize());
+      } catch (_) {}
+    }
     _bindControls();
   }
 
   function resize() {
     if (!renderer || !canvas) return;
-    // Siempre usar las dimensiones reales de la ventana para el canvas de juego
-    // (canvas.clientWidth puede ser 0 si la pantalla está oculta con opacity:0)
     const w = window.innerWidth;
     const h = window.innerHeight;
     if (w === 0 || h === 0) return;
 
-    renderer.setSize(w, h, false);
+    // Sincronizar el pixel ratio actual según el nivel de zoom del navegador
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(w, h, true);
 
     if (isSplitScreen) {
-      // Split: cada mitad tiene su propio aspect ratio
+      // Split: cada mitad tiene su propio aspect ratio exacto
       const halfH = Math.floor(h / 2);
-      const aspect = w / halfH;
-      camera.aspect = aspect;
+      const topH = h - halfH;
+      camera.aspect = w / topH;
       camera.updateProjectionMatrix();
-      cameraRival.aspect = aspect;
+      cameraRival.aspect = w / halfH;
       cameraRival.updateProjectionMatrix();
       // En split-screen no usamos el composer (scissor test incompatible con bloom)
     } else {
-      if (composer) composer.setSize(w, h);
+      if (composer) {
+        composer.setPixelRatio(dpr);
+        composer.setSize(w, h);
+      }
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     }
@@ -9480,15 +9500,20 @@ const Neon3DEngine = (() => {
   }
 
   function _renderSplitScreen(dt) {
-    const w = renderer.domElement.width;
-    const h = renderer.domElement.height;
+    // IMPORTANTE: En Three.js, setViewport() y setScissor() toman coordenadas en píxeles CSS (lógicos),
+    // y Three.js internamente las multiplica por el pixelRatio.
+    // Usar window.innerWidth y window.innerHeight garantiza que coincida exactamente con la pantalla
+    // sin importar el zoom del navegador (Edge / Chrome) ni el escalado de Windows (125% / 150%).
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     const halfH = Math.floor(h / 2);
+    const topH = h - halfH;
 
     renderer.setScissorTest(true);
 
     // ── Mitad SUPERIOR: Jugador local ────────────────────────────────────────
-    renderer.setViewport(0, halfH, w, halfH);
-    renderer.setScissor(0, halfH, w, halfH);
+    renderer.setViewport(0, halfH, w, topH);
+    renderer.setScissor(0, halfH, w, topH);
     renderer.render(scene, camera);
 
     // ── Mitad INFERIOR: Rival (desde su cámara) ──────────────────────────────

@@ -169,10 +169,11 @@ const Neon3DEngine = (() => {
     const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
     renderer = new THREE.WebGLRenderer({
       canvas: canvas,
-      antialias: !isTouch,
+      antialias: true,
       powerPreference: 'high-performance'
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(dpr);
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(65, 1, 0.1, 500);
@@ -182,13 +183,12 @@ const Neon3DEngine = (() => {
     // Solo inicializamos bloom si hay shaders disponibles; en split-screen se desactiva.
     if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
       composer = new THREE.EffectComposer(renderer);
+      composer.setPixelRatio(dpr);
       composer.addPass(new THREE.RenderPass(scene, camera));
-      composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(256, 256), isTouch ? 0.85 : 1.1, 0.55, 0.12));
+      composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), isTouch ? 0.85 : 1.1, 0.55, 0.12));
     }
 
     // Crear elementos DOM del divisor split-screen (ocultos por defecto)
-    _createSplitDivider();
-
     _createSplitDivider();
 
     _loadLevelWorld(currentLevelNum);
@@ -196,30 +196,40 @@ const Neon3DEngine = (() => {
 
     resize();
     window.addEventListener('resize', resize);
+    if (window.matchMedia) {
+      try {
+        const mediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+        mediaQuery.addEventListener?.('change', () => resize());
+      } catch (_) {}
+    }
     _bindControls();
   }
 
   function resize() {
     if (!renderer || !canvas) return;
-    // Siempre usar las dimensiones reales de la ventana para el canvas de juego
-    // (canvas.clientWidth puede ser 0 si la pantalla está oculta con opacity:0)
     const w = window.innerWidth;
     const h = window.innerHeight;
     if (w === 0 || h === 0) return;
 
-    renderer.setSize(w, h, false);
+    // Sincronizar el pixel ratio actual según el nivel de zoom del navegador
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(w, h, true);
 
     if (isSplitScreen) {
-      // Split: cada mitad tiene su propio aspect ratio
+      // Split: cada mitad tiene su propio aspect ratio exacto
       const halfH = Math.floor(h / 2);
-      const aspect = w / halfH;
-      camera.aspect = aspect;
+      const topH = h - halfH;
+      camera.aspect = w / topH;
       camera.updateProjectionMatrix();
-      cameraRival.aspect = aspect;
+      cameraRival.aspect = w / halfH;
       cameraRival.updateProjectionMatrix();
       // En split-screen no usamos el composer (scissor test incompatible con bloom)
     } else {
-      if (composer) composer.setSize(w, h);
+      if (composer) {
+        composer.setPixelRatio(dpr);
+        composer.setSize(w, h);
+      }
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
     }
@@ -307,15 +317,20 @@ const Neon3DEngine = (() => {
   }
 
   function _renderSplitScreen(dt) {
-    const w = renderer.domElement.width;
-    const h = renderer.domElement.height;
+    // IMPORTANTE: En Three.js, setViewport() y setScissor() toman coordenadas en píxeles CSS (lógicos),
+    // y Three.js internamente las multiplica por el pixelRatio.
+    // Usar window.innerWidth y window.innerHeight garantiza que coincida exactamente con la pantalla
+    // sin importar el zoom del navegador (Edge / Chrome) ni el escalado de Windows (125% / 150%).
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     const halfH = Math.floor(h / 2);
+    const topH = h - halfH;
 
     renderer.setScissorTest(true);
 
     // ── Mitad SUPERIOR: Jugador local ────────────────────────────────────────
-    renderer.setViewport(0, halfH, w, halfH);
-    renderer.setScissor(0, halfH, w, halfH);
+    renderer.setViewport(0, halfH, w, topH);
+    renderer.setScissor(0, halfH, w, topH);
     renderer.render(scene, camera);
 
     // ── Mitad INFERIOR: Rival (desde su cámara) ──────────────────────────────
