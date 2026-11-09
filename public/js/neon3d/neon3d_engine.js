@@ -54,6 +54,51 @@ const Neon3DEngine = (() => {
   let landT = 0;
   let time = 0;
 
+  // ── Sincronización Online Multiplayer ─────────────────────────────────────
+  let isOnline = false;
+  let currentRaceId = null;
+  let localPlayerId = null;
+  let myCustomColor = '#00F0FF';
+  let rivalName = 'Rival';
+  let rivalColor = '#FF007F';
+  let rivalRig = null;
+  let rivalNameplate = null;
+  let rivalPx = 0;
+  let rivalPy = 0;
+  let rivalDist = 0;
+  let rivalSpeed = 14;
+  let rivalPhase = 0;
+  let rivalGrounded = true;
+  let rivalIsDucking = false;
+  let rivalIsTurbo = false;
+  let rivalShield = false;
+  let rivalLives = 3;
+  let rivalScore = 0;
+  let rivalCoins = 0;
+  let rivalHasFinished = false;
+  let rivalIsWinner = false;
+  let remoteTargetDist = 0;
+  let remoteTargetPx = 0;
+  let remoteTargetPy = 0;
+  let remoteTargetSpeed = 14;
+  let remoteTargetAt = 0;
+  let hasReportedFinish = false;
+  let raceFinished = false;
+  let raceResult = null;
+  let officialRaceState = null;
+  let officialLocalX = 0;
+  let officialRemoteX = 0;
+  let officialGoalWorldX = null;
+
+  // PRNG Determinista con Mulberry32
+  let rngState = 12345;
+  function rng() {
+    let t = (rngState += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
   // Estadísticas de partida
   let lives = 3;
   let score = 0;
@@ -309,10 +354,40 @@ const Neon3DEngine = (() => {
     obstacles.push(droneObj);
   }
 
+  function _createNameplateSprite(name, color = '#FF007F') {
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'rgba(8, 4, 28, 0.82)';
+    if (ctx.roundRect) ctx.roundRect(4, 4, 248, 56, 14);
+    else ctx.rect(4, 4, 248, 56);
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+
+    ctx.font = 'bold 24px Outfit, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 6;
+    ctx.fillText(name.slice(0, 14), 128, 32);
+
+    const texture = new THREE.CanvasTexture(c);
+    const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(2.4, 0.6, 1);
+    return sprite;
+  }
+
   function spawnCoinsPattern(startDist, type = 'LINE') {
     const count = 4;
     const spacing = 3.2;
-    const laneX = (Math.random() * 2 - 1) * 2.8;
+    const laneX = (rng() * 2 - 1) * 2.8;
 
     for (let i = 0; i < count; i++) {
       const d = startDist + i * spacing;
@@ -337,7 +412,7 @@ const Neon3DEngine = (() => {
   }
 
   function spawnPowerUp(d, type) {
-    const x = (Math.random() * 2 - 1) * 3.0;
+    const x = (rng() * 2 - 1) * 3.0;
     const puMesh = Neon3DWorld.createPowerUpMesh(type);
     puMesh.position.set(x, 1.4, -d);
     scene.add(puMesh);
@@ -367,40 +442,42 @@ const Neon3DEngine = (() => {
     parts = [];
   }
 
-  function buildLevel(num = 1) {
+  function buildLevel(num = 1, seed = null) {
     _loadLevelWorld(num);
     clearEntities();
+
+    rngState = (seed !== null && seed !== undefined) ? (Number(seed) || 12345) : (num * 1000 + 42);
 
     const finish = finishDistance;
     const minGap = levelData?.minObstacleGap || 12.0;
 
     // 1. Spawner de Monedas (cada 35m)
     for (let d = 30; d < finish - 35; d += 32) {
-      const isArc = Math.random() > 0.5;
+      const isArc = rng() > 0.5;
       spawnCoinsPattern(d, isArc ? 'ARC' : 'LINE');
     }
 
     // 2. Spawner de Power-Ups (cada 120m)
     const puTypes = ['SHIELD', 'MAGNET', 'TURBO', 'DOUBLE_JUMP'];
     let puIdx = 0;
-    for (let d = 80; d < finish - 60; d += 110 + Math.random() * 30) {
+    for (let d = 80; d < finish - 60; d += 110 + rng() * 30) {
       spawnPowerUp(d, puTypes[puIdx % puTypes.length]);
       puIdx++;
     }
 
     // 3. Spawner de Obstáculos balanceados con separación segura
-    for (let d = 45; d < finish - 30; d += minGap + Math.random() * 8) {
-      const r = Math.random();
+    for (let d = 45; d < finish - 30; d += minGap + rng() * 8) {
+      const r = rng();
       if (r < 0.28) {
-        addBar(d, (Math.random() * 2 - 1) * 2.7, false);
+        addBar(d, (rng() * 2 - 1) * 2.7, false);
       } else if (r < 0.52) {
-        addPillar(d, (Math.random() * 2 - 1) * 3.4);
+        addPillar(d, (rng() * 2 - 1) * 3.4);
       } else if (r < 0.76) {
         // Láser elevado: esquivar deslizándose (Slide)
         addLaser(d, 0);
       } else {
         // Dron patrullero volador
-        addDrone(d, (Math.random() * 2 - 1) * 3.0);
+        addDrone(d, (rng() * 2 - 1) * 3.0);
       }
     }
   }
@@ -418,11 +495,137 @@ const Neon3DEngine = (() => {
     }
   }
 
+  function _playerEntryIsLocal(entry) {
+    if (!entry) return false;
+    if (localPlayerId && entry.playerId) return entry.playerId === localPlayerId;
+    if (typeof Network !== 'undefined' && Network.playerSlot !== null && Network.playerSlot !== undefined) {
+      return entry.slot === Network.playerSlot;
+    }
+    return false;
+  }
+
+  function _applyRaceSnapshot(snapshot) {
+    officialRaceState = snapshot;
+    if (snapshot.goalWorldX !== undefined) {
+      officialGoalWorldX = Number(snapshot.goalWorldX) || finishDistance;
+    }
+    const list = Array.isArray(snapshot.players) ? snapshot.players : [];
+    const localEntry = list.find(_playerEntryIsLocal) || null;
+    const remoteEntry = list.find(entry => entry !== localEntry) || null;
+
+    if (localEntry) {
+      officialLocalX = Number(localEntry.worldX) || 0;
+      if (localEntry.isAlive === false && lives > 0) {
+        lives = 0;
+        _updateHud();
+        end(false);
+      }
+    }
+
+    if (remoteEntry) {
+      officialRemoteX = Number(remoteEntry.worldX) || 0;
+      remoteTargetDist = officialRemoteX;
+      remoteTargetPx = Number(remoteEntry.px) || 0;
+      remoteTargetPy = Number(remoteEntry.y) || 0;
+      remoteTargetSpeed = Number(remoteEntry.speed) || speed;
+      remoteTargetAt = Number(snapshot.serverTime) || Date.now();
+      rivalLives = Number(remoteEntry.lives) || 0;
+      rivalScore = Number(remoteEntry.score) || 0;
+      rivalCoins = Number(remoteEntry.coins) || 0;
+      rivalShield = !!remoteEntry.shield;
+      rivalIsTurbo = (Number(remoteEntry.turboTimer) > 0);
+      rivalIsDucking = !!remoteEntry.isDucking;
+      rivalHasFinished = !!remoteEntry.hasFinished;
+      rivalIsWinner = !!remoteEntry.isWinner;
+    }
+  }
+
+  function _handleRaceFinished(data) {
+    if (raceFinished) return;
+    raceFinished = true;
+    raceResult = data;
+    const isWinner = data.winnerId === localPlayerId;
+    state = isWinner ? 'win' : 'lose';
+
+    const myResult = data.results?.find(_playerEntryIsLocal) || {
+      name: (typeof ScoreManager !== 'undefined' ? ScoreManager.getPlayerName() : 'Tú') || 'Host',
+      color: myCustomColor || '#00F0FF',
+      score: Math.floor(score + dist * 10),
+      coins: coinsCount,
+      time: time.toFixed(1),
+      isWinner: isWinner
+    };
+    const oppResult = data.results?.find(r => !_playerEntryIsLocal(r)) || {
+      name: rivalName,
+      color: rivalColor,
+      score: rivalScore,
+      coins: rivalCoins,
+      time: rivalHasFinished ? time.toFixed(1) : '--',
+      isWinner: !isWinner && !!data.winnerId
+    };
+
+    if (hudCallbacks?.onEnd) {
+      hudCallbacks.onEnd(isWinner, {
+        isOnline: true,
+        level: currentLevelNum,
+        winnerId: data.winnerId,
+        winnerName: data.winnerName,
+        reason: data.reason,
+        myResult,
+        oppResult,
+        time: time.toFixed(1),
+        lives: Math.max(0, lives),
+        coins: coinsCount,
+        score: Math.floor(score + dist * 10 + (isWinner ? 500 : 200))
+      });
+    }
+
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.play(isWinner ? 'goal' : 'hit');
+    }
+  }
+
   /**
-   * Inicia la carrera en el nivel especificado
+   * Inicia la carrera en el nivel especificado (soporta opciones para Multiplayer Online)
    */
-  function start(levelNum = 1) {
-    buildLevel(levelNum);
+  function start(levelNum = 1, options = {}) {
+    isOnline = !!options.isOnline;
+    currentRaceId = options.raceId || null;
+    localPlayerId = (typeof Network !== 'undefined' && Network.playerId) ? Network.playerId : null;
+    myCustomColor = options.myColor || '#00F0FF';
+    rivalName = options.rivalName || 'Rival';
+    rivalColor = options.rivalColor || '#FF007F';
+    const matchSeed = (options.seed !== undefined && options.seed !== null) ? options.seed : (levelNum * 1000 + 42);
+
+    hasReportedFinish = false;
+    raceFinished = false;
+    raceResult = null;
+    officialRaceState = null;
+    officialLocalX = 0;
+    officialRemoteX = 0;
+    officialGoalWorldX = null;
+
+    rivalPx = 0;
+    rivalPy = 0;
+    rivalDist = 0;
+    rivalSpeed = 14;
+    rivalPhase = 0;
+    rivalGrounded = true;
+    rivalIsDucking = false;
+    rivalIsTurbo = false;
+    rivalShield = false;
+    rivalLives = 3;
+    rivalScore = 0;
+    rivalCoins = 0;
+    rivalHasFinished = false;
+    rivalIsWinner = false;
+    remoteTargetDist = 0;
+    remoteTargetPx = 0;
+    remoteTargetPy = 0;
+    remoteTargetSpeed = 14;
+    remoteTargetAt = 0;
+
+    buildLevel(levelNum, matchSeed);
     px = py = vy = vx = dist = time = 0;
     score = 0;
     coinsCount = 0;
@@ -441,10 +644,78 @@ const Neon3DEngine = (() => {
     doubleJumpTimer = 0;
     canDoubleJump = false;
 
+    // Recrear Corredor Local con su color personalizado
+    if (playerRig?.root) {
+      scene.remove(playerRig.root);
+      if (playerRig.shieldM) scene.remove(playerRig.shieldM);
+      if (playerRig.shieldS) scene.remove(playerRig.shieldS);
+      playerRig = null;
+    }
+    const localColorHex = myCustomColor ? parseInt(myCustomColor.replace('#', '0x'), 16) : (levelData?.palette?.neonMain || CY);
+    playerRig = Neon3DPlayer.create(scene, { glowColor: localColorHex });
+
+    // En multijugador online, crear el corredor rival y su letrero de neón
+    if (rivalRig?.root) {
+      scene.remove(rivalRig.root);
+      if (rivalRig.shieldM) scene.remove(rivalRig.shieldM);
+      if (rivalRig.shieldS) scene.remove(rivalRig.shieldS);
+      rivalRig = null;
+    }
+    if (rivalNameplate) {
+      scene.remove(rivalNameplate);
+      rivalNameplate = null;
+    }
+
+    if (isOnline) {
+      const rivalColorHex = rivalColor ? parseInt(rivalColor.replace('#', '0x'), 16) : MG;
+      rivalRig = Neon3DPlayer.create(scene, { glowColor: rivalColorHex });
+      rivalNameplate = _createNameplateSprite(rivalName, rivalColor);
+      scene.add(rivalNameplate);
+
+      if (typeof Network !== 'undefined') {
+        Network.onRaceState = (snapshot) => {
+          if (!snapshot || snapshot.raceId !== currentRaceId) return;
+          if (officialRaceState && snapshot.tick <= officialRaceState.tick) return;
+          _applyRaceSnapshot(snapshot);
+        };
+
+        Network.onPlayerGoalReached = (data) => {
+          if (!data || (data.raceId !== undefined && data.raceId !== currentRaceId)) return;
+          const isLocal = _playerEntryIsLocal(data);
+          if (!isLocal) {
+            rivalHasFinished = true;
+            if (hudCallbacks?.onToast) hudCallbacks.onToast(`🏁 ¡${rivalName} cruzó la meta!`, rivalColor);
+          }
+        };
+
+        Network.onRaceFinished = (data) => {
+          if (!data || data.raceId !== currentRaceId) return;
+          _handleRaceFinished(data);
+        };
+
+        Network.onOpponentDisconnected = () => {
+          if (state === 'play' && !raceFinished) {
+            if (hudCallbacks?.onToast) hudCallbacks.onToast('⚠️ Tu rival se desconectó. Esperando reconexión...', '#FFD700');
+          }
+        };
+
+        Network.onOpponentReconnected = () => {
+          if (state === 'play' && !raceFinished) {
+            if (hudCallbacks?.onToast) hudCallbacks.onToast('✅ Tu rival se reconectó a la carrera.', '#00FF88');
+          }
+        };
+      }
+    }
+
     state = 'play';
     clock.start();
 
-    if (hudCallbacks?.onToast) hudCallbacks.onToast(`¡NIVEL ${levelNum} - YA!`, '#2ff3ff');
+    if (hudCallbacks?.onToast) {
+      const toastMsg = isOnline 
+        ? `¡CARRERA 3D ONLINE! VS ${rivalName.toUpperCase()}` 
+        : `¡NIVEL ${levelNum} - YA!`;
+      hudCallbacks.onToast(toastMsg, myCustomColor || '#2ff3ff');
+    }
     _updateHud();
 
     if (!rafId) {
@@ -454,19 +725,44 @@ const Neon3DEngine = (() => {
 
   function togglePause() {
     if (state === 'play') {
+      if (isOnline) {
+        // En partida online, el juego continúa en vivo pero se muestra el menú de pausa
+        if (hudCallbacks?.onPause) hudCallbacks.onPause(true, true);
+        return;
+      }
       state = 'paused';
-      if (hudCallbacks?.onPause) hudCallbacks.onPause(true);
+      if (hudCallbacks?.onPause) hudCallbacks.onPause(true, false);
     } else if (state === 'paused') {
       state = 'play';
       clock.getDelta(); // Descartar tiempo acumulado durante pausa
-      if (hudCallbacks?.onPause) hudCallbacks.onPause(false);
+      if (hudCallbacks?.onPause) hudCallbacks.onPause(false, false);
     }
   }
 
   function end(win) {
+    if (isOnline) {
+      // En online, la finalización oficial es dictada por el servidor
+      state = win ? 'win' : 'lose';
+      if (hudCallbacks?.onEnd) {
+        hudCallbacks.onEnd(win, {
+          isOnline: true,
+          level: currentLevelNum,
+          time: time.toFixed(1),
+          lives: Math.max(0, lives),
+          coins: coinsCount,
+          score: Math.floor(score + dist * 10)
+        });
+      }
+      if (typeof AudioManager !== 'undefined') {
+        AudioManager.play(win ? 'goal' : 'hit');
+      }
+      return;
+    }
+
     state = win ? 'win' : 'lose';
     if (hudCallbacks?.onEnd) {
       hudCallbacks.onEnd(win, {
+        isOnline: false,
         level: currentLevelNum,
         time: time.toFixed(1),
         lives: Math.max(0, lives),
@@ -481,6 +777,9 @@ const Neon3DEngine = (() => {
 
   function _updateHud() {
     if (!hudCallbacks?.onHudUpdate) return;
+    const diffM = Math.round(dist - rivalDist);
+    const isFirst = dist >= rivalDist;
+
     hudCallbacks.onHudUpdate({
       level: currentLevelNum,
       levelName: levelData?.name || `Nivel ${currentLevelNum}`,
@@ -494,7 +793,17 @@ const Neon3DEngine = (() => {
       shieldActive: shieldActive,
       magnetActive: magnetTimer > 0,
       turboActive: turboTimer > 0,
-      doubleJumpActive: doubleJumpTimer > 0
+      doubleJumpActive: doubleJumpTimer > 0,
+      // Datos Online
+      isOnline: isOnline,
+      isFirst: isFirst,
+      distGap: diffM,
+      playerProgress: Math.min(100, (dist / finishDistance) * 100),
+      rivalProgress: Math.min(100, (rivalDist / finishDistance) * 100),
+      rivalName: rivalName,
+      rivalColor: rivalColor,
+      rivalLives: rivalLives,
+      rivalScore: rivalScore
     });
   }
 
@@ -539,6 +848,29 @@ const Neon3DEngine = (() => {
 
       dist += speed * dt;
       time += dt;
+
+      // ── Enviar estado a la red (Modo Online 3D) ──────────────────────────
+      if (isOnline && typeof Network !== 'undefined') {
+        Network.sendState({
+          raceId: currentRaceId,
+          level: currentLevelNum,
+          worldX: dist,
+          px: px,
+          y: py,
+          vy: vy,
+          speed: speed,
+          isDucking: isDucking,
+          hasFinished: (dist >= finishDistance),
+          turboTimer: turboTimer,
+          dashTimer: dashTimer,
+          shield: shieldActive,
+          score: Math.floor(score + dist * 10),
+          coins: coinsCount,
+          lives: Math.max(0, lives),
+          isAlive: (lives > 0),
+          elapsedMs: Math.max(0, time * 1000)
+        });
+      }
 
       // Físicas de Salto y Gravedad
       const grav = levelData?.gravity || 36.0;
@@ -734,7 +1066,21 @@ const Neon3DEngine = (() => {
 
       // Llegada a la meta
       if (dist >= finishDistance) {
-        end(true);
+        if (isOnline) {
+          if (!hasReportedFinish && typeof Network !== 'undefined') {
+            hasReportedFinish = true;
+            Network.sendPlayerFinished({
+              raceId: currentRaceId,
+              elapsedMs: time * 1000,
+              time: Math.round(time),
+              worldX: dist,
+              score: Math.floor(score + dist * 10),
+              coins: coinsCount
+            });
+          }
+        } else {
+          end(true);
+        }
       }
       _updateHud();
 
@@ -801,6 +1147,53 @@ const Neon3DEngine = (() => {
       playerRig.shieldM.rotation.x += dt;
     }
 
+    // ── Actualizar e interpolar corredor Rival en la pista 3D ────────────────
+    if (isOnline && rivalRig) {
+      if (officialRaceState) {
+        const ageFrames = (typeof Network !== 'undefined' && Network.getSnapshotAgeMs)
+          ? Network.getSnapshotAgeMs(remoteTargetAt) / (1000 / 60)
+          : 0;
+        const predictedDist = remoteTargetDist + remoteTargetSpeed * Math.min(15, Math.max(0, ageFrames * (dt / 0.016)));
+        const targetDist = Math.max(0, Math.min(finishDistance, predictedDist));
+        const blend = 1 - Math.exp(-14 * dt);
+
+        const dDist = targetDist - rivalDist;
+        if (Math.abs(dDist) > 120) rivalDist = targetDist;
+        else rivalDist += dDist * blend;
+
+        rivalPx += (remoteTargetPx - rivalPx) * blend;
+        rivalPy += (remoteTargetPy - rivalPy) * blend;
+        rivalGrounded = rivalPy <= 0.08;
+        if (rivalGrounded) rivalPy = 0;
+        rivalPhase += dt * (8 + remoteTargetSpeed * 0.2);
+
+        rivalRig.root.position.set(rivalPx, rivalPy, -rivalDist);
+        Neon3DPlayer.animate(rivalRig, dt, rivalGrounded, remoteTargetSpeed, rivalPhase, 0, rivalHasFinished, {
+          isDucking: rivalIsDucking,
+          isFastFalling: false,
+          isTurbo: rivalIsTurbo,
+          hasMagnet: false
+        });
+
+        rivalRig.torso.position.y = 1.05 + (rivalGrounded && !rivalIsDucking ? Math.abs(Math.sin(rivalPhase)) * 0.07 : 0);
+        rivalRig.shieldM.visible = rivalRig.shieldS.visible = rivalShield;
+        if (rivalShield) {
+          rivalRig.shieldM.position.set(rivalPx, rivalPy + 1.1, -rivalDist);
+          rivalRig.shieldS.position.copy(rivalRig.shieldM.position);
+          rivalRig.shieldM.rotation.y += dt * 2;
+        }
+        rivalRig.flameL.visible = rivalRig.flameR.visible = rivalIsTurbo;
+
+        if (rivalNameplate) {
+          rivalNameplate.position.set(rivalPx, rivalPy + 2.4, -rivalDist);
+        }
+      } else {
+        // En espera de los primeros paquetes: colocar rival en línea de salida
+        rivalRig.root.position.set(rivalPx, rivalPy, -rivalDist);
+        if (rivalNameplate) rivalNameplate.position.set(rivalPx, rivalPy + 2.4, -rivalDist);
+      }
+    }
+
     // Luces y fondo
     worldData.playerLight.position.set(px, py + 2.5, pz - 1);
     worldData.sun.position.set(0, 52, pz - 330);
@@ -832,6 +1225,19 @@ const Neon3DEngine = (() => {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
+    if (rivalRig?.root) {
+      scene.remove(rivalRig.root);
+      if (rivalRig.shieldM) scene.remove(rivalRig.shieldM);
+      if (rivalRig.shieldS) scene.remove(rivalRig.shieldS);
+      rivalRig = null;
+    }
+    if (rivalNameplate) {
+      scene.remove(rivalNameplate);
+      rivalNameplate = null;
+    }
+    isOnline = false;
+    currentRaceId = null;
+    officialRaceState = null;
   }
 
   return {

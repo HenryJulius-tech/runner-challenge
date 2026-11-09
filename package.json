@@ -12,5 +12,8 @@
     "socket.io": "^4.8.4"
   },
   "author": "Proyecto Universitario",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
 }

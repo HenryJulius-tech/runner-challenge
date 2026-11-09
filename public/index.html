@@ -41,6 +41,10 @@
           style="background: linear-gradient(135deg, rgba(255,43,214,0.35), rgba(47,243,255,0.35)); border-color: #2ff3ff; box-shadow: 0 0 22px rgba(47,243,255,0.4);">
           <span class="btn-icon">🕶️</span> JUGAR NEON RUN 3D
         </button>
+        <button id="btn-online-3d-menu" class="btn-menu btn-primary"
+          style="background: linear-gradient(135deg, rgba(0,240,255,0.25), rgba(255,0,127,0.25)); border-color: #ff2bd6; box-shadow: 0 0 22px rgba(255,43,214,0.4);">
+          <span class="btn-icon">🌐🕶️</span> MULTIPLAYER ONLINE 3D (NUEVO)
+        </button>
         <button id="btn-play-solo" class="btn-menu btn-secondary">
           <span class="btn-icon">▶</span> JUGAR SOLO (2D)
         </button>
@@ -48,7 +52,7 @@
           <span class="btn-icon">👥</span> MULTIPLAYER LOCAL (2 JUGADORES)
         </button>
         <button id="btn-online" class="btn-menu btn-secondary">
-          <span class="btn-icon">🌐</span> MULTIPLAYER ONLINE (NUEVO)
+          <span class="btn-icon">🌐</span> MULTIPLAYER ONLINE (2D / 3D)
         </button>
         <button id="btn-levels" class="btn-menu btn-outline">
           <span class="btn-icon">📋</span> NIVELES (DEMO)
@@ -248,6 +252,23 @@
             <button id="btn-copy-code" class="btn-action-sm">📋 Copiar Código</button>
             <button id="btn-copy-link" class="btn-action-sm btn-action-accent">🔗 Copiar Enlace</button>
             <button id="btn-leave-room" class="btn-action-sm btn-action-danger">🚪 Salir</button>
+          </div>
+        </div>
+
+        <!-- Selector de Modo de Juego (2D Clásico / 3D Cyberpunk) -->
+        <div class="online-mode-box">
+          <label style="font-weight: 600; color: var(--c-cyan); display: block; margin-bottom: 8px; text-align: center;">🎮 MODO DE CARRERA MULTIPLAYER:</label>
+          <div class="online-mode-toggle-group" id="online-mode-toggle-group">
+            <button type="button" class="btn-mode-toggle active" id="btn-mode-2d" data-mode="2d">
+              <span>🕹️</span> MODO 2D CLÁSICO
+            </button>
+            <button type="button" class="btn-mode-toggle" id="btn-mode-3d" data-mode="3d">
+              <span>🕶️</span> MODO 3D CYBERPUNK
+            </button>
+          </div>
+          <div id="online-mode-guest-indicator" class="hidden" style="text-align: center; margin-top: 8px;">
+            <span style="font-size: 0.85rem; color: var(--c-muted); font-weight: 600;">Modo de juego:</span>
+            <div id="online-mode-guest-text" style="color: #00F0FF; font-weight: 700; font-size: 1.1rem; margin-top: 2px;">🕹️ 2D Clásico</div>
           </div>
         </div>
 
@@ -655,6 +676,12 @@
       <button class="btn-back" id="btn-back-levels-3d">← Volver</button>
       <h2 class="screen-title" style="text-shadow: 0 0 15px #2ff3ff, 0 0 30px #ff2bd6;">🕶️ SELECCIÓN DE NIVELES 3D</h2>
     </div>
+    <div style="text-align: center; margin: 12px 0 18px;">
+      <button id="btn-online-from-3d" class="btn-menu btn-primary"
+        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 28px; background: linear-gradient(135deg, rgba(255,43,214,0.35), rgba(47,243,255,0.35)); border-color: #2ff3ff; box-shadow: 0 0 18px rgba(47,243,255,0.4); font-size: 1rem; border-radius: 28px; cursor: pointer;">
+        <span class="btn-icon">🌐</span> JUGAR MULTIPLAYER ONLINE EN 3D
+      </button>
+    </div>
     <div class="levels-grid" id="levels-3d-grid">
       <!-- Generado dinámicamente por neon3d_ui.js -->
     </div>
@@ -670,8 +697,13 @@
     <div id="hud-3d">
       <div class="hud-3d-row">
         <span class="hud-3d-pill" id="hud-3d-lives">♥♥♥</span>
-        <div class="hud-3d-bar"><i id="hud-3d-progress-bar"></i></div>
+        <div class="hud-3d-bar">
+          <i id="hud-3d-progress-bar"></i>
+          <span class="hud-3d-runner" id="hud-3d-runner-p1" style="display:none; color:#00F0FF;">🏃</span>
+          <span class="hud-3d-runner" id="hud-3d-runner-p2" style="display:none; color:#FF007F;">🏃</span>
+        </div>
         <span class="hud-3d-pill" id="hud-3d-time">0.0 s</span>
+        <span class="hud-3d-pill hud-3d-online-rank" id="hud-3d-online-rank" style="display:none;">1º LUGAR</span>
         <span class="hud-3d-pill" id="hud-3d-disc" style="border-color: #2ff3ff; text-shadow: 0 0 8px #2ff3ff;">DISCO [F]</span>
         <button id="btn-pause-3d" class="btn-pause" style="pointer-events: auto; width: 34px; height: 34px; border-color: #2ff3ff;" title="Pausar juego">⏸</button>
       </div>
@@ -700,8 +732,8 @@
     <!-- Modal Pausa 3D -->
     <div id="screen-pause-3d" class="overlay-3d">
       <div class="modal-box-3d">
-        <h2 class="modal-title-3d">PAUSA 3D</h2>
-        <p class="modal-desc-3d">Partida detenida. ¿Qué deseas hacer?</p>
+        <h2 class="modal-title-3d" id="pause-3d-title">PAUSA 3D</h2>
+        <p class="modal-desc-3d" id="pause-3d-desc">Partida detenida. ¿Qué deseas hacer?</p>
         <div class="modal-actions-3d">
           <button id="btn-resume-3d" class="btn-menu btn-primary">▶ CONTINUAR</button>
           <button id="btn-restart-3d" class="btn-menu btn-secondary">🔄 REINICIAR</button>
@@ -714,8 +746,8 @@
     <!-- Modal Fin de Partida / Derrota 3D -->
     <div id="screen-gameover-3d" class="overlay-3d">
       <div class="modal-box-3d">
-        <h2 class="modal-title-3d" style="text-shadow: 0 0 20px #ff2bd6;">SIN ENERGÍA</h2>
-        <p class="modal-desc-3d">Te quedaste sin vidas en el Nivel <span id="gameover-3d-level">1</span>.<br/>Tiempo: <strong id="gameover-3d-time" style="color: #ff2bd6;">0.0 s</strong></p>
+        <h2 class="modal-title-3d" id="gameover-3d-title" style="text-shadow: 0 0 20px #ff2bd6;">SIN ENERGÍA</h2>
+        <p class="modal-desc-3d" id="gameover-3d-desc">Te quedaste sin vidas en el Nivel <span id="gameover-3d-level">1</span>.<br/>Tiempo: <strong id="gameover-3d-time" style="color: #ff2bd6;">0.0 s</strong></p>
         <div class="modal-actions-3d">
           <button id="btn-retry-gameover-3d" class="btn-menu btn-primary">🔄 REINTENTAR</button>
           <button id="btn-levels-from-gameover-3d" class="btn-menu btn-secondary">📋 SELECCIÓN DE NIVELES</button>
@@ -727,13 +759,36 @@
     <!-- Modal Victoria 3D -->
     <div id="screen-victory-3d" class="overlay-3d">
       <div class="modal-box-3d">
-        <h2 class="modal-title-3d" style="text-shadow: 0 0 25px #2ff3ff;">¡META CRUZADA! 🏆</h2>
+        <h2 class="modal-title-3d" id="victory-3d-title" style="text-shadow: 0 0 25px #2ff3ff;">¡META CRUZADA! 🏆</h2>
         <p class="modal-desc-3d" id="victory-3d-msg">¡Cruzaste la meta cibernética del Nivel 1 con éxito!</p>
-        <div style="display: flex; justify-content: space-around; margin: 16px 0; font-family: var(--font-game);">
+
+        <!-- Stats modo Solo -->
+        <div id="victory-3d-solo-stats" style="display: flex; justify-content: space-around; margin: 16px 0; font-family: var(--font-game);">
           <div><div style="font-size: 0.8rem; color: #94a3b8;">TIEMPO</div><div id="victory-3d-time" style="font-size: 1.4rem; color: #2ff3ff; font-weight: 900;">0.0 s</div></div>
           <div><div style="font-size: 0.8rem; color: #94a3b8;">VIDAS</div><div id="victory-3d-lives" style="font-size: 1.4rem; color: #ff2bd6; font-weight: 900;">3 / 3</div></div>
           <div><div style="font-size: 0.8rem; color: #94a3b8;">PUNTOS</div><div id="victory-3d-score" style="font-size: 1.4rem; color: #ffd700; font-weight: 900;">7600</div></div>
         </div>
+
+        <!-- Comparativa Online Multijugador 3D -->
+        <div id="victory-3d-online-comparison" class="hidden" style="margin: 16px 0;">
+          <div class="results-comparison" style="margin: 0; gap: 14px;">
+            <div class="result-col" id="res-3d-p1-col" style="background: rgba(0, 240, 255, 0.08); border: 1px solid var(--c-cyan); border-radius: 12px; padding: 12px;">
+              <h3 id="res-3d-p1-name" style="color: var(--c-cyan); margin-bottom: 8px;">PLAYER 1</h3>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Posición:</span><span id="res-3d-p1-pos" class="highlight" style="font-weight:bold; color:#00F0FF;">WINNER</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Tiempo:</span><span id="res-3d-p1-time">0.0 s</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Monedas:</span><span id="res-3d-p1-coins">0</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Puntos:</span><span id="res-3d-p1-score">0</span></div>
+            </div>
+            <div class="result-col" id="res-3d-p2-col" style="background: rgba(255, 0, 127, 0.08); border: 1px solid var(--c-accent); border-radius: 12px; padding: 12px;">
+              <h3 id="res-3d-p2-name" style="color: var(--c-accent); margin-bottom: 8px;">PLAYER 2</h3>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Posición:</span><span id="res-3d-p2-pos" class="highlight" style="font-weight:bold; color:#FF007F;">RUNNER-UP</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Tiempo:</span><span id="res-3d-p2-time">0.0 s</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Monedas:</span><span id="res-3d-p2-coins">0</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Puntos:</span><span id="res-3d-p2-score">0</span></div>
+            </div>
+          </div>
+        </div>
+
         <div class="modal-actions-3d">
           <button id="btn-next-level-3d" class="btn-menu btn-primary">⏩ SIGUIENTE NIVEL</button>
           <button id="btn-retry-victory-3d" class="btn-menu btn-secondary">🔄 REPETIR NIVEL</button>

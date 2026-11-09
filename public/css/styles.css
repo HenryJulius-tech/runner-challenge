@@ -2283,5 +2283,85 @@ kbd {
   margin-top: 20px;
 }
 
+/* ── Selector de Modo 2D / 3D en Lobby Online ── */
+.online-mode-box {
+  background: rgba(14, 10, 36, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin: 14px auto;
+  max-width: 600px;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.15);
+}
+
+.online-mode-toggle-group {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-family: var(--font-game, Outfit, sans-serif);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-mode-toggle:hover:not(:disabled) {
+  border-color: var(--c-cyan);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-mode-toggle.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(255, 0, 127, 0.3));
+  border-color: var(--c-cyan);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.5), inset 0 0 10px rgba(0, 240, 255, 0.25);
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+}
+
+.btn-mode-toggle:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── Marcadores y HUD en 3D ── */
+.hud-3d-bar {
+  position: relative;
+}
+
+.hud-3d-runner {
+  position: absolute;
+  top: -16px;
+  transform: translateX(-50%);
+  font-size: 16px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px currentColor);
+  transition: left 0.1s linear;
+  z-index: 10;
+}
+
+.hud-3d-online-rank {
+  border-color: #00FF88 !important;
+  text-shadow: 0 0 8px #00FF88 !important;
+  color: #00FF88 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+
 
 

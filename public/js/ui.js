@@ -369,14 +369,24 @@ const UI = (() => {
       showScreen('settings');
     });
 
-    // ── Helper para poblar los 20 niveles en el selector Online ────────────
-    function _populateOnlineLevels() {
+    // ── Helper para poblar los 20 niveles en el selector Online (2D o 3D) ──
+    function _populateOnlineLevels(forceMode) {
       const select = document.getElementById('mp-select-level-online');
-      if (!select || select.children.length > 0) return;
-      const allLevels = LevelConfig.getAllLevels ? LevelConfig.getAllLevels() : [];
+      if (!select) return;
+      const mode = forceMode || onlineState.gameMode || '2d';
+      const is3D = mode === '3d';
+      const allLevels = (is3D && typeof Neon3DLevels !== 'undefined')
+        ? Neon3DLevels.getAllLevels()
+        : (LevelConfig.getAllLevels ? LevelConfig.getAllLevels() : []);
+
+      const prevVal = select.value || '1';
       select.innerHTML = allLevels.map(lvl => 
-        `<option value="${lvl.number}">Nivel ${lvl.number}: ${lvl.name} — [${lvl.difficulty}]</option>`
+        `<option value="${lvl.number}">Nivel ${lvl.number}: ${lvl.name} — [${lvl.difficulty}${is3D ? ' · 3D' : ''}]</option>`
       ).join('');
+
+      if (prevVal && select.querySelector(`option[value="${prevVal}"]`)) {
+        select.value = prevVal;
+      }
     }
 
     // ── Paleta Neón para Corredores ────────────────────────────────────────
@@ -418,6 +428,7 @@ const UI = (() => {
     const onlineState = {
       inRoom: false,
       isHost: false,
+      gameMode: '2d', // '2d' | '3d'
       roomId: null,
       seed: 42,
       level: 1,
@@ -557,14 +568,51 @@ const UI = (() => {
       const badge = document.getElementById('room-code-badge');
       if (badge) badge.textContent = onlineState.roomId || '------';
 
+      // Modo de Juego (2D vs 3D)
+      const btnMode2D = document.getElementById('btn-mode-2d');
+      const btnMode3D = document.getElementById('btn-mode-3d');
+      const guestModeWrap = document.getElementById('online-mode-guest-indicator');
+      const guestModeText = document.getElementById('online-mode-guest-text');
+      const is3D = onlineState.gameMode === '3d';
+
+      if (onlineState.isHost) {
+        btnMode2D?.removeAttribute('disabled');
+        btnMode3D?.removeAttribute('disabled');
+        guestModeWrap?.classList.add('hidden');
+        if (is3D) {
+          btnMode3D?.classList.add('active');
+          btnMode2D?.classList.remove('active');
+        } else {
+          btnMode2D?.classList.add('active');
+          btnMode3D?.classList.remove('active');
+        }
+      } else {
+        btnMode2D?.setAttribute('disabled', 'true');
+        btnMode3D?.setAttribute('disabled', 'true');
+        guestModeWrap?.classList.remove('hidden');
+        if (guestModeText) {
+          guestModeText.textContent = is3D ? '🕶️ Modo 3D Cyberpunk' : '🕹️ Modo 2D Clásico';
+          guestModeText.style.color = is3D ? '#FF007F' : '#00F0FF';
+        }
+        if (is3D) {
+          btnMode3D?.classList.add('active');
+          btnMode2D?.classList.remove('active');
+        } else {
+          btnMode2D?.classList.add('active');
+          btnMode3D?.classList.remove('active');
+        }
+      }
+
       // Nivel
       const hostWrap = document.getElementById('online-level-host-wrap');
       const guestWrap = document.getElementById('online-level-guest-wrap');
       const guestText = document.getElementById('online-level-guest-text');
       const selectLevel = document.getElementById('mp-select-level-online');
 
-      const lvlData = LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null;
-      const lvlLabel = lvlData ? `Nivel ${onlineState.level}: ${lvlData.name}` : `Nivel ${onlineState.level}`;
+      const lvlData = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(onlineState.level) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null);
+      const lvlLabel = lvlData ? `Nivel ${onlineState.level}: ${lvlData.name}${is3D ? ' (3D)' : ''}` : `Nivel ${onlineState.level}`;
 
       if (onlineState.isHost) {
         hostWrap?.classList.remove('hidden');
@@ -746,8 +794,10 @@ const UI = (() => {
         onlineState.p2Name = data.opponentName || 'Rival';
         onlineState.p2Color = data.opponentColor || '#FF007F';
         onlineState.seed = data.seed;
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         onlineState.myReady = false;
         onlineState.opponentReady = false;
+        _populateOnlineLevels();
         _updateOnlineLobbyUI();
         if (AudioManager.playPowerup) AudioManager.playPowerup();
         showToast(`⚡ ¡${onlineState.p2Name} se unió a la sala!`, 'success');
@@ -796,6 +846,7 @@ const UI = (() => {
         onlineState.isHost = Number(res.slot) === 0;
         onlineState.seed = res.seed || onlineState.seed;
         onlineState.level = res.level || onlineState.level;
+        if (res.gameMode) onlineState.gameMode = res.gameMode;
         onlineState.opponentConnected = res.opponentConnected !== false;
         onlineState.p1Name = res.hostName || onlineState.p1Name;
         onlineState.p1Color = res.hostColor || onlineState.p1Color;
@@ -803,6 +854,8 @@ const UI = (() => {
         onlineState.p2Color = res.guestColor || onlineState.p2Color;
         onlineState.myReady = false;
         onlineState.opponentReady = false;
+
+        _populateOnlineLevels();
 
         if (typeof Game !== 'undefined' && Game.state === 'playing') {
           showToast('🔄 Conexión restablecida. La carrera continúa.', 'success');
@@ -814,6 +867,7 @@ const UI = (() => {
       };
 
       Network.onRoomReadyStatus = (data) => {
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         if (onlineState.isHost) {
           onlineState.myReady = data.p1Ready;
           onlineState.opponentReady = data.p2Ready;
@@ -833,7 +887,19 @@ const UI = (() => {
         onlineState.p1Losses = Number(data.p1Losses) || 0;
         onlineState.p2Wins = Number(data.p2Wins) || 0;
         onlineState.p2Losses = Number(data.p2Losses) || 0;
+        _populateOnlineLevels();
         _updateOnlineLobbyUI();
+      };
+
+      Network.onModeUpdated = (data) => {
+        onlineState.gameMode = data.gameMode || '2d';
+        onlineState.level = data.level || onlineState.level;
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+        _populateOnlineLevels();
+        _updateOnlineLobbyUI();
+        const modeLabel = onlineState.gameMode === '3d' ? '3D Cyberpunk' : '2D Clásico';
+        showToast(`🎮 Modo de carrera cambiado a ${modeLabel}.`, 'info');
       };
 
       Network.onMatchStartCountdown = (data) => {
@@ -854,28 +920,45 @@ const UI = (() => {
         const p2Name     = data.p2Name || onlineState.p2Name;
         const p1Color    = data.p1Color || onlineState.p1Color;
         const p2Color    = data.p2Color || onlineState.p2Color;
+        const is3D       = (data.gameMode === '3d') || (onlineState.gameMode === '3d');
 
         setTimeout(() => {
           startCountdown(() => {
-            Game.startLevelOnline(
-              matchLevel,
-              true,
-              onlineState.isHost,
-              matchSeed,
-              onlineState.isHost ? p1Name : p2Name,
-              onlineState.isHost ? p2Name : p1Name,
-              onlineState.isHost ? p1Color : p2Color,
-              onlineState.isHost ? p2Color : p1Color,
-              data.raceId || null
-            );
+            if (is3D && typeof Neon3DUI !== 'undefined') {
+              Neon3DUI.startRaceOnline(
+                matchLevel,
+                {
+                  raceId: data.raceId || null,
+                  seed: matchSeed,
+                  isHost: onlineState.isHost,
+                  myColor: onlineState.isHost ? p1Color : p2Color,
+                  rivalName: onlineState.isHost ? p2Name : p1Name,
+                  rivalColor: onlineState.isHost ? p2Color : p1Color
+                }
+              );
+            } else {
+              Game.startLevelOnline(
+                matchLevel,
+                true,
+                onlineState.isHost,
+                matchSeed,
+                onlineState.isHost ? p1Name : p2Name,
+                onlineState.isHost ? p2Name : p1Name,
+                onlineState.isHost ? p1Color : p2Color,
+                onlineState.isHost ? p2Color : p1Color,
+                data.raceId || null
+              );
+            }
           });
         }, 500);
       };
 
       Network.onLevelUpdated = (data) => {
         onlineState.level = data.level;
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         onlineState.myReady = false;
         onlineState.opponentReady = false;
+        _populateOnlineLevels();
         _updateOnlineLobbyUI();
         showToast(`El Host cambió la carrera al Nivel ${data.level}. Confirmen con ¡Listo!`, 'info');
       };
@@ -891,13 +974,19 @@ const UI = (() => {
 
       Network.onRoomReturnedToLobby = (data) => {
         if (typeof Game !== 'undefined') Game.stopLoop();
+        if (typeof Neon3DEngine !== 'undefined') Neon3DEngine.stop();
 
         hideScreen('game');
+        hideScreen('game-3d');
         hideScreen('results');
         hideScreen('gameover');
         hidePause();
+        document.getElementById('screen-pause-3d')?.classList.remove('active');
+        document.getElementById('screen-gameover-3d')?.classList.remove('active');
+        document.getElementById('screen-victory-3d')?.classList.remove('active');
 
         onlineState.inRoom = true;
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         onlineState.level = data.level || onlineState.level;
         onlineState.seed = data.seed || Math.floor(Math.random() * 10000);
         onlineState.myReady = false;
@@ -910,12 +999,14 @@ const UI = (() => {
         onlineState.p2Color = data.p2Color || onlineState.p2Color;
 
         showScreen('lobby');
+        _populateOnlineLevels();
         _showOnlineLobbyView(true);
         _updateOnlineLobbyUI();
 
+        const modeTxt = onlineState.gameMode === '3d' ? '3D Cyberpunk' : '2D';
         const msg = data.reason === 'restart'
-          ? `↺ Revancha en el Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`
-          : `🏁 Pasando al Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`;
+          ? `↺ Revancha en el Nivel ${onlineState.level} (${modeTxt}). ¡Pulsen "¡ESTOY LISTO!"!`
+          : `🏁 Pasando al Nivel ${onlineState.level} (${modeTxt}). ¡Pulsen "¡ESTOY LISTO!"!`;
         showToast(msg, 'info');
       };
     }
@@ -940,13 +1031,62 @@ const UI = (() => {
     });
 
     // ── Lobby Online ────────────────────────────────────────────────────────
-    document.getElementById('btn-online')?.addEventListener('click', () => {
+    const _openOnlineLobby = (defaultMode = '2d') => {
       AudioManager.init();
       showScreen('lobby');
       _setupNetworkListeners();
       Network.init();
-      _populateOnlineLevels();
+      onlineState.gameMode = defaultMode;
+      _populateOnlineLevels(defaultMode);
       _showOnlineLobbyView(false);
+      const btn2D = document.getElementById('btn-mode-2d');
+      const btn3D = document.getElementById('btn-mode-3d');
+      if (defaultMode === '3d') {
+        btn3D?.classList.add('active');
+        btn2D?.classList.remove('active');
+      } else {
+        btn2D?.classList.add('active');
+        btn3D?.classList.remove('active');
+      }
+    };
+
+    document.getElementById('btn-online')?.addEventListener('click', () => {
+      _openOnlineLobby('2d');
+    });
+
+    document.getElementById('btn-online-3d-menu')?.addEventListener('click', () => {
+      _openOnlineLobby('3d');
+    });
+
+    document.getElementById('btn-online-from-3d')?.addEventListener('click', () => {
+      _openOnlineLobby('3d');
+    });
+
+    // ── Conmutador de modo 2D / 3D en la sala ────────────────────────────────
+    document.getElementById('btn-mode-2d')?.addEventListener('click', () => {
+      if (!onlineState.isHost) return;
+      if (onlineState.gameMode === '2d') return;
+      onlineState.gameMode = '2d';
+      onlineState.myReady = false;
+      onlineState.opponentReady = false;
+      _populateOnlineLevels('2d');
+      const lvlData = LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null;
+      Network.changeGameMode('2d', onlineState.level, lvlData?.levelLength || 3200);
+      _updateOnlineLobbyUI();
+      showToast('🎮 Modo cambiado a 2D Clásico.', 'info');
+    });
+
+    document.getElementById('btn-mode-3d')?.addEventListener('click', () => {
+      if (!onlineState.isHost) return;
+      if (onlineState.gameMode === '3d') return;
+      onlineState.gameMode = '3d';
+      onlineState.myReady = false;
+      onlineState.opponentReady = false;
+      _populateOnlineLevels('3d');
+      const lvlData = typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(onlineState.level) : null;
+      Network.changeGameMode('3d', onlineState.level, lvlData?.finishDistance || 650);
+      _updateOnlineLobbyUI();
+      showToast('🕶️ Modo cambiado a 3D Cyberpunk.', 'info');
     });
     
     document.getElementById('btn-back-lobby')?.addEventListener('click', () => {
@@ -972,11 +1112,17 @@ const UI = (() => {
       const pName = ScoreManager.getPlayerName() || 'Host';
       const selLevel = parseInt(document.getElementById('mp-select-level-online')?.value || '1', 10);
       const pColor = onlineState.p1Color || '#00F0FF';
+      const is3D = onlineState.gameMode === '3d';
+      const lvlInfo = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(selLevel) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(selLevel) : null);
+      const goalDist = is3D ? (lvlInfo?.finishDistance || 650) : (lvlInfo?.levelLength || 3200);
 
-      Network.createRoom({ name: pName, level: selLevel, color: pColor }, (res) => {
+      Network.createRoom({ name: pName, level: selLevel, color: pColor, gameMode: onlineState.gameMode || '2d', goalWorldX: goalDist }, (res) => {
         if (res && res.success) {
           onlineState.isHost = true;
           onlineState.roomId = res.roomId;
+          onlineState.gameMode = res.gameMode || onlineState.gameMode || '2d';
           onlineState.seed = res.seed;
           onlineState.level = res.level || selLevel;
           onlineState.p1Name = pName;
@@ -991,9 +1137,11 @@ const UI = (() => {
           onlineState.p2Wins = 0;
           onlineState.p2Losses = 0;
 
+          _populateOnlineLevels();
           _showOnlineLobbyView(true);
           _updateOnlineLobbyUI();
-          showToast(`¡Sala ${res.roomId} creada! Comparte el código o enlace con tu rival`, 'success');
+          const modeTag = onlineState.gameMode === '3d' ? '3D' : '2D';
+          showToast(`¡Sala ${res.roomId} (${modeTag}) creada! Comparte el código o enlace con tu rival`, 'success');
         } else {
           showToast('Error al crear sala: ' + (res?.message || 'Sin conexión'), 'danger');
         }
@@ -1022,6 +1170,7 @@ const UI = (() => {
         if (res && res.success) {
           onlineState.isHost = false;
           onlineState.roomId = res.roomId;
+          onlineState.gameMode = res.gameMode || '2d';
           onlineState.seed = res.seed;
           onlineState.level = res.level || 1;
           onlineState.p1Name = res.hostName || 'Host';
@@ -1036,10 +1185,12 @@ const UI = (() => {
           onlineState.p2Wins = 0;
           onlineState.p2Losses = 0;
 
+          _populateOnlineLevels();
           _showOnlineLobbyView(true);
           _updateOnlineLobbyUI();
           if (AudioManager.playPowerup) AudioManager.playPowerup();
-          showToast(`¡Conectado a la sala ${code}! Pulsa ¡ESTOY LISTO!`, 'success');
+          const modeTag = onlineState.gameMode === '3d' ? '3D' : '2D';
+          showToast(`¡Conectado a la sala ${code} (${modeTag})! Pulsa ¡ESTOY LISTO!`, 'success');
         } else {
           if (statusEl) statusEl.textContent = '❌ ' + (res?.message || 'Error al unirse');
           showToast(res?.message || 'Error al unirse a la sala', 'danger');
@@ -1056,8 +1207,12 @@ const UI = (() => {
 
       const myName = onlineState.isHost ? onlineState.p1Name : onlineState.p2Name;
       const myColor = onlineState.isHost ? onlineState.p1Color : onlineState.p2Color;
-      const levelInfo = LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null;
-      Network.sendReady(onlineState.myReady, myName, myColor, levelInfo?.levelLength);
+      const is3D = onlineState.gameMode === '3d';
+      const levelInfo = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(onlineState.level) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null);
+      const goalDist = is3D ? (levelInfo?.finishDistance || 650) : (levelInfo?.levelLength || 3200);
+      Network.sendReady(onlineState.myReady, myName, myColor, goalDist);
       _updateOnlineLobbyUI();
     });
 
@@ -1068,8 +1223,12 @@ const UI = (() => {
       onlineState.level = newLevel;
       onlineState.myReady = false;
       onlineState.opponentReady = false;
-      const levelInfo = LevelConfig.getLevelData ? LevelConfig.getLevelData(newLevel) : null;
-      Network.changeLevel(newLevel, levelInfo?.levelLength);
+      const is3D = onlineState.gameMode === '3d';
+      const levelInfo = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(newLevel) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(newLevel) : null);
+      const goalDist = is3D ? (levelInfo?.finishDistance || 650) : (levelInfo?.levelLength || 3200);
+      Network.changeLevel(newLevel, goalDist, onlineState.gameMode);
       _updateOnlineLobbyUI();
       showToast(`Nivel cambiado al Nivel ${newLevel}. Ambos deben confirmar con ¡Listo!`, 'info');
     });

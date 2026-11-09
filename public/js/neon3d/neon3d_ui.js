@@ -12,6 +12,8 @@ const Neon3DUI = (() => {
 
   let isInitialized = false;
   let activeLevel = 1;
+  let isOnlineGame = false;
+  let onlineOptions = {};
 
   function init() {
     if (isInitialized) return;
@@ -83,12 +85,19 @@ const Neon3DUI = (() => {
 
     document.getElementById('btn-restart-3d')?.addEventListener('click', () => {
       _closeAllOverlays();
-      startRace(activeLevel);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'restart', gameMode: '3d' });
+      } else {
+        startRace(activeLevel);
+      }
     });
 
     document.getElementById('btn-exit-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('menu');
       }
@@ -97,13 +106,19 @@ const Neon3DUI = (() => {
     // ── Fin de Partida / Derrota 3D ─────────────────────────────────────────
     document.getElementById('btn-retry-gameover-3d')?.addEventListener('click', () => {
       _closeAllOverlays();
-      startRace(activeLevel);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'restart', gameMode: '3d' });
+      } else {
+        startRace(activeLevel);
+      }
     });
 
     document.getElementById('btn-levels-from-gameover-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
-      if (typeof UI !== 'undefined' && UI.showScreen) {
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'lobby', gameMode: '3d' });
+      } else if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('levels-3d');
       }
     });
@@ -111,6 +126,9 @@ const Neon3DUI = (() => {
     document.getElementById('btn-exit-gameover-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('menu');
       }
@@ -121,18 +139,28 @@ const Neon3DUI = (() => {
       _closeAllOverlays();
       const maxLevels = typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.TOTAL_LEVELS : 20;
       const nextLvl = Math.min(maxLevels, activeLevel + 1);
-      startRace(nextLvl);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ nextLevel: true, level: nextLvl, gameMode: '3d' });
+      } else {
+        startRace(nextLvl);
+      }
     });
 
     document.getElementById('btn-retry-victory-3d')?.addEventListener('click', () => {
       _closeAllOverlays();
-      startRace(activeLevel);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'restart', gameMode: '3d' });
+      } else {
+        startRace(activeLevel);
+      }
     });
 
     document.getElementById('btn-levels-from-victory-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
-      if (typeof UI !== 'undefined' && UI.showScreen) {
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'lobby', gameMode: '3d' });
+      } else if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('levels-3d');
       }
     });
@@ -140,6 +168,9 @@ const Neon3DUI = (() => {
     document.getElementById('btn-exit-victory-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('menu');
       }
@@ -148,7 +179,9 @@ const Neon3DUI = (() => {
     document.getElementById('btn-levels-from-pause-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
-      if (typeof UI !== 'undefined' && UI.showScreen) {
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'lobby', gameMode: '3d' });
+      } else if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('levels-3d');
       }
     });
@@ -219,11 +252,13 @@ const Neon3DUI = (() => {
   }
 
   /**
-   * Inicia la carrera en el nivel 3D especificado
+   * Inicia la carrera en el nivel 3D especificado (Solo)
    */
   function startRace(levelNum = 1) {
     init();
     activeLevel = levelNum;
+    isOnlineGame = false;
+    onlineOptions = {};
 
     if (typeof UI !== 'undefined' && UI.showScreen) {
       UI.showScreen('game-3d');
@@ -233,6 +268,33 @@ const Neon3DUI = (() => {
 
     Neon3DEngine.resize();
     Neon3DEngine.start(activeLevel);
+  }
+
+  /**
+   * Inicia la carrera en el nivel 3D en modo Multiplayer Online
+   */
+  function startRaceOnline(levelNum = 1, options = {}) {
+    init();
+    activeLevel = levelNum;
+    isOnlineGame = true;
+    onlineOptions = options;
+
+    if (typeof UI !== 'undefined' && UI.showScreen) {
+      UI.showScreen('game-3d');
+    }
+
+    _closeAllOverlays();
+
+    Neon3DEngine.resize();
+    Neon3DEngine.start(activeLevel, {
+      isOnline: true,
+      raceId: options.raceId,
+      seed: options.seed,
+      myColor: options.myColor,
+      rivalName: options.rivalName,
+      rivalColor: options.rivalColor,
+      isHost: options.isHost
+    });
   }
 
   function _updateHud(data) {
@@ -246,6 +308,35 @@ const Neon3DUI = (() => {
     const progEl = document.getElementById('hud-3d-progress-bar');
     if (progEl) {
       progEl.style.width = `${data.progress}%`;
+    }
+
+    // Marcadores de jugadores en el progreso (Online)
+    const markerP1 = document.getElementById('hud-3d-runner-p1');
+    const markerP2 = document.getElementById('hud-3d-runner-p2');
+    const rankPill = document.getElementById('hud-3d-online-rank');
+
+    if (data.isOnline) {
+      if (markerP1) {
+        markerP1.style.display = 'block';
+        markerP1.style.left = `${data.playerProgress}%`;
+        if (onlineOptions.myColor) markerP1.style.color = onlineOptions.myColor;
+      }
+      if (markerP2) {
+        markerP2.style.display = 'block';
+        markerP2.style.left = `${data.rivalProgress}%`;
+        if (onlineOptions.rivalColor) markerP2.style.color = onlineOptions.rivalColor;
+      }
+      if (rankPill) {
+        rankPill.style.display = 'inline-block';
+        const gapTxt = data.isFirst ? `+${Math.max(0, data.distGap)}m` : `${data.distGap}m`;
+        rankPill.textContent = `${data.isFirst ? '1º LUGAR' : '2º LUGAR'} (${gapTxt})`;
+        rankPill.style.color = data.isFirst ? '#00FF88' : '#FF007F';
+        rankPill.style.borderColor = data.isFirst ? '#00FF88' : '#FF007F';
+      }
+    } else {
+      if (markerP1) markerP1.style.display = 'none';
+      if (markerP2) markerP2.style.display = 'none';
+      if (rankPill) rankPill.style.display = 'none';
     }
 
     // Cronómetro
@@ -292,19 +383,140 @@ const Neon3DUI = (() => {
     }, 1400);
   }
 
-  function _handlePause(isPaused) {
+  function _handlePause(isPaused, isLiveOnline = false) {
     const pauseScreen = document.getElementById('screen-pause-3d');
     if (!pauseScreen) return;
-    if (isPaused) pauseScreen.classList.add('active');
-    else pauseScreen.classList.remove('active');
+
+    if (isPaused) {
+      const titleEl = document.getElementById('pause-3d-title');
+      const descEl = document.getElementById('pause-3d-desc');
+      const restartBtn = document.getElementById('btn-restart-3d');
+      const levelsBtn = document.getElementById('btn-levels-from-pause-3d');
+      const exitBtn = document.getElementById('btn-exit-3d');
+
+      if (isLiveOnline) {
+        if (titleEl) titleEl.textContent = 'PAUSA 3D (CARRERA EN VIVO)';
+        if (descEl) descEl.textContent = 'La carrera online continúa en tiempo real en la pista.';
+        if (restartBtn) restartBtn.style.display = 'none';
+        if (levelsBtn) levelsBtn.style.display = 'none';
+        if (exitBtn) exitBtn.textContent = '🚪 ABANDONAR SALA';
+      } else {
+        if (titleEl) titleEl.textContent = 'PAUSA 3D';
+        if (descEl) descEl.textContent = 'Partida detenida. ¿Qué deseas hacer?';
+        if (restartBtn) restartBtn.style.display = 'block';
+        if (levelsBtn) levelsBtn.style.display = 'block';
+        if (exitBtn) exitBtn.textContent = '🚪 SALIR AL MENÚ';
+      }
+      pauseScreen.classList.add('active');
+    } else {
+      pauseScreen.classList.remove('active');
+    }
   }
 
   function _handleGameEnd(win, stats) {
     activeLevel = stats.level;
     const maxLevels = typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.TOTAL_LEVELS : 20;
 
+    const victoryScreen = document.getElementById('screen-victory-3d');
+    const soloStats = document.getElementById('victory-3d-solo-stats');
+    const onlineComp = document.getElementById('victory-3d-online-comparison');
+    const titleEl = document.getElementById('victory-3d-title');
+    const msgEl = document.getElementById('victory-3d-msg');
+    const nextBtn = document.getElementById('btn-next-level-3d');
+    const retryBtn = document.getElementById('btn-retry-victory-3d');
+    const levelsBtn = document.getElementById('btn-levels-from-victory-3d');
+    const exitBtn = document.getElementById('btn-exit-victory-3d');
+
+    if (stats.isOnline) {
+      // ══════════════════════════════════════════════════════════════════
+      // MODAL RESULTADOS MULTIJUGADOR ONLINE 3D
+      // ══════════════════════════════════════════════════════════════════
+      _closeAllOverlays();
+      if (victoryScreen) {
+        if (soloStats) soloStats.style.display = 'none';
+        if (onlineComp) onlineComp.classList.remove('hidden');
+
+        const myRes = stats.myResult || {};
+        const oppRes = stats.oppResult || {};
+        const isWinner = !!myRes.isWinner;
+
+        if (titleEl) {
+          titleEl.textContent = isWinner ? '¡VICTORIA ONLINE! 🥇' : '2º LUGAR ONLINE 🥈';
+          titleEl.style.textShadow = isWinner ? '0 0 25px #00F0FF, 0 0 40px #FFD700' : '0 0 25px #FF007F';
+        }
+        if (msgEl) {
+          msgEl.textContent = isWinner
+            ? `¡Cruzaste la meta cibernética en 1º puesto del Nivel ${stats.level}!`
+            : `¡Buena carrera! El ganador fue ${stats.winnerName || oppRes.name || 'tu rival'}.`;
+        }
+
+        // Columna Local
+        const p1Name = document.getElementById('res-3d-p1-name');
+        const p1Pos = document.getElementById('res-3d-p1-pos');
+        const p1Time = document.getElementById('res-3d-p1-time');
+        const p1Coins = document.getElementById('res-3d-p1-coins');
+        const p1Score = document.getElementById('res-3d-p1-score');
+        const p1Col = document.getElementById('res-3d-p1-col');
+
+        if (p1Name) {
+          p1Name.textContent = myRes.name || 'Tú';
+          p1Name.style.color = myRes.color || '#00F0FF';
+        }
+        if (p1Col) p1Col.style.borderColor = myRes.color || '#00F0FF';
+        if (p1Pos) {
+          p1Pos.textContent = isWinner ? '1º WINNER 🥇' : '2º PUESTO 🥈';
+          p1Pos.style.color = isWinner ? '#FFD700' : '#cbd5e1';
+        }
+        if (p1Time) p1Time.textContent = `${myRes.time || stats.time} s`;
+        if (p1Coins) p1Coins.textContent = String(myRes.coins ?? stats.coins);
+        if (p1Score) p1Score.textContent = String(myRes.score ?? stats.score);
+
+        // Columna Rival
+        const p2Name = document.getElementById('res-3d-p2-name');
+        const p2Pos = document.getElementById('res-3d-p2-pos');
+        const p2Time = document.getElementById('res-3d-p2-time');
+        const p2Coins = document.getElementById('res-3d-p2-coins');
+        const p2Score = document.getElementById('res-3d-p2-score');
+        const p2Col = document.getElementById('res-3d-p2-col');
+
+        if (p2Name) {
+          p2Name.textContent = oppRes.name || 'Rival';
+          p2Name.style.color = oppRes.color || '#FF007F';
+        }
+        if (p2Col) p2Col.style.borderColor = oppRes.color || '#FF007F';
+        if (p2Pos) {
+          p2Pos.textContent = oppRes.isWinner ? '1º WINNER 🥇' : '2º PUESTO 🥈';
+          p2Pos.style.color = oppRes.isWinner ? '#FFD700' : '#cbd5e1';
+        }
+        if (p2Time) p2Time.textContent = oppRes.time ? `${oppRes.time} s` : '--';
+        if (p2Coins) p2Coins.textContent = String(oppRes.coins ?? 0);
+        if (p2Score) p2Score.textContent = String(oppRes.score ?? 0);
+
+        // Botones de acción
+        if (nextBtn) {
+          if (onlineOptions.isHost) {
+            nextBtn.style.display = 'block';
+            nextBtn.textContent = `⏩ SIGUIENTE NIVEL (${Math.min(maxLevels, stats.level + 1)})`;
+          } else {
+            nextBtn.style.display = 'none';
+          }
+        }
+        if (retryBtn) retryBtn.textContent = '🔄 REVANCHA';
+        if (levelsBtn) levelsBtn.textContent = '📋 SALIR AL LOBBY';
+        if (exitBtn) exitBtn.textContent = '🏠 MENÚ PRINCIPAL';
+
+        victoryScreen.classList.add('active');
+      }
+      return;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // MODO SOLO (ORIGINAL)
+    // ══════════════════════════════════════════════════════════════════
+    if (soloStats) soloStats.style.display = 'flex';
+    if (onlineComp) onlineComp.classList.add('hidden');
+
     if (win) {
-      // Guardar récord y desbloquear siguiente nivel
       if (typeof ScoreManager !== 'undefined') {
         ScoreManager.saveResults({
           level: stats.level,
@@ -313,17 +525,16 @@ const Neon3DUI = (() => {
         });
       }
 
-      const victoryScreen = document.getElementById('screen-victory-3d');
       if (victoryScreen) {
-        const msgEl = document.getElementById('victory-3d-msg');
-        if (msgEl) {
-          msgEl.textContent = `¡Cruzaste la meta cibernética del Nivel ${stats.level} con éxito!`;
+        if (titleEl) {
+          titleEl.textContent = '¡META CRUZADA! 🏆';
+          titleEl.style.textShadow = '0 0 25px #2ff3ff';
         }
+        if (msgEl) msgEl.textContent = `¡Cruzaste la meta cibernética del Nivel ${stats.level} con éxito!`;
         document.getElementById('victory-3d-time').textContent = `${stats.time} s`;
         document.getElementById('victory-3d-lives').textContent = `${stats.lives} / 3`;
         document.getElementById('victory-3d-score').textContent = stats.score;
 
-        const nextBtn = document.getElementById('btn-next-level-3d');
         if (nextBtn) {
           if (stats.level < maxLevels) {
             nextBtn.style.display = 'block';
@@ -332,6 +543,9 @@ const Neon3DUI = (() => {
             nextBtn.style.display = 'none';
           }
         }
+        if (retryBtn) retryBtn.textContent = '🔄 REPETIR NIVEL';
+        if (levelsBtn) levelsBtn.textContent = '📋 SELECCIÓN DE NIVELES';
+        if (exitBtn) exitBtn.textContent = '🚪 MENÚ PRINCIPAL';
 
         victoryScreen.classList.add('active');
       }
@@ -349,6 +563,7 @@ const Neon3DUI = (() => {
   return {
     init,
     startRace,
+    startRaceOnline,
     showToast,
     renderLevels3DGrid,
     get activeLevel() { return activeLevel; }

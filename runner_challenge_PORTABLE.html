@@ -1733,6 +1733,178 @@ kbd {
   padding: 10px;
 }
 
+/* ── Tabla de puntuación de la sala online ─────────────────────────────── */
+.online-scoreboard {
+  width: 100%;
+  margin: 22px auto 18px;
+  background: rgba(8, 12, 28, 0.82);
+  border: 1px solid rgba(0, 240, 255, 0.22);
+  border-radius: 14px;
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.08), inset 0 0 20px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.online-scoreboard-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.12), rgba(255, 0, 127, 0.12));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #eafcff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.8px;
+}
+
+.online-scoreboard-sub {
+  color: var(--c-muted, #94a3b8);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.online-scoreboard-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.online-scoreboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+}
+
+.online-scoreboard-table th {
+  padding: 9px 10px;
+  color: #8ea3b8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.online-scoreboard-table td {
+  padding: 11px 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.online-scoreboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.online-scoreboard-table .col-pos { width: 42px; }
+.online-scoreboard-table .col-player { text-align: left; }
+.online-scoreboard-table .col-stat { width: 84px; }
+.online-scoreboard-table .col-state { width: 116px; }
+
+.online-scoreboard-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.online-scoreboard-table tbody tr.is-leader {
+  background: rgba(0, 240, 255, 0.07);
+}
+
+.online-scoreboard-table tbody tr.is-trailing {
+  opacity: 0.78;
+}
+
+.scoreboard-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.scoreboard-player-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.scoreboard-player-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.scoreboard-position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #b8c6d6;
+  font-weight: 800;
+  font-size: 0.78rem;
+}
+
+.online-scoreboard-table tbody tr.is-leader .scoreboard-position {
+  background: rgba(0, 240, 255, 0.18);
+  color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+}
+
+.scoreboard-stat-win {
+  color: #00ff88;
+  font-weight: 800;
+}
+
+.scoreboard-stat-loss {
+  color: #ff4d7d;
+  font-weight: 700;
+}
+
+.scoreboard-state {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.scoreboard-state.winning {
+  background: rgba(0, 255, 136, 0.12);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  color: #00ff88;
+}
+
+.scoreboard-state.losing {
+  background: rgba(255, 77, 125, 0.1);
+  border: 1px solid rgba(255, 77, 125, 0.3);
+  color: #ff6a93;
+}
+
+.scoreboard-state.neutral {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+@media (max-width: 540px) {
+  .online-scoreboard-table { font-size: 0.8rem; }
+  .online-scoreboard-table .col-stat { width: 62px; }
+  .online-scoreboard-table .col-state { width: 90px; }
+  .online-scoreboard-table th,
+  .online-scoreboard-table td { padding: 9px 6px; }
+  .online-scoreboard-sub { display: none; }
+}
+
 .online-ready-action-box {
   display: flex;
   flex-direction: column;
@@ -2124,6 +2296,86 @@ kbd {
   margin-top: 20px;
 }
 
+/* ── Selector de Modo 2D / 3D en Lobby Online ── */
+.online-mode-box {
+  background: rgba(14, 10, 36, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin: 14px auto;
+  max-width: 600px;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.15);
+}
+
+.online-mode-toggle-group {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-family: var(--font-game, Outfit, sans-serif);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-mode-toggle:hover:not(:disabled) {
+  border-color: var(--c-cyan);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-mode-toggle.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(255, 0, 127, 0.3));
+  border-color: var(--c-cyan);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.5), inset 0 0 10px rgba(0, 240, 255, 0.25);
+  text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+}
+
+.btn-mode-toggle:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── Marcadores y HUD en 3D ── */
+.hud-3d-bar {
+  position: relative;
+}
+
+.hud-3d-runner {
+  position: absolute;
+  top: -16px;
+  transform: translateX(-50%);
+  font-size: 16px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px currentColor);
+  transition: left 0.1s linear;
+  z-index: 10;
+}
+
+.hud-3d-online-rank {
+  border-color: #00FF88 !important;
+  text-shadow: 0 0 8px #00FF88 !important;
+  color: #00FF88 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+
 
 
 
@@ -2157,6 +2409,10 @@ kbd {
           style="background: linear-gradient(135deg, rgba(255,43,214,0.35), rgba(47,243,255,0.35)); border-color: #2ff3ff; box-shadow: 0 0 22px rgba(47,243,255,0.4);">
           <span class="btn-icon">🕶️</span> JUGAR NEON RUN 3D
         </button>
+        <button id="btn-online-3d-menu" class="btn-menu btn-primary"
+          style="background: linear-gradient(135deg, rgba(0,240,255,0.25), rgba(255,0,127,0.25)); border-color: #ff2bd6; box-shadow: 0 0 22px rgba(255,43,214,0.4);">
+          <span class="btn-icon">🌐🕶️</span> MULTIPLAYER ONLINE 3D (NUEVO)
+        </button>
         <button id="btn-play-solo" class="btn-menu btn-secondary">
           <span class="btn-icon">▶</span> JUGAR SOLO (2D)
         </button>
@@ -2164,7 +2420,7 @@ kbd {
           <span class="btn-icon">👥</span> MULTIPLAYER LOCAL (2 JUGADORES)
         </button>
         <button id="btn-online" class="btn-menu btn-secondary">
-          <span class="btn-icon">🌐</span> MULTIPLAYER ONLINE (NUEVO)
+          <span class="btn-icon">🌐</span> MULTIPLAYER ONLINE (2D / 3D)
         </button>
         <button id="btn-levels" class="btn-menu btn-outline">
           <span class="btn-icon">📋</span> NIVELES (DEMO)
@@ -2367,6 +2623,23 @@ kbd {
           </div>
         </div>
 
+        <!-- Selector de Modo de Juego (2D Clásico / 3D Cyberpunk) -->
+        <div class="online-mode-box">
+          <label style="font-weight: 600; color: var(--c-cyan); display: block; margin-bottom: 8px; text-align: center;">🎮 MODO DE CARRERA MULTIPLAYER:</label>
+          <div class="online-mode-toggle-group" id="online-mode-toggle-group">
+            <button type="button" class="btn-mode-toggle active" id="btn-mode-2d" data-mode="2d">
+              <span>🕹️</span> MODO 2D CLÁSICO
+            </button>
+            <button type="button" class="btn-mode-toggle" id="btn-mode-3d" data-mode="3d">
+              <span>🕶️</span> MODO 3D CYBERPUNK
+            </button>
+          </div>
+          <div id="online-mode-guest-indicator" class="hidden" style="text-align: center; margin-top: 8px;">
+            <span style="font-size: 0.85rem; color: var(--c-muted); font-weight: 600;">Modo de juego:</span>
+            <div id="online-mode-guest-text" style="color: #00F0FF; font-weight: 700; font-size: 1.1rem; margin-top: 2px;">🕹️ 2D Clásico</div>
+          </div>
+        </div>
+
         <!-- Selector / Estado de Nivel -->
         <div class="online-level-box">
           <div id="online-level-host-wrap">
@@ -2445,6 +2718,43 @@ kbd {
             <div class="lobby-status-pill status-disconnected" id="lobby-p2-status">
               <span class="status-icon">⌛</span> <span class="status-txt">ESPERANDO...</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Tabla de puntuación de la sala (victorias/derrotas entre carreras) -->
+        <div class="online-scoreboard" id="online-scoreboard">
+          <div class="online-scoreboard-title">
+            <span>🏆 MARCADOR DE LA SALA</span>
+            <span class="online-scoreboard-sub">Se actualiza al terminar cada carrera</span>
+          </div>
+          <div class="online-scoreboard-table-wrap">
+            <table class="online-scoreboard-table">
+              <thead>
+                <tr>
+                  <th class="col-pos">#</th>
+                  <th class="col-player">Jugador</th>
+                  <th class="col-stat">Ganadas</th>
+                  <th class="col-stat">Perdidas</th>
+                  <th class="col-state">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="online-scoreboard-body">
+                <tr>
+                  <td class="col-pos">1</td>
+                  <td class="col-player">Host</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-state"><span class="scoreboard-state neutral">SIN PARTIDAS</span></td>
+                </tr>
+                <tr>
+                  <td class="col-pos">2</td>
+                  <td class="col-player">Esperando rival...</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-stat">0</td>
+                  <td class="col-state"><span class="scoreboard-state neutral">SIN PARTIDAS</span></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -2734,6 +3044,12 @@ kbd {
       <button class="btn-back" id="btn-back-levels-3d">← Volver</button>
       <h2 class="screen-title" style="text-shadow: 0 0 15px #2ff3ff, 0 0 30px #ff2bd6;">🕶️ SELECCIÓN DE NIVELES 3D</h2>
     </div>
+    <div style="text-align: center; margin: 12px 0 18px;">
+      <button id="btn-online-from-3d" class="btn-menu btn-primary"
+        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 28px; background: linear-gradient(135deg, rgba(255,43,214,0.35), rgba(47,243,255,0.35)); border-color: #2ff3ff; box-shadow: 0 0 18px rgba(47,243,255,0.4); font-size: 1rem; border-radius: 28px; cursor: pointer;">
+        <span class="btn-icon">🌐</span> JUGAR MULTIPLAYER ONLINE EN 3D
+      </button>
+    </div>
     <div class="levels-grid" id="levels-3d-grid">
       <!-- Generado dinámicamente por neon3d_ui.js -->
     </div>
@@ -2749,8 +3065,13 @@ kbd {
     <div id="hud-3d">
       <div class="hud-3d-row">
         <span class="hud-3d-pill" id="hud-3d-lives">♥♥♥</span>
-        <div class="hud-3d-bar"><i id="hud-3d-progress-bar"></i></div>
+        <div class="hud-3d-bar">
+          <i id="hud-3d-progress-bar"></i>
+          <span class="hud-3d-runner" id="hud-3d-runner-p1" style="display:none; color:#00F0FF;">🏃</span>
+          <span class="hud-3d-runner" id="hud-3d-runner-p2" style="display:none; color:#FF007F;">🏃</span>
+        </div>
         <span class="hud-3d-pill" id="hud-3d-time">0.0 s</span>
+        <span class="hud-3d-pill hud-3d-online-rank" id="hud-3d-online-rank" style="display:none;">1º LUGAR</span>
         <span class="hud-3d-pill" id="hud-3d-disc" style="border-color: #2ff3ff; text-shadow: 0 0 8px #2ff3ff;">DISCO [F]</span>
         <button id="btn-pause-3d" class="btn-pause" style="pointer-events: auto; width: 34px; height: 34px; border-color: #2ff3ff;" title="Pausar juego">⏸</button>
       </div>
@@ -2779,8 +3100,8 @@ kbd {
     <!-- Modal Pausa 3D -->
     <div id="screen-pause-3d" class="overlay-3d">
       <div class="modal-box-3d">
-        <h2 class="modal-title-3d">PAUSA 3D</h2>
-        <p class="modal-desc-3d">Partida detenida. ¿Qué deseas hacer?</p>
+        <h2 class="modal-title-3d" id="pause-3d-title">PAUSA 3D</h2>
+        <p class="modal-desc-3d" id="pause-3d-desc">Partida detenida. ¿Qué deseas hacer?</p>
         <div class="modal-actions-3d">
           <button id="btn-resume-3d" class="btn-menu btn-primary">▶ CONTINUAR</button>
           <button id="btn-restart-3d" class="btn-menu btn-secondary">🔄 REINICIAR</button>
@@ -2793,8 +3114,8 @@ kbd {
     <!-- Modal Fin de Partida / Derrota 3D -->
     <div id="screen-gameover-3d" class="overlay-3d">
       <div class="modal-box-3d">
-        <h2 class="modal-title-3d" style="text-shadow: 0 0 20px #ff2bd6;">SIN ENERGÍA</h2>
-        <p class="modal-desc-3d">Te quedaste sin vidas en el Nivel <span id="gameover-3d-level">1</span>.<br/>Tiempo: <strong id="gameover-3d-time" style="color: #ff2bd6;">0.0 s</strong></p>
+        <h2 class="modal-title-3d" id="gameover-3d-title" style="text-shadow: 0 0 20px #ff2bd6;">SIN ENERGÍA</h2>
+        <p class="modal-desc-3d" id="gameover-3d-desc">Te quedaste sin vidas en el Nivel <span id="gameover-3d-level">1</span>.<br/>Tiempo: <strong id="gameover-3d-time" style="color: #ff2bd6;">0.0 s</strong></p>
         <div class="modal-actions-3d">
           <button id="btn-retry-gameover-3d" class="btn-menu btn-primary">🔄 REINTENTAR</button>
           <button id="btn-levels-from-gameover-3d" class="btn-menu btn-secondary">📋 SELECCIÓN DE NIVELES</button>
@@ -2806,13 +3127,36 @@ kbd {
     <!-- Modal Victoria 3D -->
     <div id="screen-victory-3d" class="overlay-3d">
       <div class="modal-box-3d">
-        <h2 class="modal-title-3d" style="text-shadow: 0 0 25px #2ff3ff;">¡META CRUZADA! 🏆</h2>
+        <h2 class="modal-title-3d" id="victory-3d-title" style="text-shadow: 0 0 25px #2ff3ff;">¡META CRUZADA! 🏆</h2>
         <p class="modal-desc-3d" id="victory-3d-msg">¡Cruzaste la meta cibernética del Nivel 1 con éxito!</p>
-        <div style="display: flex; justify-content: space-around; margin: 16px 0; font-family: var(--font-game);">
+
+        <!-- Stats modo Solo -->
+        <div id="victory-3d-solo-stats" style="display: flex; justify-content: space-around; margin: 16px 0; font-family: var(--font-game);">
           <div><div style="font-size: 0.8rem; color: #94a3b8;">TIEMPO</div><div id="victory-3d-time" style="font-size: 1.4rem; color: #2ff3ff; font-weight: 900;">0.0 s</div></div>
           <div><div style="font-size: 0.8rem; color: #94a3b8;">VIDAS</div><div id="victory-3d-lives" style="font-size: 1.4rem; color: #ff2bd6; font-weight: 900;">3 / 3</div></div>
           <div><div style="font-size: 0.8rem; color: #94a3b8;">PUNTOS</div><div id="victory-3d-score" style="font-size: 1.4rem; color: #ffd700; font-weight: 900;">7600</div></div>
         </div>
+
+        <!-- Comparativa Online Multijugador 3D -->
+        <div id="victory-3d-online-comparison" class="hidden" style="margin: 16px 0;">
+          <div class="results-comparison" style="margin: 0; gap: 14px;">
+            <div class="result-col" id="res-3d-p1-col" style="background: rgba(0, 240, 255, 0.08); border: 1px solid var(--c-cyan); border-radius: 12px; padding: 12px;">
+              <h3 id="res-3d-p1-name" style="color: var(--c-cyan); margin-bottom: 8px;">PLAYER 1</h3>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Posición:</span><span id="res-3d-p1-pos" class="highlight" style="font-weight:bold; color:#00F0FF;">WINNER</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Tiempo:</span><span id="res-3d-p1-time">0.0 s</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Monedas:</span><span id="res-3d-p1-coins">0</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Puntos:</span><span id="res-3d-p1-score">0</span></div>
+            </div>
+            <div class="result-col" id="res-3d-p2-col" style="background: rgba(255, 0, 127, 0.08); border: 1px solid var(--c-accent); border-radius: 12px; padding: 12px;">
+              <h3 id="res-3d-p2-name" style="color: var(--c-accent); margin-bottom: 8px;">PLAYER 2</h3>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Posición:</span><span id="res-3d-p2-pos" class="highlight" style="font-weight:bold; color:#FF007F;">RUNNER-UP</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Tiempo:</span><span id="res-3d-p2-time">0.0 s</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Monedas:</span><span id="res-3d-p2-coins">0</span></div>
+              <div class="res-stat-item" style="display:flex; justify-content:space-between; margin:4px 0;"><span>Puntos:</span><span id="res-3d-p2-score">0</span></div>
+            </div>
+          </div>
+        </div>
+
         <div class="modal-actions-3d">
           <button id="btn-next-level-3d" class="btn-menu btn-primary">⏩ SIGUIENTE NIVEL</button>
           <button id="btn-retry-victory-3d" class="btn-menu btn-secondary">🔄 REPETIR NIVEL</button>
@@ -5347,6 +5691,20 @@ const Game = (() => {
   let networkSeed    = null;
   let networkOpponentState = null;
 
+  // ── Sincronización autoritativa online ─────────────────────────────────────
+  let currentRaceId       = null; // Identificador de la carrera oficial (servidor)
+  let localPlayerId       = null; // Identificador estable de ESTE jugador en la sala
+  let officialRaceState   = null; // Último snapshot oficial recibido
+  let officialLocalX      = 0;    // Progreso oficial del jugador local
+  let officialRemoteX     = 0;    // Progreso oficial del rival
+  let officialGoalWorldX  = null; // Meta oficial de la carrera
+  let raceResult          = null; // Resultado final dictado por el servidor
+  let raceResultApplied   = false;
+  let remoteTargetX       = 0;    // Objetivo de interpolación visual del rival
+  let remoteTargetSpeed   = 5;
+  let remoteTargetAt      = 0;    // serverTime del snapshot del rival
+  let remoteTargetFinished = false;
+
   // Componentes Viewport 1 (Player 1)
   let canvas1        = null;
   let renderer1      = null;
@@ -5512,7 +5870,7 @@ const Game = (() => {
    * @param {string} p1Name
    * @param {string} p2Name
    */
-  function startLevel(levelNum = 1, multiplayer = false, p1Name = 'Player 1', p2Name = 'Player 2', online = false, seed = null, p1Color = '#00F0FF', p2Color = '#FF007F', isRoomHost = false) {
+  function startLevel(levelNum = 1, multiplayer = false, p1Name = 'Player 1', p2Name = 'Player 2', online = false, seed = null, p1Color = '#00F0FF', p2Color = '#FF007F', isRoomHost = false, raceId = null) {
     currentLevel  = levelNum;
     isMultiplayer = multiplayer;
     isOnline      = online;
@@ -5521,61 +5879,57 @@ const Game = (() => {
     raceFinished  = false;
     winnerChosen  = false;
     networkOpponentState = null; // Limpiar cualquier paquete residual de niveles previos
+    currentRaceId        = raceId;
+    localPlayerId        = (typeof Network !== 'undefined' && Network.playerId) ? Network.playerId : null;
+    officialRaceState    = null;
+    officialLocalX       = 0;
+    officialRemoteX      = 0;
+    officialGoalWorldX   = null;
+    raceResult           = null;
+    raceResultApplied    = false;
+    remoteTargetX        = 0;
+    remoteTargetSpeed    = levelData?.scrollSpeed ?? 5;
+    remoteTargetAt       = 0;
+    remoteTargetFinished = false;
     for (const k in keys) delete keys[k]; // Resetear buffer de teclas
     
     if (isOnline && typeof Network !== 'undefined') {
-      Network.onOpponentState = (state) => {
-        // Descartar paquetes de red que pertenezcan a un nivel distinto al actual
-        if (!state || (state.level !== undefined && state.level !== currentLevel)) {
-          return;
-        }
-        networkOpponentState = state;
+      // El estado del rival ya no se acepta "en crudo": se usa el snapshot oficial
+      // del servidor para que ambos clientes compartan el mismo orden de carrera.
+      Network.onOpponentState = null;
+
+      Network.onRaceState = (snapshot) => {
+        if (!snapshot || snapshot.raceId !== currentRaceId) return;
+        if (officialRaceState && snapshot.tick <= officialRaceState.tick) return;
+        _applyRaceSnapshot(snapshot);
       };
 
       Network.onPlayerGoalReached = (data) => {
-        winnerChosen = true;
-        const isLocalPlayer = (isRoomHost && data.isHost) || (!isRoomHost && !data.isHost);
-
-        if (isLocalPlayer) {
-          if (players[0]) {
-            players[0].isWinner = data.isWinner;
-            players[0].hasFinished = true;
-          }
-          p1Stats.isWinner = data.isWinner;
-          p1Stats.score = data.score;
-        } else {
-          if (players[1]) {
-            players[1].isWinner = data.isWinner;
-            players[1].hasFinished = true;
-          }
-          p2Stats.isWinner = data.isWinner;
-          p2Stats.score = data.score;
+        if (!data || (data.raceId !== undefined && data.raceId !== currentRaceId)) return;
+        const isLocal = _isLocalSnapshotPlayer(data);
+        if (isLocal) {
+          if (players[0]) players[0].hasFinished = true;
+        } else if (players[1]) {
+          players[1].hasFinished = true;
         }
+        const runnerName = isLocal ? players[0]?.name : players[1]?.name;
+        UI.showToast(`🏁 ${runnerName || 'Un corredor'} cruzó la meta`, 'info');
+      };
 
-        if (data.isWinner) {
-          AudioManager.play('goal');
-          const winnerName = isLocalPlayer ? players[0]?.name : players[1]?.name;
-          UI.showToast(`🏁 ¡${winnerName} cruzó la meta en 1º LUGAR! 🏆`, 'success');
-        }
+      Network.onRaceFinished = (data) => {
+        if (!data || data.raceId !== currentRaceId) return;
+        _handleRaceFinished(data);
       };
 
       Network.onOpponentDisconnected = () => {
         if (state === STATE.PLAYING && !raceFinished) {
-          UI.showToast('⚠️ Tu rival se ha desconectado. ¡Victoria por abandono!', 'warning');
-          winnerChosen = true;
-          if (players[0]) {
-            players[0].isWinner = true;
-            p1Stats.isWinner = true;
-            p1Stats.score += 500;
-          }
-          if (players[1]) {
-            players[1].isAlive = false;
-            p2Stats.isAlive = false;
-          }
-          raceFinished = true;
-          setTimeout(() => {
-            _onRaceComplete();
-          }, 1200);
+          UI.showToast('⚠️ Tu rival se desconectó. Esperando su reconexión...', 'warning');
+        }
+      };
+
+      Network.onOpponentReconnected = () => {
+        if (state === STATE.PLAYING && !raceFinished) {
+          UI.showToast('✅ Tu rival se reconectó. La carrera continúa.', 'success');
         }
       };
     }
@@ -5711,12 +6065,12 @@ const Game = (() => {
     rafId = requestAnimationFrame(gameLoop);
   }
 
-  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName, p1CustomColor, p2CustomColor) {
+  function startLevelOnline(levelNum, multiplayer = true, isRoomHost = false, seed = 42, p1CustomName, p2CustomName, p1CustomColor, p2CustomColor, raceId = null) {
     const p1Name = p1CustomName || (isRoomHost ? 'Host' : 'Rival');
     const p2Name = p2CustomName || (isRoomHost ? 'Rival' : 'Host');
     const p1Color = p1CustomColor || (isRoomHost ? '#00F0FF' : '#FF007F');
     const p2Color = p2CustomColor || (isRoomHost ? '#FF007F' : '#00F0FF');
-    startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed, p1Color, p2Color, isRoomHost);
+    startLevel(levelNum, multiplayer, p1Name, p2Name, true, seed, p1Color, p2Color, isRoomHost, raceId);
   }
 
   /**
@@ -5747,6 +6101,11 @@ const Game = (() => {
     }
     state = STATE.IDLE;
     networkOpponentState = null;
+    officialRaceState = null;
+    currentRaceId = null;
+    localPlayerId = null;
+    raceResult = null;
+    raceResultApplied = false;
     for (const k in keys) delete keys[k];
     AudioManager.stopMusic();
   }
@@ -5782,35 +6141,32 @@ const Game = (() => {
     // ── 2. Procesar Inputs P2 (Flechas Direccionales o Red) ─────────────────
     if (isMultiplayer && p2) {
       if (isOnline) {
-        if (networkOpponentState) {
-          // Descartar si el paquete es de otro nivel
-          if (networkOpponentState.level !== undefined && networkOpponentState.level !== currentLevel) {
-            networkOpponentState = null;
+        // El rival se representa con el último estado oficial + extrapolación corta
+        // para compensar la latencia. El orden/resultado NO depende de esta interpolación.
+        if (officialRaceState && !remoteTargetFinished) {
+          const ageFrames = (typeof Network !== 'undefined' && Network.getSnapshotAgeMs)
+            ? Network.getSnapshotAgeMs(remoteTargetAt) / (1000 / 60)
+            : 0;
+          const predictedX = remoteTargetX + remoteTargetSpeed * Math.min(15, Math.max(0, ageFrames));
+          const maxX = officialGoalWorldX || goalWorldX;
+          const targetX = Math.max(0, Math.min(maxX, predictedX));
+          const blend = 1 - Math.exp(-14 * (delta / 1000)); // suave e independiente de FPS
+
+          const dx = targetX - p2.worldX;
+          if (Math.abs(dx) > 350) {
+            // Resincronización tras una pausa/reconexión: evitar quedarse atrás para siempre.
+            p2.worldX = targetX;
           } else {
-            // Interpolación suave de coordenadas
-            p2.worldX += (networkOpponentState.worldX - p2.worldX) * 0.35;
-            p2.y += (networkOpponentState.y - p2.y) * 0.35;
-            
-            p2.vy = networkOpponentState.vy;
-            p2.isDucking = networkOpponentState.isDucking;
-            p2.hasFinished = networkOpponentState.hasFinished;
-            
-            // Sincronización de telemetría, vidas y estado
-            if (networkOpponentState.lives !== undefined) p2.lives = networkOpponentState.lives;
-            if (networkOpponentState.isAlive !== undefined) p2.isAlive = networkOpponentState.isAlive;
-            if (networkOpponentState.score !== undefined) p2Stats.score = networkOpponentState.score;
-            if (networkOpponentState.coins !== undefined) p2Stats.coins = networkOpponentState.coins;
-            if (networkOpponentState.isWinner && !winnerChosen) {
-              winnerChosen = true;
-              p2.isWinner = true;
-              p2Stats.isWinner = true;
-            }
-            
-            // Power-ups y sprint sincronizados visualmente
-            p2.turboTimer = networkOpponentState.turboTimer || 0;
-            p2.dashTimer  = networkOpponentState.dashTimer || 0;
-            p2.shield     = networkOpponentState.shield || false;
+            p2.worldX += dx * blend;
           }
+
+          if (p2._networkY !== undefined) {
+            const dy = p2._networkY - p2.y;
+            if (Math.abs(dy) > 250) p2.y = p2._networkY;
+            else p2.y += dy * blend;
+          }
+          if (p2._networkVy !== undefined) p2.vy = p2._networkVy;
+          if (p2._networkDucking !== undefined) p2.isDucking = p2._networkDucking;
         }
       } else if (p2.isAlive) {
         const p2JumpPressed = Boolean(keys['ArrowUp']);
@@ -5852,10 +6208,12 @@ const Game = (() => {
     // ── Enviar estado de red P1 ──────────────────────────────────────────────
     if (isOnline && p1 && typeof Network !== 'undefined') {
       Network.sendState({
+        raceId: currentRaceId,
         level: currentLevel,
         worldX: p1.worldX,
         y: p1.y,
         vy: p1.vy,
+        speed: p1.currentSpeed,
         isDucking: p1.isDucking,
         hasFinished: p1.hasFinished,
         turboTimer: p1.turboTimer,
@@ -5865,7 +6223,7 @@ const Game = (() => {
         coins: p1Stats.coins,
         lives: p1.lives,
         isAlive: p1.isAlive,
-        isWinner: p1Stats.isWinner
+        elapsedMs: Math.max(0, performance.now() - startTime)
       });
     }
 
@@ -5881,7 +6239,7 @@ const Game = (() => {
     if (p1.isAlive && !p1.hasFinished) {
       p1Stats.score += Math.floor(scrollSpeed * 0.1);
     }
-    if (isMultiplayer && p2?.isAlive && !p2?.hasFinished) {
+    if (isMultiplayer && !isOnline && p2?.isAlive && !p2?.hasFinished) {
       p2Stats.score += Math.floor(scrollSpeed * 0.1);
     }
 
@@ -6101,8 +6459,12 @@ const Game = (() => {
       p1Stats.time   = elapsedSecs;
 
       if (isOnline && typeof Network !== 'undefined') {
+        // El cliente sólo informa su cruce; el ganador lo decide el servidor.
         Network.sendPlayerFinished({
+          raceId: currentRaceId,
+          elapsedMs: Math.max(0, performance.now() - startTime),
           time: elapsedSecs,
+          worldX: p1.worldX,
           score: p1Stats.score,
           coins: p1Stats.coins
         });
@@ -6140,10 +6502,191 @@ const Game = (() => {
   }
 
   /**
+   * ¿Esta entrada del snapshot/resultado corresponde al jugador local?
+   * Se usa playerId estable; nunca el orden de la lista ni "quién es host".
+   */
+  function _playerEntryIsLocal(entry) {
+    if (!entry) return false;
+    if (localPlayerId && entry.playerId) return entry.playerId === localPlayerId;
+    if (typeof Network !== 'undefined' && Network.playerSlot !== null && Network.playerSlot !== undefined) {
+      return entry.slot === Network.playerSlot;
+    }
+    return false;
+  }
+
+  function _isLocalSnapshotPlayer(data) {
+    if (!data) return false;
+    if (localPlayerId && data.playerId) return data.playerId === localPlayerId;
+    if (typeof Network !== 'undefined' && Network.playerSlot !== null && Network.playerSlot !== undefined) {
+      return data.slot === Network.playerSlot;
+    }
+    return false;
+  }
+
+  function _safeNum(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  /**
+   * Aplica un snapshot oficial del servidor. El estado oficial manda sobre
+   * el orden de posiciones, la meta y la condición de ganador.
+   */
+  function _applyRaceSnapshot(snapshot) {
+    officialRaceState = snapshot;
+    if (snapshot.goalWorldX !== undefined) {
+      officialGoalWorldX = _safeNum(snapshot.goalWorldX, goalWorldX);
+    }
+
+    const list = Array.isArray(snapshot.players) ? snapshot.players : [];
+    const localEntry = list.find(_playerEntryIsLocal) || null;
+    const remoteEntry = list.find(entry => entry !== localEntry) || null;
+
+    const p1 = players[0];
+    const p2 = players[1];
+
+    if (localEntry) {
+      officialLocalX = _safeNum(localEntry.worldX);
+      if (p1) {
+        // Reconciliación sólo si el servidor está MUY por delante (p. ej. tras reconectar).
+        // Nunca se retrocede al jugador local por un snapshot antiguo.
+        if (!p1.hasFinished && officialLocalX > p1.worldX + 150) {
+          p1.worldX = officialLocalX;
+        }
+        if (localEntry.isAlive === false) {
+          p1.isAlive = false;
+          p1Stats.isAlive = false;
+          p1.lives = 0;
+        }
+      }
+    } else {
+      officialLocalX = p1 ? p1.worldX : 0;
+    }
+
+    if (remoteEntry) {
+      officialRemoteX = _safeNum(remoteEntry.worldX);
+      remoteTargetX = officialRemoteX;
+      remoteTargetSpeed = _safeNum(remoteEntry.speed, levelData?.scrollSpeed ?? 5);
+      remoteTargetAt = _safeNum(snapshot.serverTime);
+      remoteTargetFinished = !!remoteEntry.hasFinished;
+
+      if (p2) {
+        p2._networkY = _safeNum(remoteEntry.y, p2.y);
+        p2._networkVy = _safeNum(remoteEntry.vy);
+        p2._networkDucking = !!remoteEntry.isDucking;
+        p2.hasFinished = !!remoteEntry.hasFinished;
+        p2.lives = _safeNum(remoteEntry.lives, p2.lives);
+        p2.isAlive = remoteEntry.isAlive !== false;
+        p2.turboTimer = _safeNum(remoteEntry.turboTimer);
+        p2.dashTimer = _safeNum(remoteEntry.dashTimer);
+        p2.shield = !!remoteEntry.shield;
+        p2.isWinner = !!remoteEntry.isWinner;
+        if (remoteEntry.finishTimeMs !== null && remoteEntry.finishTimeMs !== undefined) {
+          p2.finishTime = Math.round(_safeNum(remoteEntry.finishTimeMs) / 1000);
+        }
+      }
+      p2Stats.score = _safeNum(remoteEntry.score);
+      p2Stats.coins = _safeNum(remoteEntry.coins);
+      p2Stats.isAlive = remoteEntry.isAlive !== false;
+      p2Stats.isWinner = !!remoteEntry.isWinner;
+      if (remoteEntry.finishTimeMs !== null && remoteEntry.finishTimeMs !== undefined) {
+        p2Stats.time = Math.round(_safeNum(remoteEntry.finishTimeMs) / 1000);
+      }
+    } else {
+      officialRemoteX = p2 ? p2.worldX : 0;
+    }
+  }
+
+  /**
+   * Aplica el resultado oficial (mismo ganador y mismas puntuaciones en ambos clientes).
+   */
+  function _applyRaceResult(data) {
+    if (!data || raceResultApplied) return;
+    const results = Array.isArray(data.results) ? data.results : [];
+    const localEntry = results.find(_playerEntryIsLocal) || null;
+    const remoteEntry = results.find(entry => entry !== localEntry) || null;
+
+    if (localEntry) {
+      p1Stats.isWinner = !!localEntry.isWinner;
+      p1Stats.score = _safeNum(localEntry.score, p1Stats.score);
+      p1Stats.coins = _safeNum(localEntry.coins, p1Stats.coins);
+      p1Stats.isAlive = localEntry.isAlive !== false;
+      if (localEntry.time !== null && localEntry.time !== undefined) {
+        p1Stats.time = _safeNum(localEntry.time, p1Stats.time);
+      }
+      if (players[0]) {
+        players[0].isWinner = !!localEntry.isWinner;
+        players[0].hasFinished = !!localEntry.hasFinished;
+        players[0].isAlive = localEntry.isAlive !== false;
+        players[0].finishTime = p1Stats.time;
+      }
+    }
+
+    if (remoteEntry) {
+      p2Stats.isWinner = !!remoteEntry.isWinner;
+      p2Stats.score = _safeNum(remoteEntry.score, p2Stats.score);
+      p2Stats.coins = _safeNum(remoteEntry.coins, p2Stats.coins);
+      p2Stats.isAlive = remoteEntry.isAlive !== false;
+      if (remoteEntry.time !== null && remoteEntry.time !== undefined) {
+        p2Stats.time = _safeNum(remoteEntry.time, p2Stats.time);
+      }
+      if (players[1]) {
+        players[1].isWinner = !!remoteEntry.isWinner;
+        players[1].hasFinished = !!remoteEntry.hasFinished;
+        players[1].isAlive = remoteEntry.isAlive !== false;
+        players[1].finishTime = p2Stats.time;
+      }
+    }
+
+    raceResultApplied = true;
+  }
+
+  /**
+   * Final único de carrera dictado por el servidor.
+   */
+  function _handleRaceFinished(data) {
+    if (!data || (raceResult && raceResult.raceId === data.raceId)) return;
+    if (state !== STATE.PLAYING && state !== STATE.PAUSED) return;
+
+    raceResult = data;
+    raceResultApplied = false;
+    _applyRaceResult(data);
+
+    const localSlot = (typeof Network !== 'undefined') ? Network.playerSlot : null;
+    const localWon = !!data.winnerId && (
+      (localPlayerId && data.winnerId === localPlayerId) ||
+      (!localPlayerId && localSlot !== null && data.winnerSlot === localSlot)
+    );
+
+    raceFinished = true;
+    winnerChosen = true;
+    state = data.winnerId ? STATE.LEVEL_COMPLETE : STATE.GAMEOVER;
+    AudioManager.stopMusic();
+
+    if (data.winnerId) {
+      if (localWon) AudioManager.play('goal');
+      const winnerName = data.winnerName || (localWon ? players[0]?.name : players[1]?.name) || 'Ganador';
+      UI.showToast(`🏆 ${winnerName} gana la carrera`, localWon ? 'success' : 'info');
+    }
+
+    setTimeout(() => {
+      if (raceFinished && state === STATE.LEVEL_COMPLETE) {
+        _onRaceComplete();
+      } else if (raceFinished && state === STATE.GAMEOVER) {
+        _onGameOver();
+      }
+    }, 1000);
+  }
+
+  /**
    * Comprobar fin de partida
    */
   function _checkEndConditions() {
     if (raceFinished) return;
+
+    // En online el final lo dicta el servidor mediante 'race_finished'.
+    // Evita que un cliente cierre la carrera antes que el otro.
+    if (isOnline) return;
 
     const allFinishedOrDead = players.every(p => !p.isAlive || p.hasFinished);
     const anyFinished       = players.some(p => p.hasFinished);
@@ -6167,6 +6710,7 @@ const Game = (() => {
    * Finalización de carrera con resultados
    */
   function _onRaceComplete() {
+    if (isOnline && raceResult) _applyRaceResult(raceResult);
     const elapsed = Math.floor((performance.now() - startTime) / 1000);
 
     // Guardar récord de P1
@@ -6253,13 +6797,19 @@ const Game = (() => {
     const p1 = players[0];
     const p2 = players[1];
 
+    // En online, la telemetría usa el estado OFICIAL (idéntico en ambos clientes),
+    // no la posición local predicha ni el rival interpolado.
+    const hudGoal = (isOnline && officialGoalWorldX) ? officialGoalWorldX : goalWorldX;
+    const hudP1X = (isOnline && officialRaceState) ? officialLocalX : (p1?.worldX || 0);
+    const hudP2X = (isOnline && officialRaceState) ? officialRemoteX : (p2?.worldX || 0);
+
     // HUD Viewport 1 (P1)
     if (p1) {
       document.getElementById('vp-p1-score').textContent = p1Stats.score;
       document.getElementById('vp-p1-coins').textContent = p1Stats.coins;
       document.getElementById('vp-p1-lives').textContent = '❤️'.repeat(Math.max(0, p1.lives));
 
-      const p1Progress = Math.min(100, Math.max(0, (p1.worldX / goalWorldX) * 100));
+      const p1Progress = Math.min(100, Math.max(0, (hudP1X / hudGoal) * 100));
       const p1Fill = document.getElementById('progress-bar-fill-p1');
       const p1Icon = document.getElementById('progress-icon-p1');
       if (p1Fill) p1Fill.style.width = p1Progress + '%';
@@ -6275,7 +6825,7 @@ const Game = (() => {
       document.getElementById('vp-p2-coins').textContent = p2Stats.coins;
       document.getElementById('vp-p2-lives').textContent = '❤️'.repeat(Math.max(0, p2.lives));
 
-      const p2Progress = Math.min(100, Math.max(0, (p2.worldX / goalWorldX) * 100));
+      const p2Progress = Math.min(100, Math.max(0, (hudP2X / hudGoal) * 100));
       const p2Fill = document.getElementById('progress-bar-fill-p2');
       const p2Icon = document.getElementById('progress-icon-p2');
       if (p2Fill) p2Fill.style.width = p2Progress + '%';
@@ -6289,7 +6839,7 @@ const Game = (() => {
       const rankP2 = document.getElementById('vp-p2-rank');
       const statusBadge = document.getElementById('split-status-badge');
 
-      const distDiffPx = p1.worldX - p2.worldX;
+      const distDiffPx = hudP1X - hudP2X;
       const distDiffMeters = Math.round(Math.abs(distDiffPx) / 10);
 
       if (distDiffPx > 30) {
@@ -8620,6 +9170,51 @@ const Neon3DEngine = (() => {
   let landT = 0;
   let time = 0;
 
+  // ── Sincronización Online Multiplayer ─────────────────────────────────────
+  let isOnline = false;
+  let currentRaceId = null;
+  let localPlayerId = null;
+  let myCustomColor = '#00F0FF';
+  let rivalName = 'Rival';
+  let rivalColor = '#FF007F';
+  let rivalRig = null;
+  let rivalNameplate = null;
+  let rivalPx = 0;
+  let rivalPy = 0;
+  let rivalDist = 0;
+  let rivalSpeed = 14;
+  let rivalPhase = 0;
+  let rivalGrounded = true;
+  let rivalIsDucking = false;
+  let rivalIsTurbo = false;
+  let rivalShield = false;
+  let rivalLives = 3;
+  let rivalScore = 0;
+  let rivalCoins = 0;
+  let rivalHasFinished = false;
+  let rivalIsWinner = false;
+  let remoteTargetDist = 0;
+  let remoteTargetPx = 0;
+  let remoteTargetPy = 0;
+  let remoteTargetSpeed = 14;
+  let remoteTargetAt = 0;
+  let hasReportedFinish = false;
+  let raceFinished = false;
+  let raceResult = null;
+  let officialRaceState = null;
+  let officialLocalX = 0;
+  let officialRemoteX = 0;
+  let officialGoalWorldX = null;
+
+  // PRNG Determinista con Mulberry32
+  let rngState = 12345;
+  function rng() {
+    let t = (rngState += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+
   // Estadísticas de partida
   let lives = 3;
   let score = 0;
@@ -8875,10 +9470,40 @@ const Neon3DEngine = (() => {
     obstacles.push(droneObj);
   }
 
+  function _createNameplateSprite(name, color = '#FF007F') {
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'rgba(8, 4, 28, 0.82)';
+    if (ctx.roundRect) ctx.roundRect(4, 4, 248, 56, 14);
+    else ctx.rect(4, 4, 248, 56);
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+
+    ctx.font = 'bold 24px Outfit, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 6;
+    ctx.fillText(name.slice(0, 14), 128, 32);
+
+    const texture = new THREE.CanvasTexture(c);
+    const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(2.4, 0.6, 1);
+    return sprite;
+  }
+
   function spawnCoinsPattern(startDist, type = 'LINE') {
     const count = 4;
     const spacing = 3.2;
-    const laneX = (Math.random() * 2 - 1) * 2.8;
+    const laneX = (rng() * 2 - 1) * 2.8;
 
     for (let i = 0; i < count; i++) {
       const d = startDist + i * spacing;
@@ -8903,7 +9528,7 @@ const Neon3DEngine = (() => {
   }
 
   function spawnPowerUp(d, type) {
-    const x = (Math.random() * 2 - 1) * 3.0;
+    const x = (rng() * 2 - 1) * 3.0;
     const puMesh = Neon3DWorld.createPowerUpMesh(type);
     puMesh.position.set(x, 1.4, -d);
     scene.add(puMesh);
@@ -8933,40 +9558,42 @@ const Neon3DEngine = (() => {
     parts = [];
   }
 
-  function buildLevel(num = 1) {
+  function buildLevel(num = 1, seed = null) {
     _loadLevelWorld(num);
     clearEntities();
+
+    rngState = (seed !== null && seed !== undefined) ? (Number(seed) || 12345) : (num * 1000 + 42);
 
     const finish = finishDistance;
     const minGap = levelData?.minObstacleGap || 12.0;
 
     // 1. Spawner de Monedas (cada 35m)
     for (let d = 30; d < finish - 35; d += 32) {
-      const isArc = Math.random() > 0.5;
+      const isArc = rng() > 0.5;
       spawnCoinsPattern(d, isArc ? 'ARC' : 'LINE');
     }
 
     // 2. Spawner de Power-Ups (cada 120m)
     const puTypes = ['SHIELD', 'MAGNET', 'TURBO', 'DOUBLE_JUMP'];
     let puIdx = 0;
-    for (let d = 80; d < finish - 60; d += 110 + Math.random() * 30) {
+    for (let d = 80; d < finish - 60; d += 110 + rng() * 30) {
       spawnPowerUp(d, puTypes[puIdx % puTypes.length]);
       puIdx++;
     }
 
     // 3. Spawner de Obstáculos balanceados con separación segura
-    for (let d = 45; d < finish - 30; d += minGap + Math.random() * 8) {
-      const r = Math.random();
+    for (let d = 45; d < finish - 30; d += minGap + rng() * 8) {
+      const r = rng();
       if (r < 0.28) {
-        addBar(d, (Math.random() * 2 - 1) * 2.7, false);
+        addBar(d, (rng() * 2 - 1) * 2.7, false);
       } else if (r < 0.52) {
-        addPillar(d, (Math.random() * 2 - 1) * 3.4);
+        addPillar(d, (rng() * 2 - 1) * 3.4);
       } else if (r < 0.76) {
         // Láser elevado: esquivar deslizándose (Slide)
         addLaser(d, 0);
       } else {
         // Dron patrullero volador
-        addDrone(d, (Math.random() * 2 - 1) * 3.0);
+        addDrone(d, (rng() * 2 - 1) * 3.0);
       }
     }
   }
@@ -8984,11 +9611,137 @@ const Neon3DEngine = (() => {
     }
   }
 
+  function _playerEntryIsLocal(entry) {
+    if (!entry) return false;
+    if (localPlayerId && entry.playerId) return entry.playerId === localPlayerId;
+    if (typeof Network !== 'undefined' && Network.playerSlot !== null && Network.playerSlot !== undefined) {
+      return entry.slot === Network.playerSlot;
+    }
+    return false;
+  }
+
+  function _applyRaceSnapshot(snapshot) {
+    officialRaceState = snapshot;
+    if (snapshot.goalWorldX !== undefined) {
+      officialGoalWorldX = Number(snapshot.goalWorldX) || finishDistance;
+    }
+    const list = Array.isArray(snapshot.players) ? snapshot.players : [];
+    const localEntry = list.find(_playerEntryIsLocal) || null;
+    const remoteEntry = list.find(entry => entry !== localEntry) || null;
+
+    if (localEntry) {
+      officialLocalX = Number(localEntry.worldX) || 0;
+      if (localEntry.isAlive === false && lives > 0) {
+        lives = 0;
+        _updateHud();
+        end(false);
+      }
+    }
+
+    if (remoteEntry) {
+      officialRemoteX = Number(remoteEntry.worldX) || 0;
+      remoteTargetDist = officialRemoteX;
+      remoteTargetPx = Number(remoteEntry.px) || 0;
+      remoteTargetPy = Number(remoteEntry.y) || 0;
+      remoteTargetSpeed = Number(remoteEntry.speed) || speed;
+      remoteTargetAt = Number(snapshot.serverTime) || Date.now();
+      rivalLives = Number(remoteEntry.lives) || 0;
+      rivalScore = Number(remoteEntry.score) || 0;
+      rivalCoins = Number(remoteEntry.coins) || 0;
+      rivalShield = !!remoteEntry.shield;
+      rivalIsTurbo = (Number(remoteEntry.turboTimer) > 0);
+      rivalIsDucking = !!remoteEntry.isDucking;
+      rivalHasFinished = !!remoteEntry.hasFinished;
+      rivalIsWinner = !!remoteEntry.isWinner;
+    }
+  }
+
+  function _handleRaceFinished(data) {
+    if (raceFinished) return;
+    raceFinished = true;
+    raceResult = data;
+    const isWinner = data.winnerId === localPlayerId;
+    state = isWinner ? 'win' : 'lose';
+
+    const myResult = data.results?.find(_playerEntryIsLocal) || {
+      name: (typeof ScoreManager !== 'undefined' ? ScoreManager.getPlayerName() : 'Tú') || 'Host',
+      color: myCustomColor || '#00F0FF',
+      score: Math.floor(score + dist * 10),
+      coins: coinsCount,
+      time: time.toFixed(1),
+      isWinner: isWinner
+    };
+    const oppResult = data.results?.find(r => !_playerEntryIsLocal(r)) || {
+      name: rivalName,
+      color: rivalColor,
+      score: rivalScore,
+      coins: rivalCoins,
+      time: rivalHasFinished ? time.toFixed(1) : '--',
+      isWinner: !isWinner && !!data.winnerId
+    };
+
+    if (hudCallbacks?.onEnd) {
+      hudCallbacks.onEnd(isWinner, {
+        isOnline: true,
+        level: currentLevelNum,
+        winnerId: data.winnerId,
+        winnerName: data.winnerName,
+        reason: data.reason,
+        myResult,
+        oppResult,
+        time: time.toFixed(1),
+        lives: Math.max(0, lives),
+        coins: coinsCount,
+        score: Math.floor(score + dist * 10 + (isWinner ? 500 : 200))
+      });
+    }
+
+    if (typeof AudioManager !== 'undefined') {
+      AudioManager.play(isWinner ? 'goal' : 'hit');
+    }
+  }
+
   /**
-   * Inicia la carrera en el nivel especificado
+   * Inicia la carrera en el nivel especificado (soporta opciones para Multiplayer Online)
    */
-  function start(levelNum = 1) {
-    buildLevel(levelNum);
+  function start(levelNum = 1, options = {}) {
+    isOnline = !!options.isOnline;
+    currentRaceId = options.raceId || null;
+    localPlayerId = (typeof Network !== 'undefined' && Network.playerId) ? Network.playerId : null;
+    myCustomColor = options.myColor || '#00F0FF';
+    rivalName = options.rivalName || 'Rival';
+    rivalColor = options.rivalColor || '#FF007F';
+    const matchSeed = (options.seed !== undefined && options.seed !== null) ? options.seed : (levelNum * 1000 + 42);
+
+    hasReportedFinish = false;
+    raceFinished = false;
+    raceResult = null;
+    officialRaceState = null;
+    officialLocalX = 0;
+    officialRemoteX = 0;
+    officialGoalWorldX = null;
+
+    rivalPx = 0;
+    rivalPy = 0;
+    rivalDist = 0;
+    rivalSpeed = 14;
+    rivalPhase = 0;
+    rivalGrounded = true;
+    rivalIsDucking = false;
+    rivalIsTurbo = false;
+    rivalShield = false;
+    rivalLives = 3;
+    rivalScore = 0;
+    rivalCoins = 0;
+    rivalHasFinished = false;
+    rivalIsWinner = false;
+    remoteTargetDist = 0;
+    remoteTargetPx = 0;
+    remoteTargetPy = 0;
+    remoteTargetSpeed = 14;
+    remoteTargetAt = 0;
+
+    buildLevel(levelNum, matchSeed);
     px = py = vy = vx = dist = time = 0;
     score = 0;
     coinsCount = 0;
@@ -9007,10 +9760,78 @@ const Neon3DEngine = (() => {
     doubleJumpTimer = 0;
     canDoubleJump = false;
 
+    // Recrear Corredor Local con su color personalizado
+    if (playerRig?.root) {
+      scene.remove(playerRig.root);
+      if (playerRig.shieldM) scene.remove(playerRig.shieldM);
+      if (playerRig.shieldS) scene.remove(playerRig.shieldS);
+      playerRig = null;
+    }
+    const localColorHex = myCustomColor ? parseInt(myCustomColor.replace('#', '0x'), 16) : (levelData?.palette?.neonMain || CY);
+    playerRig = Neon3DPlayer.create(scene, { glowColor: localColorHex });
+
+    // En multijugador online, crear el corredor rival y su letrero de neón
+    if (rivalRig?.root) {
+      scene.remove(rivalRig.root);
+      if (rivalRig.shieldM) scene.remove(rivalRig.shieldM);
+      if (rivalRig.shieldS) scene.remove(rivalRig.shieldS);
+      rivalRig = null;
+    }
+    if (rivalNameplate) {
+      scene.remove(rivalNameplate);
+      rivalNameplate = null;
+    }
+
+    if (isOnline) {
+      const rivalColorHex = rivalColor ? parseInt(rivalColor.replace('#', '0x'), 16) : MG;
+      rivalRig = Neon3DPlayer.create(scene, { glowColor: rivalColorHex });
+      rivalNameplate = _createNameplateSprite(rivalName, rivalColor);
+      scene.add(rivalNameplate);
+
+      if (typeof Network !== 'undefined') {
+        Network.onRaceState = (snapshot) => {
+          if (!snapshot || snapshot.raceId !== currentRaceId) return;
+          if (officialRaceState && snapshot.tick <= officialRaceState.tick) return;
+          _applyRaceSnapshot(snapshot);
+        };
+
+        Network.onPlayerGoalReached = (data) => {
+          if (!data || (data.raceId !== undefined && data.raceId !== currentRaceId)) return;
+          const isLocal = _playerEntryIsLocal(data);
+          if (!isLocal) {
+            rivalHasFinished = true;
+            if (hudCallbacks?.onToast) hudCallbacks.onToast(`🏁 ¡${rivalName} cruzó la meta!`, rivalColor);
+          }
+        };
+
+        Network.onRaceFinished = (data) => {
+          if (!data || data.raceId !== currentRaceId) return;
+          _handleRaceFinished(data);
+        };
+
+        Network.onOpponentDisconnected = () => {
+          if (state === 'play' && !raceFinished) {
+            if (hudCallbacks?.onToast) hudCallbacks.onToast('⚠️ Tu rival se desconectó. Esperando reconexión...', '#FFD700');
+          }
+        };
+
+        Network.onOpponentReconnected = () => {
+          if (state === 'play' && !raceFinished) {
+            if (hudCallbacks?.onToast) hudCallbacks.onToast('✅ Tu rival se reconectó a la carrera.', '#00FF88');
+          }
+        };
+      }
+    }
+
     state = 'play';
     clock.start();
 
-    if (hudCallbacks?.onToast) hudCallbacks.onToast(`¡NIVEL ${levelNum} - YA!`, '#2ff3ff');
+    if (hudCallbacks?.onToast) {
+      const toastMsg = isOnline 
+        ? `¡CARRERA 3D ONLINE! VS ${rivalName.toUpperCase()}` 
+        : `¡NIVEL ${levelNum} - YA!`;
+      hudCallbacks.onToast(toastMsg, myCustomColor || '#2ff3ff');
+    }
     _updateHud();
 
     if (!rafId) {
@@ -9020,19 +9841,44 @@ const Neon3DEngine = (() => {
 
   function togglePause() {
     if (state === 'play') {
+      if (isOnline) {
+        // En partida online, el juego continúa en vivo pero se muestra el menú de pausa
+        if (hudCallbacks?.onPause) hudCallbacks.onPause(true, true);
+        return;
+      }
       state = 'paused';
-      if (hudCallbacks?.onPause) hudCallbacks.onPause(true);
+      if (hudCallbacks?.onPause) hudCallbacks.onPause(true, false);
     } else if (state === 'paused') {
       state = 'play';
       clock.getDelta(); // Descartar tiempo acumulado durante pausa
-      if (hudCallbacks?.onPause) hudCallbacks.onPause(false);
+      if (hudCallbacks?.onPause) hudCallbacks.onPause(false, false);
     }
   }
 
   function end(win) {
+    if (isOnline) {
+      // En online, la finalización oficial es dictada por el servidor
+      state = win ? 'win' : 'lose';
+      if (hudCallbacks?.onEnd) {
+        hudCallbacks.onEnd(win, {
+          isOnline: true,
+          level: currentLevelNum,
+          time: time.toFixed(1),
+          lives: Math.max(0, lives),
+          coins: coinsCount,
+          score: Math.floor(score + dist * 10)
+        });
+      }
+      if (typeof AudioManager !== 'undefined') {
+        AudioManager.play(win ? 'goal' : 'hit');
+      }
+      return;
+    }
+
     state = win ? 'win' : 'lose';
     if (hudCallbacks?.onEnd) {
       hudCallbacks.onEnd(win, {
+        isOnline: false,
         level: currentLevelNum,
         time: time.toFixed(1),
         lives: Math.max(0, lives),
@@ -9047,6 +9893,9 @@ const Neon3DEngine = (() => {
 
   function _updateHud() {
     if (!hudCallbacks?.onHudUpdate) return;
+    const diffM = Math.round(dist - rivalDist);
+    const isFirst = dist >= rivalDist;
+
     hudCallbacks.onHudUpdate({
       level: currentLevelNum,
       levelName: levelData?.name || `Nivel ${currentLevelNum}`,
@@ -9060,7 +9909,17 @@ const Neon3DEngine = (() => {
       shieldActive: shieldActive,
       magnetActive: magnetTimer > 0,
       turboActive: turboTimer > 0,
-      doubleJumpActive: doubleJumpTimer > 0
+      doubleJumpActive: doubleJumpTimer > 0,
+      // Datos Online
+      isOnline: isOnline,
+      isFirst: isFirst,
+      distGap: diffM,
+      playerProgress: Math.min(100, (dist / finishDistance) * 100),
+      rivalProgress: Math.min(100, (rivalDist / finishDistance) * 100),
+      rivalName: rivalName,
+      rivalColor: rivalColor,
+      rivalLives: rivalLives,
+      rivalScore: rivalScore
     });
   }
 
@@ -9105,6 +9964,29 @@ const Neon3DEngine = (() => {
 
       dist += speed * dt;
       time += dt;
+
+      // ── Enviar estado a la red (Modo Online 3D) ──────────────────────────
+      if (isOnline && typeof Network !== 'undefined') {
+        Network.sendState({
+          raceId: currentRaceId,
+          level: currentLevelNum,
+          worldX: dist,
+          px: px,
+          y: py,
+          vy: vy,
+          speed: speed,
+          isDucking: isDucking,
+          hasFinished: (dist >= finishDistance),
+          turboTimer: turboTimer,
+          dashTimer: dashTimer,
+          shield: shieldActive,
+          score: Math.floor(score + dist * 10),
+          coins: coinsCount,
+          lives: Math.max(0, lives),
+          isAlive: (lives > 0),
+          elapsedMs: Math.max(0, time * 1000)
+        });
+      }
 
       // Físicas de Salto y Gravedad
       const grav = levelData?.gravity || 36.0;
@@ -9300,7 +10182,21 @@ const Neon3DEngine = (() => {
 
       // Llegada a la meta
       if (dist >= finishDistance) {
-        end(true);
+        if (isOnline) {
+          if (!hasReportedFinish && typeof Network !== 'undefined') {
+            hasReportedFinish = true;
+            Network.sendPlayerFinished({
+              raceId: currentRaceId,
+              elapsedMs: time * 1000,
+              time: Math.round(time),
+              worldX: dist,
+              score: Math.floor(score + dist * 10),
+              coins: coinsCount
+            });
+          }
+        } else {
+          end(true);
+        }
       }
       _updateHud();
 
@@ -9367,6 +10263,53 @@ const Neon3DEngine = (() => {
       playerRig.shieldM.rotation.x += dt;
     }
 
+    // ── Actualizar e interpolar corredor Rival en la pista 3D ────────────────
+    if (isOnline && rivalRig) {
+      if (officialRaceState) {
+        const ageFrames = (typeof Network !== 'undefined' && Network.getSnapshotAgeMs)
+          ? Network.getSnapshotAgeMs(remoteTargetAt) / (1000 / 60)
+          : 0;
+        const predictedDist = remoteTargetDist + remoteTargetSpeed * Math.min(15, Math.max(0, ageFrames * (dt / 0.016)));
+        const targetDist = Math.max(0, Math.min(finishDistance, predictedDist));
+        const blend = 1 - Math.exp(-14 * dt);
+
+        const dDist = targetDist - rivalDist;
+        if (Math.abs(dDist) > 120) rivalDist = targetDist;
+        else rivalDist += dDist * blend;
+
+        rivalPx += (remoteTargetPx - rivalPx) * blend;
+        rivalPy += (remoteTargetPy - rivalPy) * blend;
+        rivalGrounded = rivalPy <= 0.08;
+        if (rivalGrounded) rivalPy = 0;
+        rivalPhase += dt * (8 + remoteTargetSpeed * 0.2);
+
+        rivalRig.root.position.set(rivalPx, rivalPy, -rivalDist);
+        Neon3DPlayer.animate(rivalRig, dt, rivalGrounded, remoteTargetSpeed, rivalPhase, 0, rivalHasFinished, {
+          isDucking: rivalIsDucking,
+          isFastFalling: false,
+          isTurbo: rivalIsTurbo,
+          hasMagnet: false
+        });
+
+        rivalRig.torso.position.y = 1.05 + (rivalGrounded && !rivalIsDucking ? Math.abs(Math.sin(rivalPhase)) * 0.07 : 0);
+        rivalRig.shieldM.visible = rivalRig.shieldS.visible = rivalShield;
+        if (rivalShield) {
+          rivalRig.shieldM.position.set(rivalPx, rivalPy + 1.1, -rivalDist);
+          rivalRig.shieldS.position.copy(rivalRig.shieldM.position);
+          rivalRig.shieldM.rotation.y += dt * 2;
+        }
+        rivalRig.flameL.visible = rivalRig.flameR.visible = rivalIsTurbo;
+
+        if (rivalNameplate) {
+          rivalNameplate.position.set(rivalPx, rivalPy + 2.4, -rivalDist);
+        }
+      } else {
+        // En espera de los primeros paquetes: colocar rival en línea de salida
+        rivalRig.root.position.set(rivalPx, rivalPy, -rivalDist);
+        if (rivalNameplate) rivalNameplate.position.set(rivalPx, rivalPy + 2.4, -rivalDist);
+      }
+    }
+
     // Luces y fondo
     worldData.playerLight.position.set(px, py + 2.5, pz - 1);
     worldData.sun.position.set(0, 52, pz - 330);
@@ -9398,6 +10341,19 @@ const Neon3DEngine = (() => {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
+    if (rivalRig?.root) {
+      scene.remove(rivalRig.root);
+      if (rivalRig.shieldM) scene.remove(rivalRig.shieldM);
+      if (rivalRig.shieldS) scene.remove(rivalRig.shieldS);
+      rivalRig = null;
+    }
+    if (rivalNameplate) {
+      scene.remove(rivalNameplate);
+      rivalNameplate = null;
+    }
+    isOnline = false;
+    currentRaceId = null;
+    officialRaceState = null;
   }
 
   return {
@@ -9430,6 +10386,8 @@ const Neon3DUI = (() => {
 
   let isInitialized = false;
   let activeLevel = 1;
+  let isOnlineGame = false;
+  let onlineOptions = {};
 
   function init() {
     if (isInitialized) return;
@@ -9501,12 +10459,19 @@ const Neon3DUI = (() => {
 
     document.getElementById('btn-restart-3d')?.addEventListener('click', () => {
       _closeAllOverlays();
-      startRace(activeLevel);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'restart', gameMode: '3d' });
+      } else {
+        startRace(activeLevel);
+      }
     });
 
     document.getElementById('btn-exit-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('menu');
       }
@@ -9515,13 +10480,19 @@ const Neon3DUI = (() => {
     // ── Fin de Partida / Derrota 3D ─────────────────────────────────────────
     document.getElementById('btn-retry-gameover-3d')?.addEventListener('click', () => {
       _closeAllOverlays();
-      startRace(activeLevel);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'restart', gameMode: '3d' });
+      } else {
+        startRace(activeLevel);
+      }
     });
 
     document.getElementById('btn-levels-from-gameover-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
-      if (typeof UI !== 'undefined' && UI.showScreen) {
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'lobby', gameMode: '3d' });
+      } else if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('levels-3d');
       }
     });
@@ -9529,6 +10500,9 @@ const Neon3DUI = (() => {
     document.getElementById('btn-exit-gameover-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('menu');
       }
@@ -9539,18 +10513,28 @@ const Neon3DUI = (() => {
       _closeAllOverlays();
       const maxLevels = typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.TOTAL_LEVELS : 20;
       const nextLvl = Math.min(maxLevels, activeLevel + 1);
-      startRace(nextLvl);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ nextLevel: true, level: nextLvl, gameMode: '3d' });
+      } else {
+        startRace(nextLvl);
+      }
     });
 
     document.getElementById('btn-retry-victory-3d')?.addEventListener('click', () => {
       _closeAllOverlays();
-      startRace(activeLevel);
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'restart', gameMode: '3d' });
+      } else {
+        startRace(activeLevel);
+      }
     });
 
     document.getElementById('btn-levels-from-victory-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
-      if (typeof UI !== 'undefined' && UI.showScreen) {
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'lobby', gameMode: '3d' });
+      } else if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('levels-3d');
       }
     });
@@ -9558,6 +10542,9 @@ const Neon3DUI = (() => {
     document.getElementById('btn-exit-victory-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.leaveRoom();
+      }
       if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('menu');
       }
@@ -9566,7 +10553,9 @@ const Neon3DUI = (() => {
     document.getElementById('btn-levels-from-pause-3d')?.addEventListener('click', () => {
       Neon3DEngine.stop();
       _closeAllOverlays();
-      if (typeof UI !== 'undefined' && UI.showScreen) {
+      if (isOnlineGame && typeof Network !== 'undefined' && Network.roomId) {
+        Network.returnToLobby({ level: activeLevel, reason: 'lobby', gameMode: '3d' });
+      } else if (typeof UI !== 'undefined' && UI.showScreen) {
         UI.showScreen('levels-3d');
       }
     });
@@ -9637,11 +10626,13 @@ const Neon3DUI = (() => {
   }
 
   /**
-   * Inicia la carrera en el nivel 3D especificado
+   * Inicia la carrera en el nivel 3D especificado (Solo)
    */
   function startRace(levelNum = 1) {
     init();
     activeLevel = levelNum;
+    isOnlineGame = false;
+    onlineOptions = {};
 
     if (typeof UI !== 'undefined' && UI.showScreen) {
       UI.showScreen('game-3d');
@@ -9651,6 +10642,33 @@ const Neon3DUI = (() => {
 
     Neon3DEngine.resize();
     Neon3DEngine.start(activeLevel);
+  }
+
+  /**
+   * Inicia la carrera en el nivel 3D en modo Multiplayer Online
+   */
+  function startRaceOnline(levelNum = 1, options = {}) {
+    init();
+    activeLevel = levelNum;
+    isOnlineGame = true;
+    onlineOptions = options;
+
+    if (typeof UI !== 'undefined' && UI.showScreen) {
+      UI.showScreen('game-3d');
+    }
+
+    _closeAllOverlays();
+
+    Neon3DEngine.resize();
+    Neon3DEngine.start(activeLevel, {
+      isOnline: true,
+      raceId: options.raceId,
+      seed: options.seed,
+      myColor: options.myColor,
+      rivalName: options.rivalName,
+      rivalColor: options.rivalColor,
+      isHost: options.isHost
+    });
   }
 
   function _updateHud(data) {
@@ -9664,6 +10682,35 @@ const Neon3DUI = (() => {
     const progEl = document.getElementById('hud-3d-progress-bar');
     if (progEl) {
       progEl.style.width = `${data.progress}%`;
+    }
+
+    // Marcadores de jugadores en el progreso (Online)
+    const markerP1 = document.getElementById('hud-3d-runner-p1');
+    const markerP2 = document.getElementById('hud-3d-runner-p2');
+    const rankPill = document.getElementById('hud-3d-online-rank');
+
+    if (data.isOnline) {
+      if (markerP1) {
+        markerP1.style.display = 'block';
+        markerP1.style.left = `${data.playerProgress}%`;
+        if (onlineOptions.myColor) markerP1.style.color = onlineOptions.myColor;
+      }
+      if (markerP2) {
+        markerP2.style.display = 'block';
+        markerP2.style.left = `${data.rivalProgress}%`;
+        if (onlineOptions.rivalColor) markerP2.style.color = onlineOptions.rivalColor;
+      }
+      if (rankPill) {
+        rankPill.style.display = 'inline-block';
+        const gapTxt = data.isFirst ? `+${Math.max(0, data.distGap)}m` : `${data.distGap}m`;
+        rankPill.textContent = `${data.isFirst ? '1º LUGAR' : '2º LUGAR'} (${gapTxt})`;
+        rankPill.style.color = data.isFirst ? '#00FF88' : '#FF007F';
+        rankPill.style.borderColor = data.isFirst ? '#00FF88' : '#FF007F';
+      }
+    } else {
+      if (markerP1) markerP1.style.display = 'none';
+      if (markerP2) markerP2.style.display = 'none';
+      if (rankPill) rankPill.style.display = 'none';
     }
 
     // Cronómetro
@@ -9710,19 +10757,140 @@ const Neon3DUI = (() => {
     }, 1400);
   }
 
-  function _handlePause(isPaused) {
+  function _handlePause(isPaused, isLiveOnline = false) {
     const pauseScreen = document.getElementById('screen-pause-3d');
     if (!pauseScreen) return;
-    if (isPaused) pauseScreen.classList.add('active');
-    else pauseScreen.classList.remove('active');
+
+    if (isPaused) {
+      const titleEl = document.getElementById('pause-3d-title');
+      const descEl = document.getElementById('pause-3d-desc');
+      const restartBtn = document.getElementById('btn-restart-3d');
+      const levelsBtn = document.getElementById('btn-levels-from-pause-3d');
+      const exitBtn = document.getElementById('btn-exit-3d');
+
+      if (isLiveOnline) {
+        if (titleEl) titleEl.textContent = 'PAUSA 3D (CARRERA EN VIVO)';
+        if (descEl) descEl.textContent = 'La carrera online continúa en tiempo real en la pista.';
+        if (restartBtn) restartBtn.style.display = 'none';
+        if (levelsBtn) levelsBtn.style.display = 'none';
+        if (exitBtn) exitBtn.textContent = '🚪 ABANDONAR SALA';
+      } else {
+        if (titleEl) titleEl.textContent = 'PAUSA 3D';
+        if (descEl) descEl.textContent = 'Partida detenida. ¿Qué deseas hacer?';
+        if (restartBtn) restartBtn.style.display = 'block';
+        if (levelsBtn) levelsBtn.style.display = 'block';
+        if (exitBtn) exitBtn.textContent = '🚪 SALIR AL MENÚ';
+      }
+      pauseScreen.classList.add('active');
+    } else {
+      pauseScreen.classList.remove('active');
+    }
   }
 
   function _handleGameEnd(win, stats) {
     activeLevel = stats.level;
     const maxLevels = typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.TOTAL_LEVELS : 20;
 
+    const victoryScreen = document.getElementById('screen-victory-3d');
+    const soloStats = document.getElementById('victory-3d-solo-stats');
+    const onlineComp = document.getElementById('victory-3d-online-comparison');
+    const titleEl = document.getElementById('victory-3d-title');
+    const msgEl = document.getElementById('victory-3d-msg');
+    const nextBtn = document.getElementById('btn-next-level-3d');
+    const retryBtn = document.getElementById('btn-retry-victory-3d');
+    const levelsBtn = document.getElementById('btn-levels-from-victory-3d');
+    const exitBtn = document.getElementById('btn-exit-victory-3d');
+
+    if (stats.isOnline) {
+      // ══════════════════════════════════════════════════════════════════
+      // MODAL RESULTADOS MULTIJUGADOR ONLINE 3D
+      // ══════════════════════════════════════════════════════════════════
+      _closeAllOverlays();
+      if (victoryScreen) {
+        if (soloStats) soloStats.style.display = 'none';
+        if (onlineComp) onlineComp.classList.remove('hidden');
+
+        const myRes = stats.myResult || {};
+        const oppRes = stats.oppResult || {};
+        const isWinner = !!myRes.isWinner;
+
+        if (titleEl) {
+          titleEl.textContent = isWinner ? '¡VICTORIA ONLINE! 🥇' : '2º LUGAR ONLINE 🥈';
+          titleEl.style.textShadow = isWinner ? '0 0 25px #00F0FF, 0 0 40px #FFD700' : '0 0 25px #FF007F';
+        }
+        if (msgEl) {
+          msgEl.textContent = isWinner
+            ? `¡Cruzaste la meta cibernética en 1º puesto del Nivel ${stats.level}!`
+            : `¡Buena carrera! El ganador fue ${stats.winnerName || oppRes.name || 'tu rival'}.`;
+        }
+
+        // Columna Local
+        const p1Name = document.getElementById('res-3d-p1-name');
+        const p1Pos = document.getElementById('res-3d-p1-pos');
+        const p1Time = document.getElementById('res-3d-p1-time');
+        const p1Coins = document.getElementById('res-3d-p1-coins');
+        const p1Score = document.getElementById('res-3d-p1-score');
+        const p1Col = document.getElementById('res-3d-p1-col');
+
+        if (p1Name) {
+          p1Name.textContent = myRes.name || 'Tú';
+          p1Name.style.color = myRes.color || '#00F0FF';
+        }
+        if (p1Col) p1Col.style.borderColor = myRes.color || '#00F0FF';
+        if (p1Pos) {
+          p1Pos.textContent = isWinner ? '1º WINNER 🥇' : '2º PUESTO 🥈';
+          p1Pos.style.color = isWinner ? '#FFD700' : '#cbd5e1';
+        }
+        if (p1Time) p1Time.textContent = `${myRes.time || stats.time} s`;
+        if (p1Coins) p1Coins.textContent = String(myRes.coins ?? stats.coins);
+        if (p1Score) p1Score.textContent = String(myRes.score ?? stats.score);
+
+        // Columna Rival
+        const p2Name = document.getElementById('res-3d-p2-name');
+        const p2Pos = document.getElementById('res-3d-p2-pos');
+        const p2Time = document.getElementById('res-3d-p2-time');
+        const p2Coins = document.getElementById('res-3d-p2-coins');
+        const p2Score = document.getElementById('res-3d-p2-score');
+        const p2Col = document.getElementById('res-3d-p2-col');
+
+        if (p2Name) {
+          p2Name.textContent = oppRes.name || 'Rival';
+          p2Name.style.color = oppRes.color || '#FF007F';
+        }
+        if (p2Col) p2Col.style.borderColor = oppRes.color || '#FF007F';
+        if (p2Pos) {
+          p2Pos.textContent = oppRes.isWinner ? '1º WINNER 🥇' : '2º PUESTO 🥈';
+          p2Pos.style.color = oppRes.isWinner ? '#FFD700' : '#cbd5e1';
+        }
+        if (p2Time) p2Time.textContent = oppRes.time ? `${oppRes.time} s` : '--';
+        if (p2Coins) p2Coins.textContent = String(oppRes.coins ?? 0);
+        if (p2Score) p2Score.textContent = String(oppRes.score ?? 0);
+
+        // Botones de acción
+        if (nextBtn) {
+          if (onlineOptions.isHost) {
+            nextBtn.style.display = 'block';
+            nextBtn.textContent = `⏩ SIGUIENTE NIVEL (${Math.min(maxLevels, stats.level + 1)})`;
+          } else {
+            nextBtn.style.display = 'none';
+          }
+        }
+        if (retryBtn) retryBtn.textContent = '🔄 REVANCHA';
+        if (levelsBtn) levelsBtn.textContent = '📋 SALIR AL LOBBY';
+        if (exitBtn) exitBtn.textContent = '🏠 MENÚ PRINCIPAL';
+
+        victoryScreen.classList.add('active');
+      }
+      return;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // MODO SOLO (ORIGINAL)
+    // ══════════════════════════════════════════════════════════════════
+    if (soloStats) soloStats.style.display = 'flex';
+    if (onlineComp) onlineComp.classList.add('hidden');
+
     if (win) {
-      // Guardar récord y desbloquear siguiente nivel
       if (typeof ScoreManager !== 'undefined') {
         ScoreManager.saveResults({
           level: stats.level,
@@ -9731,17 +10899,16 @@ const Neon3DUI = (() => {
         });
       }
 
-      const victoryScreen = document.getElementById('screen-victory-3d');
       if (victoryScreen) {
-        const msgEl = document.getElementById('victory-3d-msg');
-        if (msgEl) {
-          msgEl.textContent = `¡Cruzaste la meta cibernética del Nivel ${stats.level} con éxito!`;
+        if (titleEl) {
+          titleEl.textContent = '¡META CRUZADA! 🏆';
+          titleEl.style.textShadow = '0 0 25px #2ff3ff';
         }
+        if (msgEl) msgEl.textContent = `¡Cruzaste la meta cibernética del Nivel ${stats.level} con éxito!`;
         document.getElementById('victory-3d-time').textContent = `${stats.time} s`;
         document.getElementById('victory-3d-lives').textContent = `${stats.lives} / 3`;
         document.getElementById('victory-3d-score').textContent = stats.score;
 
-        const nextBtn = document.getElementById('btn-next-level-3d');
         if (nextBtn) {
           if (stats.level < maxLevels) {
             nextBtn.style.display = 'block';
@@ -9750,6 +10917,9 @@ const Neon3DUI = (() => {
             nextBtn.style.display = 'none';
           }
         }
+        if (retryBtn) retryBtn.textContent = '🔄 REPETIR NIVEL';
+        if (levelsBtn) levelsBtn.textContent = '📋 SELECCIÓN DE NIVELES';
+        if (exitBtn) exitBtn.textContent = '🚪 MENÚ PRINCIPAL';
 
         victoryScreen.classList.add('active');
       }
@@ -9767,6 +10937,7 @@ const Neon3DUI = (() => {
   return {
     init,
     startRace,
+    startRaceOnline,
     showToast,
     renderLevels3DGrid,
     get activeLevel() { return activeLevel; }
@@ -10146,14 +11317,24 @@ const UI = (() => {
       showScreen('settings');
     });
 
-    // ── Helper para poblar los 20 niveles en el selector Online ────────────
-    function _populateOnlineLevels() {
+    // ── Helper para poblar los 20 niveles en el selector Online (2D o 3D) ──
+    function _populateOnlineLevels(forceMode) {
       const select = document.getElementById('mp-select-level-online');
-      if (!select || select.children.length > 0) return;
-      const allLevels = LevelConfig.getAllLevels ? LevelConfig.getAllLevels() : [];
+      if (!select) return;
+      const mode = forceMode || onlineState.gameMode || '2d';
+      const is3D = mode === '3d';
+      const allLevels = (is3D && typeof Neon3DLevels !== 'undefined')
+        ? Neon3DLevels.getAllLevels()
+        : (LevelConfig.getAllLevels ? LevelConfig.getAllLevels() : []);
+
+      const prevVal = select.value || '1';
       select.innerHTML = allLevels.map(lvl => 
-        `<option value="${lvl.number}">Nivel ${lvl.number}: ${lvl.name} — [${lvl.difficulty}]</option>`
+        `<option value="${lvl.number}">Nivel ${lvl.number}: ${lvl.name} — [${lvl.difficulty}${is3D ? ' · 3D' : ''}]</option>`
       ).join('');
+
+      if (prevVal && select.querySelector(`option[value="${prevVal}"]`)) {
+        select.value = prevVal;
+      }
     }
 
     // ── Paleta Neón para Corredores ────────────────────────────────────────
@@ -10195,6 +11376,7 @@ const UI = (() => {
     const onlineState = {
       inRoom: false,
       isHost: false,
+      gameMode: '2d', // '2d' | '3d'
       roomId: null,
       seed: 42,
       level: 1,
@@ -10204,7 +11386,11 @@ const UI = (() => {
       p1Name: 'Host',
       p2Name: 'Rival',
       p1Color: '#00F0FF',
-      p2Color: '#FF007F'
+      p2Color: '#FF007F',
+      p1Wins: 0,
+      p1Losses: 0,
+      p2Wins: 0,
+      p2Losses: 0
     };
 
     function _showOnlineLobbyView(inRoom) {
@@ -10224,7 +11410,103 @@ const UI = (() => {
         onlineState.opponentReady = false;
         onlineState.opponentConnected = false;
         onlineState.roomId = null;
+        onlineState.p1Wins = 0;
+        onlineState.p1Losses = 0;
+        onlineState.p2Wins = 0;
+        onlineState.p2Losses = 0;
       }
+    }
+
+    function _updateOnlineScoreboard() {
+      const tbody = document.getElementById('online-scoreboard-body');
+      if (!tbody) return;
+
+      const players = [
+        {
+          slot: 0,
+          name: onlineState.p1Name || 'Host',
+          color: onlineState.p1Color || '#00F0FF',
+          wins: Math.max(0, Number(onlineState.p1Wins) || 0),
+          losses: Math.max(0, Number(onlineState.p1Losses) || 0)
+        },
+        {
+          slot: 1,
+          name: onlineState.opponentConnected ? (onlineState.p2Name || 'Rival') : 'Esperando rival...',
+          color: onlineState.p2Color || '#FF007F',
+          wins: Math.max(0, Number(onlineState.p2Wins) || 0),
+          losses: Math.max(0, Number(onlineState.p2Losses) || 0)
+        }
+      ];
+
+      players.sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (a.losses !== b.losses) return a.losses - b.losses;
+        return a.slot - b.slot;
+      });
+
+      const recordsDiffer = players[0].wins !== players[1].wins || players[0].losses !== players[1].losses;
+      tbody.innerHTML = '';
+
+      players.forEach((player, index) => {
+        const played = player.wins + player.losses;
+        const tr = document.createElement('tr');
+        if (recordsDiffer && index === 0) tr.classList.add('is-leader');
+        if (recordsDiffer && index === 1) tr.classList.add('is-trailing');
+
+        const posCell = document.createElement('td');
+        posCell.className = 'col-pos';
+        const posBadge = document.createElement('span');
+        posBadge.className = 'scoreboard-position';
+        posBadge.textContent = String(index + 1);
+        posCell.appendChild(posBadge);
+
+        const playerCell = document.createElement('td');
+        playerCell.className = 'col-player';
+        const playerWrap = document.createElement('div');
+        playerWrap.className = 'scoreboard-player';
+        const dot = document.createElement('span');
+        dot.className = 'scoreboard-player-dot';
+        dot.style.backgroundColor = player.color;
+        dot.style.color = player.color;
+        const name = document.createElement('span');
+        name.className = 'scoreboard-player-name';
+        name.textContent = player.name;
+        playerWrap.appendChild(dot);
+        playerWrap.appendChild(name);
+        playerCell.appendChild(playerWrap);
+
+        const winsCell = document.createElement('td');
+        winsCell.className = 'col-stat scoreboard-stat-win';
+        winsCell.textContent = String(player.wins);
+
+        const lossesCell = document.createElement('td');
+        lossesCell.className = 'col-stat scoreboard-stat-loss';
+        lossesCell.textContent = String(player.losses);
+
+        const stateCell = document.createElement('td');
+        stateCell.className = 'col-state';
+        const stateBadge = document.createElement('span');
+        stateBadge.className = 'scoreboard-state neutral';
+        if (played === 0) {
+          stateBadge.textContent = 'SIN PARTIDAS';
+        } else if (player.wins > player.losses) {
+          stateBadge.className = 'scoreboard-state winning';
+          stateBadge.textContent = 'GANANDO';
+        } else if (player.wins < player.losses) {
+          stateBadge.className = 'scoreboard-state losing';
+          stateBadge.textContent = 'PERDIENDO';
+        } else {
+          stateBadge.textContent = 'EMPATE';
+        }
+        stateCell.appendChild(stateBadge);
+
+        tr.appendChild(posCell);
+        tr.appendChild(playerCell);
+        tr.appendChild(winsCell);
+        tr.appendChild(lossesCell);
+        tr.appendChild(stateCell);
+        tbody.appendChild(tr);
+      });
     }
 
     function _updateOnlineLobbyUI() {
@@ -10234,14 +11516,51 @@ const UI = (() => {
       const badge = document.getElementById('room-code-badge');
       if (badge) badge.textContent = onlineState.roomId || '------';
 
+      // Modo de Juego (2D vs 3D)
+      const btnMode2D = document.getElementById('btn-mode-2d');
+      const btnMode3D = document.getElementById('btn-mode-3d');
+      const guestModeWrap = document.getElementById('online-mode-guest-indicator');
+      const guestModeText = document.getElementById('online-mode-guest-text');
+      const is3D = onlineState.gameMode === '3d';
+
+      if (onlineState.isHost) {
+        btnMode2D?.removeAttribute('disabled');
+        btnMode3D?.removeAttribute('disabled');
+        guestModeWrap?.classList.add('hidden');
+        if (is3D) {
+          btnMode3D?.classList.add('active');
+          btnMode2D?.classList.remove('active');
+        } else {
+          btnMode2D?.classList.add('active');
+          btnMode3D?.classList.remove('active');
+        }
+      } else {
+        btnMode2D?.setAttribute('disabled', 'true');
+        btnMode3D?.setAttribute('disabled', 'true');
+        guestModeWrap?.classList.remove('hidden');
+        if (guestModeText) {
+          guestModeText.textContent = is3D ? '🕶️ Modo 3D Cyberpunk' : '🕹️ Modo 2D Clásico';
+          guestModeText.style.color = is3D ? '#FF007F' : '#00F0FF';
+        }
+        if (is3D) {
+          btnMode3D?.classList.add('active');
+          btnMode2D?.classList.remove('active');
+        } else {
+          btnMode2D?.classList.add('active');
+          btnMode3D?.classList.remove('active');
+        }
+      }
+
       // Nivel
       const hostWrap = document.getElementById('online-level-host-wrap');
       const guestWrap = document.getElementById('online-level-guest-wrap');
       const guestText = document.getElementById('online-level-guest-text');
       const selectLevel = document.getElementById('mp-select-level-online');
 
-      const lvlData = LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null;
-      const lvlLabel = lvlData ? `Nivel ${onlineState.level}: ${lvlData.name}` : `Nivel ${onlineState.level}`;
+      const lvlData = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(onlineState.level) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null);
+      const lvlLabel = lvlData ? `Nivel ${onlineState.level}: ${lvlData.name}${is3D ? ' (3D)' : ''}` : `Nivel ${onlineState.level}`;
 
       if (onlineState.isHost) {
         hostWrap?.classList.remove('hidden');
@@ -10413,6 +11732,8 @@ const UI = (() => {
           }
         }
       }
+
+      _updateOnlineScoreboard();
     }
 
     function _setupNetworkListeners() {
@@ -10421,8 +11742,10 @@ const UI = (() => {
         onlineState.p2Name = data.opponentName || 'Rival';
         onlineState.p2Color = data.opponentColor || '#FF007F';
         onlineState.seed = data.seed;
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         onlineState.myReady = false;
         onlineState.opponentReady = false;
+        _populateOnlineLevels();
         _updateOnlineLobbyUI();
         if (AudioManager.playPowerup) AudioManager.playPowerup();
         showToast(`⚡ ¡${onlineState.p2Name} se unió a la sala!`, 'success');
@@ -10439,7 +11762,60 @@ const UI = (() => {
         _updateOnlineLobbyUI();
       };
 
+      Network.onOpponentDisconnected = (data) => {
+        onlineState.opponentConnected = false;
+        _updateOnlineLobbyUI();
+        if (data && data.reconnectWindowMs) {
+          showToast('⚠️ Rival desconectado. Esperando reconexión...', 'warning');
+        }
+      };
+
+      Network.onOpponentReconnected = (data) => {
+        onlineState.opponentConnected = true;
+        if (data && data.name) {
+          if (Number(data.slot) === 0) onlineState.p1Name = data.name;
+          else onlineState.p2Name = data.name;
+        }
+        if (data && data.color) {
+          if (Number(data.slot) === 0) onlineState.p1Color = data.color;
+          else onlineState.p2Color = data.color;
+        }
+        _updateOnlineLobbyUI();
+        showToast('✅ Rival reconectado. La sala continúa.', 'success');
+      };
+
+      Network.onReconnected = (res) => {
+        if (!res || !res.success) {
+          if (res && res.success === false) showToast('La sala anterior ya no existe.', 'warning');
+          return;
+        }
+        onlineState.inRoom = true;
+        onlineState.roomId = res.roomId || onlineState.roomId;
+        onlineState.isHost = Number(res.slot) === 0;
+        onlineState.seed = res.seed || onlineState.seed;
+        onlineState.level = res.level || onlineState.level;
+        if (res.gameMode) onlineState.gameMode = res.gameMode;
+        onlineState.opponentConnected = res.opponentConnected !== false;
+        onlineState.p1Name = res.hostName || onlineState.p1Name;
+        onlineState.p1Color = res.hostColor || onlineState.p1Color;
+        onlineState.p2Name = res.guestName || onlineState.p2Name;
+        onlineState.p2Color = res.guestColor || onlineState.p2Color;
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+
+        _populateOnlineLevels();
+
+        if (typeof Game !== 'undefined' && Game.state === 'playing') {
+          showToast('🔄 Conexión restablecida. La carrera continúa.', 'success');
+          return;
+        }
+        _showOnlineLobbyView(true);
+        _updateOnlineLobbyUI();
+        showToast('🔄 Reconectado a la sala.', 'success');
+      };
+
       Network.onRoomReadyStatus = (data) => {
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         if (onlineState.isHost) {
           onlineState.myReady = data.p1Ready;
           onlineState.opponentReady = data.p2Ready;
@@ -10455,7 +11831,23 @@ const UI = (() => {
           onlineState.p1Color = data.p1Color || onlineState.p1Color;
           onlineState.p2Color = data.p2Color || onlineState.p2Color;
         }
+        onlineState.p1Wins = Number(data.p1Wins) || 0;
+        onlineState.p1Losses = Number(data.p1Losses) || 0;
+        onlineState.p2Wins = Number(data.p2Wins) || 0;
+        onlineState.p2Losses = Number(data.p2Losses) || 0;
+        _populateOnlineLevels();
         _updateOnlineLobbyUI();
+      };
+
+      Network.onModeUpdated = (data) => {
+        onlineState.gameMode = data.gameMode || '2d';
+        onlineState.level = data.level || onlineState.level;
+        onlineState.myReady = false;
+        onlineState.opponentReady = false;
+        _populateOnlineLevels();
+        _updateOnlineLobbyUI();
+        const modeLabel = onlineState.gameMode === '3d' ? '3D Cyberpunk' : '2D Clásico';
+        showToast(`🎮 Modo de carrera cambiado a ${modeLabel}.`, 'info');
       };
 
       Network.onMatchStartCountdown = (data) => {
@@ -10476,27 +11868,45 @@ const UI = (() => {
         const p2Name     = data.p2Name || onlineState.p2Name;
         const p1Color    = data.p1Color || onlineState.p1Color;
         const p2Color    = data.p2Color || onlineState.p2Color;
+        const is3D       = (data.gameMode === '3d') || (onlineState.gameMode === '3d');
 
         setTimeout(() => {
           startCountdown(() => {
-            Game.startLevelOnline(
-              matchLevel,
-              true,
-              onlineState.isHost,
-              matchSeed,
-              onlineState.isHost ? p1Name : p2Name,
-              onlineState.isHost ? p2Name : p1Name,
-              onlineState.isHost ? p1Color : p2Color,
-              onlineState.isHost ? p2Color : p1Color
-            );
+            if (is3D && typeof Neon3DUI !== 'undefined') {
+              Neon3DUI.startRaceOnline(
+                matchLevel,
+                {
+                  raceId: data.raceId || null,
+                  seed: matchSeed,
+                  isHost: onlineState.isHost,
+                  myColor: onlineState.isHost ? p1Color : p2Color,
+                  rivalName: onlineState.isHost ? p2Name : p1Name,
+                  rivalColor: onlineState.isHost ? p2Color : p1Color
+                }
+              );
+            } else {
+              Game.startLevelOnline(
+                matchLevel,
+                true,
+                onlineState.isHost,
+                matchSeed,
+                onlineState.isHost ? p1Name : p2Name,
+                onlineState.isHost ? p2Name : p1Name,
+                onlineState.isHost ? p1Color : p2Color,
+                onlineState.isHost ? p2Color : p1Color,
+                data.raceId || null
+              );
+            }
           });
         }, 500);
       };
 
       Network.onLevelUpdated = (data) => {
         onlineState.level = data.level;
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         onlineState.myReady = false;
         onlineState.opponentReady = false;
+        _populateOnlineLevels();
         _updateOnlineLobbyUI();
         showToast(`El Host cambió la carrera al Nivel ${data.level}. Confirmen con ¡Listo!`, 'info');
       };
@@ -10512,13 +11922,19 @@ const UI = (() => {
 
       Network.onRoomReturnedToLobby = (data) => {
         if (typeof Game !== 'undefined') Game.stopLoop();
+        if (typeof Neon3DEngine !== 'undefined') Neon3DEngine.stop();
 
         hideScreen('game');
+        hideScreen('game-3d');
         hideScreen('results');
         hideScreen('gameover');
         hidePause();
+        document.getElementById('screen-pause-3d')?.classList.remove('active');
+        document.getElementById('screen-gameover-3d')?.classList.remove('active');
+        document.getElementById('screen-victory-3d')?.classList.remove('active');
 
         onlineState.inRoom = true;
+        if (data.gameMode) onlineState.gameMode = data.gameMode;
         onlineState.level = data.level || onlineState.level;
         onlineState.seed = data.seed || Math.floor(Math.random() * 10000);
         onlineState.myReady = false;
@@ -10531,12 +11947,14 @@ const UI = (() => {
         onlineState.p2Color = data.p2Color || onlineState.p2Color;
 
         showScreen('lobby');
+        _populateOnlineLevels();
         _showOnlineLobbyView(true);
         _updateOnlineLobbyUI();
 
+        const modeTxt = onlineState.gameMode === '3d' ? '3D Cyberpunk' : '2D';
         const msg = data.reason === 'restart'
-          ? `↺ Revancha en el Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`
-          : `🏁 Pasando al Nivel ${onlineState.level}. ¡Pulsen "¡ESTOY LISTO!"!`;
+          ? `↺ Revancha en el Nivel ${onlineState.level} (${modeTxt}). ¡Pulsen "¡ESTOY LISTO!"!`
+          : `🏁 Pasando al Nivel ${onlineState.level} (${modeTxt}). ¡Pulsen "¡ESTOY LISTO!"!`;
         showToast(msg, 'info');
       };
     }
@@ -10561,13 +11979,62 @@ const UI = (() => {
     });
 
     // ── Lobby Online ────────────────────────────────────────────────────────
-    document.getElementById('btn-online')?.addEventListener('click', () => {
+    const _openOnlineLobby = (defaultMode = '2d') => {
       AudioManager.init();
       showScreen('lobby');
-      Network.init();
       _setupNetworkListeners();
-      _populateOnlineLevels();
+      Network.init();
+      onlineState.gameMode = defaultMode;
+      _populateOnlineLevels(defaultMode);
       _showOnlineLobbyView(false);
+      const btn2D = document.getElementById('btn-mode-2d');
+      const btn3D = document.getElementById('btn-mode-3d');
+      if (defaultMode === '3d') {
+        btn3D?.classList.add('active');
+        btn2D?.classList.remove('active');
+      } else {
+        btn2D?.classList.add('active');
+        btn3D?.classList.remove('active');
+      }
+    };
+
+    document.getElementById('btn-online')?.addEventListener('click', () => {
+      _openOnlineLobby('2d');
+    });
+
+    document.getElementById('btn-online-3d-menu')?.addEventListener('click', () => {
+      _openOnlineLobby('3d');
+    });
+
+    document.getElementById('btn-online-from-3d')?.addEventListener('click', () => {
+      _openOnlineLobby('3d');
+    });
+
+    // ── Conmutador de modo 2D / 3D en la sala ────────────────────────────────
+    document.getElementById('btn-mode-2d')?.addEventListener('click', () => {
+      if (!onlineState.isHost) return;
+      if (onlineState.gameMode === '2d') return;
+      onlineState.gameMode = '2d';
+      onlineState.myReady = false;
+      onlineState.opponentReady = false;
+      _populateOnlineLevels('2d');
+      const lvlData = LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null;
+      Network.changeGameMode('2d', onlineState.level, lvlData?.levelLength || 3200);
+      _updateOnlineLobbyUI();
+      showToast('🎮 Modo cambiado a 2D Clásico.', 'info');
+    });
+
+    document.getElementById('btn-mode-3d')?.addEventListener('click', () => {
+      if (!onlineState.isHost) return;
+      if (onlineState.gameMode === '3d') return;
+      onlineState.gameMode = '3d';
+      onlineState.myReady = false;
+      onlineState.opponentReady = false;
+      _populateOnlineLevels('3d');
+      const lvlData = typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(onlineState.level) : null;
+      Network.changeGameMode('3d', onlineState.level, lvlData?.finishDistance || 650);
+      _updateOnlineLobbyUI();
+      showToast('🕶️ Modo cambiado a 3D Cyberpunk.', 'info');
     });
     
     document.getElementById('btn-back-lobby')?.addEventListener('click', () => {
@@ -10587,17 +12054,23 @@ const UI = (() => {
     // Crear Sala
     document.getElementById('btn-create-room')?.addEventListener('click', () => {
       _populateOnlineLevels();
-      Network.init();
       _setupNetworkListeners();
+      Network.init();
 
       const pName = ScoreManager.getPlayerName() || 'Host';
       const selLevel = parseInt(document.getElementById('mp-select-level-online')?.value || '1', 10);
       const pColor = onlineState.p1Color || '#00F0FF';
+      const is3D = onlineState.gameMode === '3d';
+      const lvlInfo = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(selLevel) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(selLevel) : null);
+      const goalDist = is3D ? (lvlInfo?.finishDistance || 650) : (lvlInfo?.levelLength || 3200);
 
-      Network.createRoom({ name: pName, level: selLevel, color: pColor }, (res) => {
+      Network.createRoom({ name: pName, level: selLevel, color: pColor, gameMode: onlineState.gameMode || '2d', goalWorldX: goalDist }, (res) => {
         if (res && res.success) {
           onlineState.isHost = true;
           onlineState.roomId = res.roomId;
+          onlineState.gameMode = res.gameMode || onlineState.gameMode || '2d';
           onlineState.seed = res.seed;
           onlineState.level = res.level || selLevel;
           onlineState.p1Name = pName;
@@ -10607,10 +12080,16 @@ const UI = (() => {
           onlineState.opponentConnected = false;
           onlineState.myReady = false;
           onlineState.opponentReady = false;
+          onlineState.p1Wins = 0;
+          onlineState.p1Losses = 0;
+          onlineState.p2Wins = 0;
+          onlineState.p2Losses = 0;
 
+          _populateOnlineLevels();
           _showOnlineLobbyView(true);
           _updateOnlineLobbyUI();
-          showToast(`¡Sala ${res.roomId} creada! Comparte el código o enlace con tu rival`, 'success');
+          const modeTag = onlineState.gameMode === '3d' ? '3D' : '2D';
+          showToast(`¡Sala ${res.roomId} (${modeTag}) creada! Comparte el código o enlace con tu rival`, 'success');
         } else {
           showToast('Error al crear sala: ' + (res?.message || 'Sin conexión'), 'danger');
         }
@@ -10629,8 +12108,8 @@ const UI = (() => {
       const statusEl = document.getElementById('join-status-msg');
       if (statusEl) statusEl.textContent = 'Conectando con la sala ' + code + '...';
 
-      Network.init();
       _setupNetworkListeners();
+      Network.init();
 
       const pName = ScoreManager.getPlayerName() || 'Rival';
       const pColor = onlineState.p2Color || '#FF007F';
@@ -10639,6 +12118,7 @@ const UI = (() => {
         if (res && res.success) {
           onlineState.isHost = false;
           onlineState.roomId = res.roomId;
+          onlineState.gameMode = res.gameMode || '2d';
           onlineState.seed = res.seed;
           onlineState.level = res.level || 1;
           onlineState.p1Name = res.hostName || 'Host';
@@ -10648,11 +12128,17 @@ const UI = (() => {
           onlineState.opponentConnected = true;
           onlineState.myReady = false;
           onlineState.opponentReady = !!res.p1Ready;
+          onlineState.p1Wins = 0;
+          onlineState.p1Losses = 0;
+          onlineState.p2Wins = 0;
+          onlineState.p2Losses = 0;
 
+          _populateOnlineLevels();
           _showOnlineLobbyView(true);
           _updateOnlineLobbyUI();
           if (AudioManager.playPowerup) AudioManager.playPowerup();
-          showToast(`¡Conectado a la sala ${code}! Pulsa ¡ESTOY LISTO!`, 'success');
+          const modeTag = onlineState.gameMode === '3d' ? '3D' : '2D';
+          showToast(`¡Conectado a la sala ${code} (${modeTag})! Pulsa ¡ESTOY LISTO!`, 'success');
         } else {
           if (statusEl) statusEl.textContent = '❌ ' + (res?.message || 'Error al unirse');
           showToast(res?.message || 'Error al unirse a la sala', 'danger');
@@ -10669,7 +12155,12 @@ const UI = (() => {
 
       const myName = onlineState.isHost ? onlineState.p1Name : onlineState.p2Name;
       const myColor = onlineState.isHost ? onlineState.p1Color : onlineState.p2Color;
-      Network.sendReady(onlineState.myReady, myName, myColor);
+      const is3D = onlineState.gameMode === '3d';
+      const levelInfo = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(onlineState.level) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(onlineState.level) : null);
+      const goalDist = is3D ? (levelInfo?.finishDistance || 650) : (levelInfo?.levelLength || 3200);
+      Network.sendReady(onlineState.myReady, myName, myColor, goalDist);
       _updateOnlineLobbyUI();
     });
 
@@ -10680,7 +12171,12 @@ const UI = (() => {
       onlineState.level = newLevel;
       onlineState.myReady = false;
       onlineState.opponentReady = false;
-      Network.changeLevel(newLevel);
+      const is3D = onlineState.gameMode === '3d';
+      const levelInfo = is3D
+        ? (typeof Neon3DLevels !== 'undefined' ? Neon3DLevels.getLevelData(newLevel) : null)
+        : (LevelConfig.getLevelData ? LevelConfig.getLevelData(newLevel) : null);
+      const goalDist = is3D ? (levelInfo?.finishDistance || 650) : (levelInfo?.levelLength || 3200);
+      Network.changeLevel(newLevel, goalDist, onlineState.gameMode);
       _updateOnlineLobbyUI();
       showToast(`Nivel cambiado al Nivel ${newLevel}. Ambos deben confirmar con ¡Listo!`, 'info');
     });
@@ -10715,8 +12211,8 @@ const UI = (() => {
       const roomParam = (params.get('room') || window.location.hash.replace('#room=', '')).trim().toUpperCase();
       if (roomParam && roomParam.length === 6) {
         showScreen('lobby');
-        Network.init();
         _setupNetworkListeners();
+        Network.init();
         _populateOnlineLevels();
         _showOnlineLobbyView(false);
         const input = document.getElementById('join-room-code');

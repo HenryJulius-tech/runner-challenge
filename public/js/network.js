@@ -30,6 +30,7 @@ const Network = (() => {
   let onRoomReadyStatusCallback = null;
   let onMatchStartCountdownCallback = null;
   let onLevelUpdatedCallback = null;
+  let onModeUpdatedCallback = null;
   let onOpponentLeftLobbyCallback = null;
   let onRoomReturnedToLobbyCallback = null;
   let onPlayerGoalReachedCallback = null;
@@ -145,6 +146,10 @@ const Network = (() => {
         if (onLevelUpdatedCallback) onLevelUpdatedCallback(data);
       });
 
+      socket.on('mode_updated', (data) => {
+        if (onModeUpdatedCallback) onModeUpdatedCallback(data);
+      });
+
       socket.on('opponent_left_lobby', (data) => {
         if (onOpponentLeftLobbyCallback) onOpponentLeftLobbyCallback(data);
       });
@@ -245,9 +250,20 @@ const Network = (() => {
     }
   }
 
-  function changeLevel(level, goalWorldX) {
+  function changeLevel(level, goalWorldX, gameMode) {
     if (socket && roomId && isHost) {
       socket.emit('select_level', {
+        level: parseInt(level, 10) || 1,
+        goalWorldX,
+        gameMode
+      });
+    }
+  }
+
+  function changeGameMode(gameMode, level, goalWorldX) {
+    if (socket && roomId && isHost) {
+      socket.emit('select_mode', {
+        gameMode: gameMode === '3d' ? '3d' : '2d',
         level: parseInt(level, 10) || 1,
         goalWorldX
       });
@@ -310,6 +326,7 @@ const Network = (() => {
     updateProfile,
     sendPlayerFinished,
     changeLevel,
+    changeGameMode,
     returnToLobby,
     leaveRoom,
     sendState,
@@ -332,6 +349,7 @@ const Network = (() => {
     set onRoomReadyStatus(cb) { onRoomReadyStatusCallback = cb; },
     set onMatchStartCountdown(cb) { onMatchStartCountdownCallback = cb; },
     set onLevelUpdated(cb) { onLevelUpdatedCallback = cb; },
+    set onModeUpdated(cb) { onModeUpdatedCallback = cb; },
     set onOpponentLeftLobby(cb) { onOpponentLeftLobbyCallback = cb; },
     set onRoomReturnedToLobby(cb) { onRoomReturnedToLobbyCallback = cb; },
     set onPlayerGoalReached(cb) { onPlayerGoalReachedCallback = cb; },

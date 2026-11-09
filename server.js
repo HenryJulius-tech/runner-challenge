@@ -96,6 +96,8 @@ function roomReadyPayload(room) {
   const p1 = getPlayerBySlot(room, 0) || { ready: false, name: 'Host', color: '#00F0FF' };
   const p2 = getPlayerBySlot(room, 1) || { ready: false, name: 'Rival', color: '#FF007F' };
   return {
+    gameMode: room.gameMode || '2d',
+    level: room.level || 1,
     p1Ready: !!p1.ready,
     p2Ready: !!p2.ready,
     p1Name: p1.name || 'Host',
@@ -146,6 +148,7 @@ function resetRacePlayers(room, race) {
       name: player.name,
       color: player.color,
       worldX: 0,
+      px: 0,
       y: 0,
       vy: 0,
       speed: 5,
@@ -168,6 +171,7 @@ function buildRaceSnapshot(room) {
   const race = room.race;
   return {
     raceId: race.id,
+    gameMode: room.gameMode || '2d',
     tick: race.tick,
     serverTime: race.serverTime,
     goalWorldX: race.goalWorldX,
@@ -186,6 +190,7 @@ function buildRaceSnapshot(room) {
         color: player.color,
         connected: !!player.connected,
         worldX: safeNumber(s.worldX),
+        px: safeNumber(s.px, 0),
         y: safeNumber(s.y),
         vy: safeNumber(s.vy),
         speed: safeNumber(s.speed, 5),
@@ -286,9 +291,10 @@ function startRace(room) {
   const p1 = getPlayerBySlot(room, 0) || {};
   const p2 = getPlayerBySlot(room, 1) || {};
 
-  console.log(`Sala ${room.id}: inicia carrera #${race.id} (nivel ${room.level}, meta ${race.goalWorldX}px)`);
+  console.log(`Sala ${room.id}: inicia carrera #${race.id} (modo: ${room.gameMode || '2d'}, nivel ${room.level}, meta ${race.goalWorldX}px)`);
   io.to(room.id).emit('match_start_countdown', {
     raceId: race.id,
+    gameMode: room.gameMode || '2d',
     goalWorldX: race.goalWorldX,
     startAt: race.startServerTime,
     serverTime: Date.now(),
@@ -453,9 +459,10 @@ function applyPlayerState(room, player, data) {
   const incomingX = safeNumber(data?.worldX, s.worldX);
   // El progreso oficial es monótono: nunca retrocede por un paquete atrasado.
   s.worldX = Math.max(0, Math.min(race.goalWorldX, Math.max(safeNumber(s.worldX), incomingX)));
+  s.px = safeNumber(data?.px, safeNumber(s.px, 0));
   s.y = safeNumber(data?.y, safeNumber(s.y));
   s.vy = safeNumber(data?.vy, safeNumber(s.vy));
-  s.speed = Math.max(0, Math.min(30, safeNumber(data?.speed, safeNumber(s.speed, 5))));
+  s.speed = Math.max(0, Math.min(60, safeNumber(data?.speed, safeNumber(s.speed, 5))));
   s.isDucking = !!data?.isDucking;
   s.turboTimer = Math.max(0, safeNumber(data?.turboTimer));
   s.dashTimer = Math.max(0, safeNumber(data?.dashTimer));
@@ -542,11 +549,14 @@ io.on('connection', (socket) => {
     const playerName = safeName(data && data.name, 'Host (P1)');
     const playerColor = safeColor(data && data.color, '#00F0FF');
     const level = parseInt(data && data.level, 10) || 1;
+    const gameMode = (data && data.gameMode === '3d') ? '3d' : '2d';
+    const defaultGoal = gameMode === '3d' ? 650 : 3200;
     const token = makeId();
     const playerId = makeId();
 
     rooms[roomId] = {
       id: roomId,
+      gameMode,
       players: [{
         id: socket.id,
         playerId,
@@ -562,10 +572,10 @@ io.on('connection', (socket) => {
       }],
       seed: Math.floor(Math.random() * 10000),
       level: level,
-      goalWorldX: safeNumber(data && data.goalWorldX, 3200),
+      goalWorldX: safeNumber(data && data.goalWorldX, defaultGoal),
       winnerId: null,
       finishedPlayers: {},
-      race: createRace({ goalWorldX: safeNumber(data && data.goalWorldX, 3200) })
+      race: createRace({ goalWorldX: safeNumber(data && data.goalWorldX, defaultGoal) })
     };
 
     socket.join(roomId);
@@ -576,6 +586,7 @@ io.on('connection', (socket) => {
       callback({
         success: true,
         roomId,
+        gameMode,
         seed: rooms[roomId].seed,
         level: rooms[roomId].level,
         hostName: playerName,
@@ -585,7 +596,7 @@ io.on('connection', (socket) => {
         slot: 0
       });
     }
-    console.log(`Sala creada: ${roomId} por ${socket.id} (${playerName}, ${playerColor})`);
+    console.log(`Sala creada: ${roomId} por ${socket.id} (${playerName}, ${playerColor}, modo: ${gameMode})`);
   });
 
   socket.on('join_room', (data, callback) => {
@@ -630,6 +641,7 @@ io.on('connection', (socket) => {
             success: true,
             reconnected: true,
             roomId,
+            gameMode: room.gameMode || '2d',
             seed: room.seed,
             level: room.level,
             hostName: p1.name,
@@ -642,7 +654,7 @@ io.on('connection', (socket) => {
             opponentConnected: getConnectedPlayers(room).length > 1,
             raceActive: !!(room.race && room.race.active),
             raceId: room.race?.id || null,
-            goalWorldX: room.goalWorldX || 3200
+            goalWorldX: room.goalWorldX || (room.gameMode === '3d' ? 650 : 3200)
           });
         }
 
@@ -702,6 +714,7 @@ io.on('connection', (socket) => {
         callback({
           success: true,
           roomId,
+          gameMode: room.gameMode || '2d',
           seed: room.seed,
           level: room.level,
           hostName: hostPlayer.name,
@@ -720,6 +733,7 @@ io.on('connection', (socket) => {
       socket.to(roomId).emit('player_joined', {
         seed: room.seed,
         level: room.level,
+        gameMode: room.gameMode || '2d',
         opponentName: playerName,
         opponentColor: playerColor,
         playerId,
@@ -789,6 +803,39 @@ io.on('connection', (socket) => {
     registerFinish(room, player.playerId, data || {});
   });
 
+  // Cambio de modo de juego (2D o 3D) por el Host
+  socket.on('select_mode', (data) => {
+    const { room, player } = getSocketPlayer(socket);
+    if (!room || !player || player.slot !== 0) return;
+
+    stopRaceTick(room);
+    clearRaceTimers(room.race);
+    room.gameMode = data?.gameMode === '3d' ? '3d' : '2d';
+    if (data && Number.isFinite(Number(data.goalWorldX))) {
+      room.goalWorldX = Math.max(100, Math.min(MAX_WORLD_X, Number(data.goalWorldX)));
+    } else {
+      room.goalWorldX = room.gameMode === '3d' ? 650 : 3200;
+    }
+    if (data && data.level) {
+      room.level = parseInt(data.level, 10) || 1;
+    }
+    room.winnerId = null;
+    room.finishedPlayers = {};
+    room.players.forEach(p => p.ready = false);
+    room.race = createRace(room);
+    room.race.goalWorldX = room.goalWorldX;
+
+    console.log(`Sala ${room.id}: modo cambiado a ${room.gameMode} por el Host`);
+    io.to(room.id).emit('mode_updated', {
+      gameMode: room.gameMode,
+      level: room.level,
+      goalWorldX: room.goalWorldX,
+      p1Ready: false,
+      p2Ready: false
+    });
+    emitReadyStatus(room);
+  });
+
   // Cambio de nivel por el Host
   socket.on('select_level', (data) => {
     const { room, player } = getSocketPlayer(socket);
@@ -797,6 +844,9 @@ io.on('connection', (socket) => {
     stopRaceTick(room);
     clearRaceTimers(room.race);
     room.level = parseInt(data.level, 10) || 1;
+    if (data && data.gameMode) {
+      room.gameMode = data.gameMode === '3d' ? '3d' : '2d';
+    }
     if (data && Number.isFinite(Number(data.goalWorldX))) {
       room.goalWorldX = Math.max(100, Math.min(MAX_WORLD_X, Number(data.goalWorldX)));
     }
@@ -809,6 +859,7 @@ io.on('connection', (socket) => {
 
     io.to(room.id).emit('level_updated', {
       level: room.level,
+      gameMode: room.gameMode || '2d',
       goalWorldX: room.goalWorldX,
       p1Ready: false,
       p2Ready: false
@@ -823,6 +874,9 @@ io.on('connection', (socket) => {
     stopRaceTick(room);
     clearRaceTimers(room.race);
 
+    if (data && data.gameMode) {
+      room.gameMode = data.gameMode === '3d' ? '3d' : '2d';
+    }
     if (data && data.level) {
       room.level = parseInt(data.level, 10);
     } else if (data && data.nextLevel) {
@@ -841,9 +895,10 @@ io.on('connection', (socket) => {
     const p1 = getPlayerBySlot(room, 0) || { ready: false, name: 'Host', color: '#00F0FF' };
     const p2 = getPlayerBySlot(room, 1) || { ready: false, name: 'Rival', color: '#FF007F' };
 
-    console.log(`Sala ${room.id} regresando al lobby. Nivel objetivo: ${room.level}, Motivo: ${data?.reason || 'siguiente'}`);
+    console.log(`Sala ${room.id} regresando al lobby. Modo: ${room.gameMode || '2d'}, Nivel objetivo: ${room.level}, Motivo: ${data?.reason || 'siguiente'}`);
 
     io.to(room.id).emit('room_returned_to_lobby', {
+      gameMode: room.gameMode || '2d',
       level: room.level,
       seed: room.seed,
       goalWorldX: room.goalWorldX,
