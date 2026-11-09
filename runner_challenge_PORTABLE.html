@@ -9144,10 +9144,17 @@ const Neon3DEngine = (() => {
   let canvas = null;
   let renderer = null;
   let scene = null;
-  let camera = null;
+  let camera = null;       // Cámara del jugador local
+  let cameraRival = null;  // Cámara del rival (split-screen online)
   let composer = null;
   let worldData = null;
   let playerRig = null;
+
+  // Split-screen: overlay DOM para la barra divisora y etiquetas
+  let splitDividerEl = null;
+  let splitLabel1El = null;
+  let splitLabel2El = null;
+  let isSplitScreen = false;
 
   // Nivel actual
   let currentLevelNum = 1;
@@ -9224,6 +9231,7 @@ const Neon3DEngine = (() => {
   let shake = 0;
   let boost = 0;
   let camX = 0;
+  let rivalCamX = 0; // Cámara del rival (suavizada para split-screen)
 
   // Cooldowns y temporizadores de habilidades
   let cdDisc = 0;
@@ -9284,13 +9292,20 @@ const Neon3DEngine = (() => {
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(65, 1, 0.1, 500);
+    cameraRival = new THREE.PerspectiveCamera(65, 1, 0.1, 500);
 
-    // Configurar Bloom si están disponibles los shaders
+    // En split-screen, el EffectComposer no se usa (renderizamos con setViewport).
+    // Solo inicializamos bloom si hay shaders disponibles; en split-screen se desactiva.
     if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
       composer = new THREE.EffectComposer(renderer);
       composer.addPass(new THREE.RenderPass(scene, camera));
       composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(256, 256), isTouch ? 0.85 : 1.1, 0.55, 0.12));
     }
+
+    // Crear elementos DOM del divisor split-screen (ocultos por defecto)
+    _createSplitDivider();
+
+    _createSplitDivider();
 
     _loadLevelWorld(currentLevelNum);
     playerRig = Neon3DPlayer.create(scene);
@@ -9307,9 +9322,124 @@ const Neon3DEngine = (() => {
     if (w === 0 || h === 0) return;
 
     renderer.setSize(w, h, false);
-    if (composer) composer.setSize(w, h);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
+
+    if (isSplitScreen) {
+      // Split: cada mitad tiene su propio aspect
+      const halfH = Math.floor(h / 2);
+      const aspect = w / halfH;
+      camera.aspect = aspect;
+      camera.updateProjectionMatrix();
+      cameraRival.aspect = aspect;
+      cameraRival.updateProjectionMatrix();
+      // En split-screen no usamos el composer (scissor test incompatible)
+    } else {
+      if (composer) composer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+  }
+
+  function _createSplitDivider() {
+    // Crear la barra divisora central del split-screen (oculta hasta modo online)
+    if (splitDividerEl) return; // Ya existe
+    const wrap = document.getElementById('screen-game-3d');
+    if (!wrap) return;
+
+    splitDividerEl = document.createElement('div');
+    splitDividerEl.id = 'split-divider-3d';
+    splitDividerEl.style.cssText = [
+      'position:absolute', 'left:0', 'right:0', 'top:50%',
+      'transform:translateY(-50%)', 'height:4px',
+      'background:linear-gradient(90deg,#ff2bd6,#2ff3ff,#ff2bd6)',
+      'box-shadow:0 0 14px #2ff3ff,0 0 28px #ff2bd6',
+      'z-index:60', 'pointer-events:none', 'display:none'
+    ].join(';');
+
+    splitLabel1El = document.createElement('div');
+    splitLabel1El.id = 'split-label-p1';
+    splitLabel1El.style.cssText = [
+      'position:absolute', 'left:8px', 'top:calc(50% - 36px)',
+      'z-index:61', 'pointer-events:none', 'display:none',
+      'font-family:var(--font-game,Orbitron,monospace)', 'font-size:11px',
+      'font-weight:900', 'letter-spacing:1.5px', 'color:#2ff3ff',
+      'text-shadow:0 0 8px #2ff3ff', 'background:rgba(0,0,0,0.55)',
+      'padding:3px 10px', 'border-radius:20px',
+      'border:1px solid rgba(47,243,255,0.5)'
+    ].join(';');
+
+    splitLabel2El = document.createElement('div');
+    splitLabel2El.id = 'split-label-p2';
+    splitLabel2El.style.cssText = [
+      'position:absolute', 'left:8px', 'top:calc(50% + 10px)',
+      'z-index:61', 'pointer-events:none', 'display:none',
+      'font-family:var(--font-game,Orbitron,monospace)', 'font-size:11px',
+      'font-weight:900', 'letter-spacing:1.5px', 'color:#ff2bd6',
+      'text-shadow:0 0 8px #ff2bd6', 'background:rgba(0,0,0,0.55)',
+      'padding:3px 10px', 'border-radius:20px',
+      'border:1px solid rgba(255,43,214,0.5)'
+    ].join(';');
+
+    wrap.appendChild(splitDividerEl);
+    wrap.appendChild(splitLabel1El);
+    wrap.appendChild(splitLabel2El);
+  }
+
+  function _showSplitDivider(localName, localColor, rivalNameStr, rivalColorStr) {
+    if (!splitDividerEl) return;
+    splitDividerEl.style.display = 'block';
+    if (splitLabel1El) {
+      splitLabel1El.textContent = `▲ TÚ: ${localName}`;
+      splitLabel1El.style.color = localColor || '#2ff3ff';
+      splitLabel1El.style.textShadow = `0 0 8px ${localColor || '#2ff3ff'}`;
+      splitLabel1El.style.borderColor = `${localColor || '#2ff3ff'}66`;
+      splitLabel1El.style.display = 'block';
+    }
+    if (splitLabel2El) {
+      splitLabel2El.textContent = `▼ ${rivalNameStr}`;
+      splitLabel2El.style.color = rivalColorStr || '#ff2bd6';
+      splitLabel2El.style.textShadow = `0 0 8px ${rivalColorStr || '#ff2bd6'}`;
+      splitLabel2El.style.borderColor = `${rivalColorStr || '#ff2bd6'}66`;
+      splitLabel2El.style.display = 'block';
+    }
+  }
+
+  function _hideSplitDivider() {
+    if (splitDividerEl) splitDividerEl.style.display = 'none';
+    if (splitLabel1El) splitLabel1El.style.display = 'none';
+    if (splitLabel2El) splitLabel2El.style.display = 'none';
+  }
+
+  function _updateCameraForPlayer(cam, playerPx, playerPy, playerPz, camXTarget, shake, dt, playerSpeed) {
+    const isPortrait = cam.aspect < 0.8;
+    const sx = (Math.random() - 0.5) * shake * 0.5;
+    const sy = (Math.random() - 0.5) * shake * 0.5;
+    cam.position.set(camXTarget + sx, (isPortrait ? 4.5 : 3.7) + playerPy * 0.3 + sy, playerPz + (isPortrait ? 10.5 : 8));
+    cam.lookAt(camXTarget * 0.6 + playerPx * 0.3, 1.6, playerPz - 9);
+    const targetFov = (isPortrait ? 78 : 62) + Math.min(playerSpeed || 14, 26) * 0.6;
+    cam.fov += (targetFov - cam.fov) * Math.min(1, dt * 3);
+    cam.updateProjectionMatrix();
+  }
+
+  function _renderSplitScreen(dt) {
+    const w = renderer.domElement.width;
+    const h = renderer.domElement.height;
+    const halfH = Math.floor(h / 2);
+
+    renderer.setScissorTest(true);
+
+    // ── Mitad SUPERIOR: Jugador local ────────────────────────────────────────
+    renderer.setViewport(0, halfH, w, halfH);
+    renderer.setScissor(0, halfH, w, halfH);
+    renderer.render(scene, camera);
+
+    // ── Mitad INFERIOR: Rival (desde su cámara) ──────────────────────────────
+    renderer.setViewport(0, 0, w, halfH);
+    renderer.setScissor(0, 0, w, halfH);
+    renderer.render(scene, cameraRival);
+
+    renderer.setScissorTest(false);
+    // Restaurar viewport completo
+    renderer.setViewport(0, 0, w, h);
   }
 
   function _loadLevelWorld(num) {
@@ -9724,6 +9854,7 @@ const Neon3DEngine = (() => {
     rivalPx = 0;
     rivalPy = 0;
     rivalDist = 0;
+    rivalCamX = 0;
     rivalSpeed = 14;
     rivalPhase = 0;
     rivalGrounded = true;
@@ -9787,6 +9918,15 @@ const Neon3DEngine = (() => {
       rivalRig = Neon3DPlayer.create(scene, { glowColor: rivalColorHex });
       rivalNameplate = _createNameplateSprite(rivalName, rivalColor);
       scene.add(rivalNameplate);
+
+      // ── Activar Split-Screen ─────────────────────────────────────────────
+      isSplitScreen = true;
+      _createSplitDivider();
+      const localDisplayName = (typeof Network !== 'undefined' && Network.playerName)
+        ? Network.playerName
+        : (typeof ScoreManager !== 'undefined' ? ScoreManager.getPlayerName() : 'TÚ');
+      _showSplitDivider(localDisplayName || 'TÚ', myCustomColor, rivalName, rivalColor);
+      resize(); // Recalcular aspect ratios para ambas cámaras
 
       if (typeof Network !== 'undefined') {
         Network.onRaceState = (snapshot) => {
@@ -10317,21 +10457,23 @@ const Neon3DEngine = (() => {
 
     // Cámara cinética con seguimiento dinámico y sacudida de pantalla
     camX += (px * 0.7 - camX) * Math.min(1, dt * 5);
-    const isPortrait = camera.aspect < 0.8;
-    const sx = (Math.random() - 0.5) * shake * 0.5;
-    const sy = (Math.random() - 0.5) * shake * 0.5;
+    _updateCameraForPlayer(camera, px, py, pz, camX, shake, dt);
 
-    camera.position.set(camX + sx, (isPortrait ? 4.5 : 3.7) + py * 0.3 + sy, pz + (isPortrait ? 10.5 : 8));
-    camera.lookAt(camX * 0.6 + px * 0.3, 1.6, pz - 9);
-
-    const targetFov = (isPortrait ? 78 : 62) + Math.min(speed, 26) * 0.6;
-    camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 3);
-    camera.updateProjectionMatrix();
+    // ── Split-Screen: cámara del rival (suavizada) ──────────────────────────
+    if (isSplitScreen && rivalRig) {
+      rivalCamX += (rivalPx * 0.7 - rivalCamX) * Math.min(1, dt * 5);
+      _updateCameraForPlayer(cameraRival, rivalPx, rivalPy, -rivalDist, rivalCamX, 0, dt);
+    }
 
     // Renderizar fotograma
     if (state !== 'idle') {
-      if (composer) composer.render();
-      else renderer.render(scene, camera);
+      if (isSplitScreen) {
+        _renderSplitScreen(dt);
+      } else if (composer) {
+        composer.render();
+      } else {
+        renderer.render(scene, camera);
+      }
     }
   }
 
@@ -10351,6 +10493,9 @@ const Neon3DEngine = (() => {
       scene.remove(rivalNameplate);
       rivalNameplate = null;
     }
+    // Desactivar split-screen
+    isSplitScreen = false;
+    _hideSplitDivider();
     isOnline = false;
     currentRaceId = null;
     officialRaceState = null;
